@@ -1,0 +1,124 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(AbstractSequence)
+{
+    /**
+     * 自身の実行を開始する。二回以上呼ばれた場合の動作は不定
+     * @param beginTick 実行を開始したとみなす時間
+     * @param consumableTick 現在時間とbeginTickの差
+     * @return consumableTickの間に実行が完了したらvoid。一時停止の必要があれば、完了時にresolveされるPromiseオブジェクト
+     */
+    AbstractFunc(run)(beginTick:int, consumableTick:int)
+
+    /**
+     * 自身をスキップ実行する。二回以上呼ばれた場合の動作は不定
+     * 先にrunが呼ばれている場合は残っている処理だけスキップ実行する
+     */
+    AbstractFunc(skip)()
+
+    Func(onTick)(tick:int)   { doNothing(); }
+    Func(trigger)(label:string) { doNothing(); }
+
+    Func(getNext)     { return this._next; }
+    Func(getPrevious) { return this._previous; }
+    Func(getHead)     { return this._previous === null ? this : this._previous.getHead(); }
+    Func(getTail)     { return this._next     === null ? this : this._next.getTail(); }
+
+    /**
+     * runが呼ばれ、最後まで実行が完了した後のみ正しい値を返します。skipが呼ばれた際の値は不定
+     * @return 実行完了までに消費した時間
+    */ 
+    Func(getConsumedTick){ return 0; }
+
+    Func(call)            { return this._appendNewSequence(new global.CallbackSequence(...)); }
+    Func(wait)            { return this._appendNewSequence(new global.WaitSequence(...)); }
+    Func(beginSkip)       { return this._appendNewSequence(new global.BeginSkipSequence(...)); }
+    Func(endSkip)         { return this._appendNewSequence(new global.EndSkipSequence(...)); }
+    Func(beginLoop)       { return this._appendNewSequence(new global.BeginLoopSequence(...)); }
+    Func(endLoop)         { return this._appendNewSequence(new global.EndLoopSequence(...)); }
+    Func(action)          { return this._appendNewSequence(new global.ActionSequence(...)); }
+    Func(transition)      { return this._appendNewSequence(new global.TransitionSequence(...)); }
+    Func(factory)         { return this._appendNewSequence(new global.FactorySequence(...)); }
+    Func(beginConcurrent) { return this._appendNewSequence(new global.BeginConcurrentSequence(...)); }
+    Func(endConcurrent)   { return this._appendNewSequence(new global.EndConcurrentSequence(...)); }
+
+    Func(clone)(previous:AbstractSequence? = null) {
+        checkArgs
+        var result = this._cloneSelf();
+        result._previous = previous;
+        result._next = this._next.clone(result) if this._next !== null;
+        result._parent = this._parent;
+        result._appendToChildOnce = this._appendToChildOnce;
+        result._child = this._child.clone(null) if this._child !== null;
+        m4_ifelse(DEBUG, 1, global.logMemoryLeakForDebug("Sequence", result);)
+        return result;
+    }
+
+    Func(invalidateAll)() {
+        var sequence = getHead();
+        while (sequence !== null) {
+            var nextSequence = sequence.getNext();
+            invalidate sequence;
+            sequence = nextSequence;
+        }
+    }
+
+
+    var _previous = null;
+    var _next = null;
+    var _parent = null;
+    var _appendToChildOnce = false;
+    var _child = null;
+
+    Constructor() { notImplemented(ASSERT_INSTANTIATE_ABSTRACT_CLASS); }
+    Finalize() {
+        if (this._child !== null) {
+            this._child.invalidateAll();
+            this._child = null;
+        }
+    }
+
+    AbstractFunc(_cloneSelf)()
+
+    Func(_appendNewSequence)(sequence:AbstractSequence) {
+        checkArgs
+        typeNull(sequence._previous)
+        typeNull(sequence._next)
+        typeNull(this._next)
+        m4_ifelse(DEBUG, 1, global.logMemoryLeakForDebug("Sequence", sequence);)
+        if (_appendToChildOnce) {
+            assert(this._child === null)
+            this._appendToChildOnce = false;
+            this._child = sequence;
+            sequence._parent = this;
+        } else {
+            assert(_next === null)
+            this._next = sequence;
+            sequence._previous = this;
+            sequence._parent = this._parent;
+        }
+        if (sequence._parent !== null && sequence._parent._isEndSequence(sequence)) {
+            return sequence._parent;
+        }
+        return sequence;
+    }
+
+    Func(_insertAfter)(sequence:AbstractSequence) {
+        checkArgs
+        var head = sequence.getHead();
+        var tail = sequence.getTail();
+
+        var next = this._next;
+        if (next !== null) { next._previous = tail; }
+        this._next = head;
+
+        head._previous = this;
+        tail._next = next;
+        for (var s = head; s !== null; s = s.getNext()) {
+            s._parent = this._parent;
+        }
+    }
+
+    Func(_isEndSequence) { return false; }
+}

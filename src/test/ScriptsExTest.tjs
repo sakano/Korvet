@@ -1,0 +1,103 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+{
+    var path = System.exePath + "temporaryIniFileTest.ini";
+    {
+        Scripts.writeIniFile(path, %[]);
+        var result = %[];
+        assertAlways( success(Scripts.readIniFile(path, IniFileType_SectionOptional, result)) )
+        assertAlways( getKeys(result).count === 0 )
+        assertAlways( success(Scripts.readIniFile(path, IniFileType_SectionRequired, result)) )
+        assertAlways( getKeys(result).count === 0 )
+        Storages.deleteFile(path);
+    }
+    {
+        Scripts.writeIniFile(path, %[ value:1234 ]);
+        var result = %[];
+        assertAlways( success(Scripts.readIniFile(path, IniFileType_SectionOptional, result)) )
+        assertAlways( getKeys(result).count === 1 )
+        assertAlways( result.value === "1234" )
+
+        result.clear();
+        var error = Scripts.readIniFile(path, IniFileType_SectionRequired, result);
+        assertAlways( !success(error) )
+        assertAlways( error instanceof "ParseError" )
+        Storages.deleteFile(path);
+    }
+    {
+        Scripts.writeIniFile(path, %[ section : %[value:"test"] ]);
+        var result = %[];
+        assertAlways( success(Scripts.readIniFile(path, IniFileType_SectionOptional, result)) )
+        assertAlways( getKeys(result).count === 1 )
+        assertAlways( getKeys(result.section).count === 1 )
+        assertAlways( result.section.value === "test" )
+
+        var result2 = %[];
+        assertAlways( success(Scripts.readIniFile(path, IniFileType_SectionRequired, result2)) )
+        assertAlways( Scripts.equalStruct(result, result2) )
+        Storages.deleteFile(path);
+    }
+    {
+        Scripts.writeIniFile(path, %[
+            section : %[value:"test"],
+            v : 100,
+            label : %[],
+            label2 : %[ value:"label2Value"],
+        ]);
+        var result = %[];
+        assertAlways( success(Scripts.readIniFile(path, IniFileType_SectionOptional, result)) )
+        assertAlways( getKeys(result).count === 4 )
+        assertAlways( getKeys(result.section).count === 1 )
+        assertAlways( result.section.value === "test" )
+        assertAlways( result.v === "100" )
+        assertAlways( getKeys(result.label).count === 0 )
+        assertAlways( getKeys(result.label2).count === 1 )
+        assertAlways( result.label2.value === "label2Value" )
+        var result2 = %[];
+        assertAlways( Scripts.readIniFile(path, IniFileType_SectionRequired, result2) instanceof "ParseError" )
+        Storages.deleteFile(path);
+    }
+    {
+        var lines = [
+            "; comment line",
+            "value = 23",
+            "value2 = 32 ",
+            "value3 =   432 ",
+        ];
+        lines.save(path);
+        var result = %[];
+        assertAlways( success(Scripts.readIniFile(path, IniFileType_SectionOptional, result)) )
+        assertAlways( getKeys(result).count === 3 )
+        assertAlways( result.value === "23" )
+        assertAlways( result.value2 === "32" )
+        assertAlways( result.value3 === "432" )
+        Storages.deleteFile(path);
+    }
+    {
+        var lines = [
+            "; comment line",
+            "[SECT]",
+            "; comment",
+            "value = hOGe",
+            "[sect]",
+            ";",
+            "value2 = moge ",
+            "value3 =  FUGA   ",
+        ];
+        lines.save(path);
+        var result = %[];
+        assertAlways( success(Scripts.readIniFile(path, IniFileType_SectionOptional, result)) )
+        assertAlways( getKeys(result).count === 2 )
+        assertAlways( getKeys(result.SECT).count === 1)
+        assertAlways( result.SECT.value === "hOGe" )
+        assertAlways( getKeys(result.sect).count === 2)
+        assertAlways( result.sect.value2 === "moge" )
+        assertAlways( result.sect.value3 === "FUGA" )
+
+        var result2 = %[];
+        assertAlways( success(Scripts.readIniFile(path, IniFileType_SectionRequired, result2)) )
+        assertAlways( Scripts.equalStruct(result, result2) )
+        Storages.deleteFile(path);
+    }
+}

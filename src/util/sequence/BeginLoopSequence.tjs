@@ -1,0 +1,143 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(BeginLoopSequence, SuspendableSequence)
+{
+    OverrideFunc(run)(beginTick:int, consumableTick:int) {
+        typeNotNull(this._child, ASSERT_BEGINLOOPSEQUENCE_EMPTY_CHILD)
+        assert(this._loopCount === 0)
+        this._beginTick = beginTick;
+        this._currentTick = beginTick + consumableTick;
+        if (this._child === null || this._loopCountMax <= 0) return;
+        return this._runChildSequence(false);
+    }
+
+    OverrideFunc(skip)() {
+        typeNotNull(this._child, ASSERT_BEGINLOOPSEQUENCE_EMPTY_CHILD)
+        assert(this._loopCount >= 0)
+        this._beginTick = this._currentTick = 0;
+        if (this._child === null || this._loopCountMax <= 0) return;
+        if (this._holder !== null) {
+            this._holder.skip();
+        } else {
+            this._runChildSequence(true);
+        }
+    }
+
+    OverrideFunc(onTick)(tick:int) {
+        typeNotNull(this._holder)
+        this._currentTick = tick;
+        this._holder.onTick(...);
+    }
+
+    OverrideFunc(trigger)(label:string) {
+        typeNotNull(this._holder)
+        this._holder.trigger(...);
+    }
+
+
+
+    var _loopCount = 0;
+    var _loopCountMax = 0;
+    var _holder = null;
+    var _currentTick;
+    var _beginTick;
+
+    Constructor(loopCountMax) {
+        assert(typeof loopCountMax === "Integer" || loopCountMax === Infinity)
+        assert(loopCountMax >= 0, ASSERT_BEGINLOOPSEQUENCE_INVALID_LOOP_COUNT)
+        this._loopCountMax = loopCountMax;
+        this._appendToChildOnce = true;
+    }
+
+    Finalize() {
+        super.finalize();
+        if (this._holder !== null) invalidate this._holder;
+    }
+
+    OverrideFunc(_cloneSelf) {
+        var result = new global.BeginLoopSequence(this._loopCountMax);
+        result._loopCount = this._loopCount;
+        return result;
+    }
+
+    OverrideFunc(_isEndSequence)(sequence:AbstractSequence) {
+        return sequence instanceof "EndLoopSequence";
+    }
+
+    Func(_runChildSequence)(skip:bool = false) {
+        // ホルダが生成されていなければ生成
+        if (this._holder === null) {
+            this._holder = new global.SequenceHolder(this._beginTick + this._consumedTick);
+        }
+
+        // ループ回数無限のときは、スキップ時に強制終了
+        if (this._loopCountMax === Infinity && skip) {
+            assert(this._loopCount > 0)
+            return;
+        }
+
+        // シーケンスの先頭から実行
+        this._child = this._child.getHead();
+        while (this._loopCount < this._loopCountMax) {
+            ++this._loopCount;
+
+            // 繰り返し実行するためクローンを作成して実行
+            var clonedSequence = this._child.clone();
+            var result = skip ? this._holder.skip(clonedSequence) : this._holder.run(clonedSequence);
+
+            // シーケンスの最後まで実行完了したら再び実行
+            if (result === SequenceHolderResult_Completed) {
+                continue;
+            }
+            assert(!skip)
+
+            // 消費可能な時間で完了できるか試す
+            if (this._beginTick + this._consumedTick < this._currentTick) {
+                this._holder.onTick(this._currentTick);
+                if (!this._holder.running) {
+                    // 完了したら消費時間を記録して再び実行
+                    this._recordConsumedTick(this._holder.getConsumedTick());
+                    continue;
+                }
+            }
+
+            // 完了できないので、完了時に_onChildSequenceCompletedが呼ばれるようにして一時停止
+            this._holder.bindEvent(SequenceHolderEvent_Completed, this._onChildSequenceCompleted);
+            return this._suspend();
+        }
+    }
+
+    // 子シーケンスの実行が終了したときに呼ばれる
+    Func(_onChildSequenceCompleted) {
+        this._holder.unbindEvent(SequenceHolderEvent_Completed, this._onChildSequenceCompleted);
+
+        // 消費時間を記録
+        this._recordConsumedTick(this._holder.getConsumedTick());
+
+        if (this._loopCount >= this._loopCountMax) {
+            // 指定回数のループが完了していれば完了を通知
+            if (!this._holder.isSkipping) this._resume();
+        } else {
+            // ループが完了していなければ再び実行
+            if (this._runChildSequence(this._holder.isSkipping) === void) {
+                // 中断なしで最後まで実行完了したら再開を通知
+                if (!this._holder.isSkipping) this._resume();
+            }
+        }
+    }
+
+    Func(_recordConsumedTick)(tick:int) {
+        this._consumedTick += tick;
+        this._holder.resetTick(this._beginTick + this._consumedTick);
+    }
+}
+
+
+
+ClassExtends(EndLoopSequence, DoNothingSequence)
+{
+    Constructor() { super.DoNothingSequence(); }
+    Finalize() { super.finalize(); }
+    OverrideFunc(_cloneSelf) { return new global.EndLoopSequence(); }
+}

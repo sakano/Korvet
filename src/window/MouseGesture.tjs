@@ -1,0 +1,149 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(MouseGesture)
+{
+    property threshold {
+        setter(v:int) {
+            typeInt(v)
+            _clear();
+            _threshold = (int)v;
+        }
+        getter { return _threshold; }
+    }
+
+    property type {
+        setter(v) {
+            assert(_type === MouseGestureType_FourDirection || _type === MouseGestureType_EightDirection)
+            _clear();
+            _type = v;
+        }
+        getter { return _type; }
+    }
+
+    property limit {
+        setter(v:int) {
+            typeInt(v)
+            _clear();
+            _limit = (int)v;
+        }
+        getter { return _limit; }
+    }
+
+    property button {
+        setter(v) {
+            assert(v === mbLeft || v === mbRight || v === mbMiddle)
+            _clear();
+            _button = v;
+        }
+        getter { return _button; }
+    }
+
+    property enabled {
+        setter(v:bool) {
+            typeBool(v)
+            _clear();
+            _enabled = !!v;
+        }
+        getter { return _enabled;}
+    }
+
+    Func(onMouseDown)(x:int, y:int, button:int) {
+        if (button !== _button) { return; }
+        _clear();
+        _isMouseDown = true;
+        _previousX = x;
+        _previousY = y;
+    }
+
+    Func(onMouseMove)(x:int, y:int) {
+        if (!_isMouseDown) { return; }
+        if (_type === MouseGestureType_FourDirection) {
+            if      (_previousX - x >= _threshold) _input(MouseGestureDirection_Left);
+            else if (x - _previousX >= _threshold) _input(MouseGestureDirection_Right);
+            else if (_previousY - y >= _threshold) _input(MouseGestureDirection_Up);
+            else if (y - _previousY >= _threshold) _input(MouseGestureDirection_Down);
+            else return;
+        } else {
+            if (Math.pow(x - _previousX, 2) + Math.pow(y - _previousY, 2) >= _threshold * _threshold) {
+                m4_define(calc,(($1*MATH_PI)/8))
+                var theta = Math.atan2(y - _previousY, x - _previousX);
+                if      (theta < calc(-7)) _input(MouseGestureDirection_Left);
+                else if (theta < calc(-5)) _input(MouseGestureDirection_UpLeft);
+                else if (theta < calc(-3)) _input(MouseGestureDirection_Up);
+                else if (theta < calc(-1)) _input(MouseGestureDirection_UpRight);
+                else if (theta < calc( 1)) _input(MouseGestureDirection_Right);
+                else if (theta < calc( 3)) _input(MouseGestureDirection_DownRight);
+                else if (theta < calc( 5)) _input(MouseGestureDirection_Down);
+                else if (theta < calc( 7)) _input(MouseGestureDirection_DownLeft);
+                else _input(MouseGestureDirection_Left);
+                m4_undefine(calc)
+            } else {
+                return;
+            }
+        }
+        _previousX = x, _previousY = y;
+        return;
+    }
+
+    Func(onMouseUp)(x:int, y:int, button:int, shift:int) {
+        if (!_enabled || !_isMouseDown || button !== _button) return false;
+        if (_gestures.count === 0) {
+            _triggerEvent(MouseGestureEventType_MouseUp, false, *);
+        } else if (_overflow) {
+            _triggerEvent(MouseGestureEventType_MouseUp, true, *);
+        } else {
+            _triggerEvent(MouseGestureEventType_Gesture, _gestures);
+        }
+        _clear();
+    }
+
+
+
+    var _threshold = 50;
+    var _type = MouseGestureType_EightDirection;
+    var _limit = 1;
+    var _button = mbRight;
+
+    var _isMouseDown = false;
+    var _previousX, _previousY;
+    var _gestures = [];
+    var _enabled = false;
+    var _overflow = false;
+
+    Constructor() {
+        global.includeObservable(this);
+        global.includeSerializable(this, [
+            "threshold",
+            "type",
+            "limit",
+            "button",
+            "enabled"
+        ]);
+    }
+
+    Finalize() {
+        invalidate _gestures;
+        global.finalizeObservable(this);
+        global.finalizeSerializable(this);
+    }
+
+    Func(_input)(gesture:string) {
+        assert(_gestures.count <= _limit)
+        if (_overflow) { return; }
+        if (_gestures.count < _limit) {
+            if (_gestures.count === 0 || _gestures[-1] !== gesture) {
+                _gestures.add(gesture);
+            }
+        } else if (_gestures[-1] !== gesture) {
+            _overflow = true;
+            _triggerEvent(MouseGestureEventType_Overflow, _gestures);
+        }
+    }
+
+    Func(_clear)() {
+        _isMouseDown = false;
+        _gestures.clear();
+        _overflow = false;
+    }
+}

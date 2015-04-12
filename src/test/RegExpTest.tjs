@@ -1,0 +1,78 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+{
+    var r = /(.)/g;
+    var counter = 0;
+    while (r.test("abced")) {
+        ++counter;
+        assertAlways(r.start === counter)
+        assertAlways(r.index === counter-1)
+        assertAlways(r.lastIndex === counter)
+        assertAlways(r.input === "abced")
+        assertAlways(r.leftContext === "abced".substr(0,counter-1))
+        assertAlways(r.rightContext === "abced".substr(counter))
+        assertAlways(r.lastMatch === r.matches[0])
+        assertAlways(r.lastParen === r.matches[1])
+        assertAlways(r.matches.count === 2)
+        assertAlways(r.matches[0] === r.matches[1])
+        assertAlways(r.matches[0] === "abced"[counter-1])
+    }
+    assertAlways(counter === 5)
+    assertAlways(RegExp.last === r)
+    invalidate r;
+}
+{
+    var r = /([a-z])([A-Z])/g;
+    var counter = 0;
+    while (r.exec("aBcDeFgh").count > 0) {
+        ++counter;
+        assertAlways(r.start === counter*2)
+        assertAlways(r.index === counter*2-2)
+        assertAlways(r.lastIndex === counter*2)
+        assertAlways(r.input === "aBcDeFgh")
+        assertAlways(r.leftContext === "aBcDeFgh".substr(0,counter*2-2))
+        assertAlways(r.rightContext === "aBcDeFgh".substr(counter*2))
+        assertAlways(r.lastMatch === r.matches[0])
+        assertAlways(r.lastParen === r.matches[2])
+        assertAlways(r.matches.count === 3)
+        assertAlways(r.matches[0] === "aBcDeFgh".substr(counter*2-2,2))
+        assertAlways(r.matches[1] === "aBcDeFgh".substr(counter*2-2,1))
+        assertAlways(r.matches[2] === "aBcDeFgh".substr(counter*2-1,1))
+    }
+    assertAlways(counter === 3)
+    assertAlways(RegExp.last === r)
+    invalidate r;
+}
+{
+    var r = new RegExp("^[a-z]");
+    r.start = 1;
+    assertAlways(r.test("Abc"))
+    assertAlways(r.start === 1)
+    assertAlways(r.lastIndex === 2)
+    assertAlways(r.input === "Abc")
+    assertAlways(r.leftContext === "A")
+    assertAlways(r.rightContext === "c")
+    assertAlways(r.lastMatch === "b")
+    assertAlways(r.lastParen === "b")
+    assertAlways(r.matches.count === 1)
+    assertAlways(r.matches[0] === "b")
+    assertAlways(RegExp.last === r)
+    invalidate r;
+}
+{
+    var r = /(?<foo>abcd)(\g<foo>e)/;
+    assertAlways(r.test("abcdabcde"))
+    assertAlways(r.start === 0)
+    assertAlways(r.lastIndex === 9)
+    assertAlways(r.input === "abcdabcde")
+    assertAlways(r.leftContext === "")
+    assertAlways(r.rightContext === "")
+    assertAlways(r.lastMatch === "abcdabcde")
+    assertAlways(r.lastParen === "abcde")
+    assertAlways(r.matches.count === 3)
+    assertAlways(r.matches[0] === "abcdabcde")
+    assertAlways(r.matches[1] === "abcd")
+    assertAlways(r.matches[2] === "abcde")
+    assertAlways(RegExp.last === r)
+    invalidate r;
+}

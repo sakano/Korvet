@@ -1,0 +1,71 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(MessageCommandHandler)
+{
+    Func(onCommand)(commandInfo:Dictionary) {
+        var handler = this._commandHandlers[commandInfo.name];
+        if (handler === void) return void;
+
+        return handler(commandInfo);
+    }
+
+    Constructor(mode) {
+        this._mode = mode;
+    }
+
+    var _mode;
+    var _currentText = "";
+    var _drawnTextIndex = 0;
+
+    var _commandHandlers = %[
+        "__ch" => _onCh,
+        "__beginpage" => _onPageBegin,
+        "__endpage" => _onPageEnd
+    ];
+
+    Func(_onPageBegin)(commandInfo:Dictionary) {
+        this._currentText = "";
+        this._drawnTextIndex = 0;
+    }
+
+    Func(_onPageEnd)(commandInfo:Dictionary) {
+        assert(this._currentText.length > 0)
+        return %[
+            interrupt : true,
+            sequence : global.SequenceRunner.sequence()
+                .beginSkip("click")
+                    .beginLoop(this._currentText.length)
+                        .factory(this._sequenceFactory)
+                    .endLoop()
+                .endSkip()
+                .wait("click")
+                .call(this._resume)
+        ];
+    }
+
+    Func(_onCh)(commandInfo:Dictionary) {
+        var text;
+        for (var i = 0; i < commandInfo.keys.count; ++i) {
+            if (commandInfo.keys[i] === "text") {
+                text = commandInfo.values[i];
+                break;
+            }
+        }
+        this._currentText += text;
+    }
+
+    Func(_sequenceFactory) {
+        return global.SequenceRunner.sequence()
+            .call(this._drawCharacter, ++this._drawnTextIndex)
+            .wait(500);
+    }
+
+    Func(_drawCharacter)(index:int) {
+        global.Debug.message(this._currentText.substr(0, index));
+    }
+
+    Func(_resume)() {
+        this._mode.resumeCommandLoopAsync();
+    }
+}

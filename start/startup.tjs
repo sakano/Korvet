@@ -1,0 +1,55 @@
+// load k2compat
+@if (kirikiriz)
+{
+    // 各種互換実装を無効化します
+    // @set (K2COMPAT_PURGE_MENU = 1) // MenuItem, Window.menu (menu.dll)
+    @set (K2COMPAT_PURGE_KAGPARSER = 1) // KAGParser (KAGParrser.dll)
+    @set (K2COMPAT_PURGE_FONTSELECT = 1) // Layer.font.doUserSelect
+    @set (K2COMPAT_PURGE_INPUTSTRING = 1) // System.inputString
+    @set (K2COMPAT_PURGE_WINDOWPROP = 1) // Window.innerSunken, Window.showScrollBars
+    @set (K2COMPAT_PURGE_PTDRAWDEVICE = 1) // Window.PassThroughDrawDevice
+    // @set (K2COMPAT_PURGE_PAD = 1) // Pad
+    // @set (K2COMPAT_PURGE_CONSOLE = 1) // コンソール (Debug.console)
+    // @set (K2COMPAT_PURGE_CONTROLLER = 1) // コントローラ (Debug.controller)
+    // @set (K2COMPAT_PURGE_SCRIPTEDITOR = 1) // スクリプトエディタ (Debug.scripted)
+    // @set (K2COMPAT_PURGE_WATCH = 1) // 監視式 (Debug.watchexp)
+    // @set (K2COMPAT_PURGE_HOTKEY = 1) // Shift+F1～F4のホットキー
+    var base = "k2compat/";
+    Scripts.execStorage(base+"k2compat.tjs");
+    Krkr2CompatUtils.scriptBase = base;
+}
+@endif
+if (System.getArgument("-rlmode") == "yes") {
+    Storages.addAutoPath(System.exePath + "data/release/");
+    Scripts.execStorage("data/release/startup.tjs");
+    global.gRelaseMode = true;
+} else {
+    Storages.addAutoPath(System.exePath + "data/debug/");
+    Scripts.execStorage("data/debug/startup.tjs");
+    global.gRelaseMode = false;
+}
+
+// テスト中にウィンドウを使っても終了しないように一時的にfalseにする
+System.exitOnWindowClose = false;
+
+// テストスクリプトを実行
+execStorage("data/debug/test/ArrayTest.tjs");
+execStorage("data/debug/test/ArrayExTest.tjs");
+execStorage("data/debug/test/DeferredTest.tjs");
+execStorage("data/debug/test/EventsTest.tjs");
+//execStorage("data/debug/test/mathExTest.tjs");
+execStorage("data/debug/test/MultiMapTest.tjs");
+execStorage("data/debug/test/PriorityQueueTest.tjs");
+execStorage("data/debug/test/RegExpTest.tjs");
+execStorage("data/debug/test/ScriptsExTest.tjs");
+execStorage("data/debug/test/SystemTest.tjs");
+execStorage("data/debug/test/UtilsTest.tjs");
+execStorage("data/debug/test/SequenceTest.tjs");
+
+System.exitOnWindowClose = true;
+
+if (!global.gRelaseMode) {
+    global.cleanMemoryLeakLogForDebug();
+}
+
+var game = new Game();

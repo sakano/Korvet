@@ -1,0 +1,213 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(ObservableWindow, Window)
+{
+    property isActive { getter { return _isActive; } }
+
+    OverrideFunc(onActivate)() {
+        this._isActive = true;
+        super.onActivate();
+        this._triggerEvent(ObservableWindowEventType_Activate);
+    }
+
+    OverrideFunc(onDeactivate)() {
+        this._isActive = false;
+        super.onDeactivate();
+        this._triggerEvent(ObservableWindowEventType_Deactivate);
+    }
+
+    OverrideFunc(onKeyDown)() {
+        super.onKeyDown(...);
+        this._triggerEvent(ObservableWindowEventType_KeyDown, *);
+    }
+
+    OverrideFunc(onKeyUp)() {
+        super.onKeyUp(...);
+        this._triggerEvent(ObservableWindowEventType_KeyUp, *);
+    }
+
+    OverrideFunc(onMouseEnter)() {
+        super.onMouseEnter(...);
+        this._triggerEvent(ObservableWindowEventType_MouseEnter, *);
+    }
+
+    OverrideFunc(onMouseLeave)() {
+        super.onMouseLeave(...);
+        this._triggerEvent(ObservableWindowEventType_MouseLeave, *);
+    }
+
+    OverrideFunc(onMouseMove)() {
+        super.onMouseMove(...);
+        this._triggerEvent(ObservableWindowEventType_MouseMove, *);
+    }
+
+    OverrideFunc(onMouseDown)(x:int, y:int, button:int, shift:int) {
+        super.onMouseDown(...);
+        this._triggerEvent(ObservableWindowEventType_MouseDown, *);
+        switch (button) {
+        case mbLeft: this._triggerEvent(ObservableWindowEventType_LeftClick, x, y, shift); break;
+        case mbMiddle: this._triggerEvent(ObservableWindowEventType_MiddleClick, x, y, shift); break;
+        }
+    }
+
+    OverrideFunc(onMouseUp)() {
+        super.onMouseUp(...);
+        this._triggerEvent(ObservableWindowEventType_MouseUp, *);
+    }
+
+    Func(onMouseGestureButtonUp)(overflow:bool, x:int, y:int, button:int, shift:int) {
+        assert(button === mbRight)
+        if (!overflow) {
+            this._triggerEvent(ObservableWindowEventType_RightClick, x, y, shift);
+        }
+    }
+
+    Func(onMouseGesture)() {
+        this._triggerEvent(ObservableWindowEventType_MouseGesture, *);
+    }
+
+    Func(onMouseGestureOverflow)() {
+        this._triggerEvent(ObservableWindowEventType_MouseGestureOverflow, *);
+    }
+
+    OverrideFunc(onMouseWheel)() {
+        super.onMouseWheel(...);
+        this._triggerEvent(ObservableWindowEventType_MouseWheel, *);
+    }
+
+    OverrideFunc(onDisplayRotate)() {
+        super.onDisplayRotate(...);
+        this._triggerEvent(ObservableWindowEventType_DisplayRotate);
+    }
+
+    OverrideFunc(onFileDrop)() {
+        super.onFileDrop(...);
+        this._triggerEvent(ObservableWindowEventType_FileDrop, *);
+    }
+
+    OverrideFunc(onCloseQuery)(canClose:bool) {
+        // 引数がfalseなら閉じれない
+        if (canClose !== void && !canClose) super.onCloseQuery(false);
+
+        // いずれかがfalseを返したら閉じれない
+        var result = this._triggerEventWhile(ObservableWindowEventType_CloseQuery, LMD(canClose) {
+            return !canClose;
+        });
+        if (result !== void) {
+            super.onCloseQuery(false);
+        } else {
+            this._triggerEvent(ObservableWindowEventType_Close);
+            super.onCloseQuery(true);
+        }
+    }
+
+    Func(onMaximizeQuery)(canMaximize:bool) {
+        // 引数がfalseなら不可
+        if (canMaximize !== void && !canMaximize) return true;
+
+        // いずれかがfalseを返したら最大化不可
+        var result = this._triggerEventWhile(ObservableWindowEventType_MaximizeQuery, LMD(canMaximize) {
+            return !canMaximize;
+        });
+        if (result !== void) return true;
+        return false;
+    }
+
+    Func(onMaximize)() {
+        this._triggerEvent(ObservableWindowEventType_Maximize);
+    }
+
+    Func(onMinimize)() {
+        this._triggerEvent(ObservableWindowEventType_Minimize);
+    }
+
+    Func(onShow)() {
+        this._triggerEvent(ObservableWindowEventType_Show);
+    }
+
+    Func(onHide)() {
+        this._triggerEvent(ObservableWindowEventType_Hide);
+    }
+
+    Func(onMoveSizeBegin)() {
+        this._triggerEvent(ObservableWindowEventType_MoveSizeBegin);
+    }
+
+    Func(onMoveSizeEnd)() {
+        this._triggerEvent(ObservableWindowEventType_MoveSizeEnd);
+    }
+
+    Func(onMoving)() {
+        this._triggerEvent(ObservableWindowEventType_Moving, *);
+    }
+
+    Func(onMove)() {
+        this._triggerEvent(ObservableWindowEventType_Move);
+    }
+
+    Func(onResizing)() {
+        this._triggerEvent(ObservableWindowEventType_Resizing, *);
+        return false;
+    }
+
+    Func(onDisplayChanged)() {
+        this._triggerEvent(ObservableWindowEventType_DisplayChanged);
+    }
+
+    Func(onEnterMenuLoop)() {
+        this._triggerEvent(ObservableWindowEventType_EnterMenuLoop);
+    }
+
+    Func(onExitMenuLoop)() {
+        this._triggerEvent(ObservableWindowEventType_ExitMenuLoop);
+    }
+
+    Func(onScreenSave)() {
+        this._triggerEvent(ObservableWindowEventType_ScreenSave);
+    }
+
+    Func(onMonitorPower)() {
+        this._triggerEvent(ObservableWindowEventType_MonitorPower, *);
+    }
+
+
+
+    var _mouseGesture;
+    var _isActive = true;
+
+    Constructor(parent:Window? = null) {
+        checkArgs
+        super.Window(parent);
+        this._include();
+        this._initMouseGesture();
+        this.enableTouch = false;
+        this.registerExEvent();
+    }
+
+    Finalize() {
+        invalidate _mouseGesture;
+        global.finalizeObservable(this);
+        global.finalizeSerializable(this);
+        super.finalize();
+    }
+
+    Func(_include)() {
+        global.includeObservable(this);
+        global.includeSerializable(this, [
+            "_mouseGesture"
+        ]);
+    }
+
+    Func(_initMouseGesture)() {
+        this._mouseGesture = new global.MouseGesture();
+        this._mouseGesture.button = mbRight;
+        this._mouseGesture.bindEvent(MouseGestureEventType_Gesture,  this.onMouseGesture);
+        this._mouseGesture.bindEvent(MouseGestureEventType_Overflow, this.onMouseGestureOverflow);
+        this._mouseGesture.bindEvent(MouseGestureEventType_MouseUp,  this.onMouseGestureButtonUp);
+        this._mouseGesture.enabled = true;
+        this.bindEvent(ObservableWindowEventType_MouseMove, this._mouseGesture.onMouseMove);
+        this.bindEvent(ObservableWindowEventType_MouseDown, this._mouseGesture.onMouseDown);
+        this.bindEvent(ObservableWindowEventType_MouseUp,   this._mouseGesture.onMouseUp);
+    }
+}

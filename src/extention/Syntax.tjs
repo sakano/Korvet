@@ -1,0 +1,46 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+m4_ifelse(DEBUG,1,
+    Func(__OverrideFuncImpl)(parentClassName:string, className:string, funcName:string, fileName:string, lineNumber:int) {
+        checkArgs
+        if (parentClassName === "" || typeof global[parentClassName][funcName] !== "Object" || !(global[parentClassName][funcName] instanceof "Function")) {
+            var msg =
+                ASSERT_NOT_FOUND_METHOD_TO_OVERRIDE + "\n" +
+                @"  Name: ${className}.${funcName}\n"
+                 "  File: ${Storages.extractStorageName(fileName)}(${lineNumber})";
+            global.System.inform(msg, ASSERT_NOT_FOUND_METHOD_TO_OVERRIDE_CAPTION);
+        }
+    }
+
+    Func(__FuncImpl)(parentClassName:string, className:string, funcName:string, fileName:string, lineNumber:int) {
+        checkArgs
+        if (parentClassName !== "" && typeof global[parentClassName] === "Object" && typeof global[parentClassName][funcName] !== "undefined") {
+            var msg =
+                ASSERT_PARENT_CLASS_HAS_SAME_NAME_METHOD + "\n" +
+                @"  Name: ${className}.${funcName}\n"
+                 "  File: ${Storages.extractStorageName(fileName)}(${lineNumber})";
+            global.System.inform(msg, ASSERT_PARENT_CLASS_HAS_SAME_NAME_METHOD_CAPTION);
+        }
+    }
+    Func(__notImplementedImpl)(message:string, className:string, funcName:string, fileName:string, lineNumber:int) {
+        checkArgs
+        var msg =
+            ASSERT_NOT_IMPLEMENTED_FUNCTION_CALLED + "\n" +
+            @"  MES: ${message}\n"
+             "  At: ${className}.${funcName}\n"
+             "  File: ${Storages.extractStorageName(fileName)}(${lineNumber})";
+        throw new global.Exception(msg);
+    }
+)
+
+Func(__assertImpl)(condExp:string, className:string, funcName:string, fileName:string, lineNumber:int, message:string) {
+    checkArgs
+    var msg =
+        ASSERT_FAILED_HEADER + "\n" +
+        @"  Mes: ${message}\n"
+         "  Exp: ${condExp}\n"
+         "  At: ${className}.${funcName}\n"
+         "  File: ${Storages.extractStorageName(fileName)}(${lineNumber})";
+    throw new global.Exception(msg);
+}

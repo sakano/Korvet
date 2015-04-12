@@ -1,0 +1,20 @@
+[
+    %[
+        filename:"bg道_昼_0",
+        scale:50,
+        width:640,
+        height:480,
+    ],
+    %[
+        filename:"bg道_昼_1",
+        scale:100,
+        width:1280,
+        height:720,
+    ],
+    %[
+        filename:"bg道_昼_2",
+        scale:150,
+        width:2560,
+        height:1440,
+    ]
+];

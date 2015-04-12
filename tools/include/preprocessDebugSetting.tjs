@@ -1,0 +1,1 @@
+m4_define(&--CHECK_MEMORY_LEAK--&, 1)m4_dnl

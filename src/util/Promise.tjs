@@ -1,0 +1,140 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(Promise)
+{
+    // friend Deferred;
+
+    /**
+     * The current state of a Deffered object.
+     * The value is PromiseState_Pending, PromiseState_Resolved or PromiseState_Rejected.
+     * @type int The number indicating the current state.
+     */
+    property state { getter { return this._state; } }
+
+    /**
+     * Add callbacks to be called when the deferred object is resolved.
+     * If the object has been resolved, callbacks are called immediately.
+     * @param func callbacks* The callback functions.
+     */
+    Func(done)(callbacks*) {
+        assert(callbacks.count > 0) 
+        switch (this._state) {
+        case PromiseState_Pending:
+            this._doneCallbacks.push(*);
+            break;
+        case PromiseState_Resolved:
+            global.gAsyncCaller.call(this._doCallbacks, callbacks);
+            break;
+        }
+        return this;
+    }
+
+    /**
+     * Add Callbacks to be called when the Deferred object is rejected.
+     * If the object has been rejected, callbacks are called immediately.
+     * @param func callbacks* The callback functions.
+     */
+    Func(fail)(callbacks*) {
+        assert(callbacks.count > 0) 
+        switch (_state) {
+        case PromiseState_Pending:
+            this._failCallbacks.push(*);
+            break;
+        case PromiseState_Rejected:
+            global.gAsyncCaller.call(this._doCallbacks, callbacks);
+            break;
+        }
+        return this;
+    }
+
+    /**
+     * Add callbacks to be called when the Deferred object is either resolved or rejected.
+     * If the object has been resolved or rejected, callbacks are called immediately.
+     * @param func callbacks* The callback functions.
+     */
+    Func(always)(callbacks*) {
+        assert(callbacks.count > 0) 
+        if (this._state === PromiseState_Pending) {
+            done(*);
+            fail(*);
+        } else {
+            global.gAsyncCaller.call(this._doCallbacks, callbacks);
+        }
+        return this;
+    }
+
+    Func(then)(doneCallback:Function+, failCallback:Function+) {
+        checkArgs
+        assert(doneCallback !== void || failCallback !== void)
+        var thenDeferred = new Deferred();
+        _thenDeferreds.add(thenDeferred);
+
+        switch (this._state) {
+        case PromiseState_Pending:
+            _thenDoneCallbacks.add(doneCallback);
+            _thenFailCallbacks.add(failCallback);
+            assert(_thenDeferreds.count === _thenDoneCallbacks.count)
+            assert(_thenDeferreds.count === _thenFailCallbacks.count)
+            break;
+        case PromiseState_Resolved:
+            global.gAsyncCaller.call(this._callThenCallback, thenDeferred, doneCallback);
+            break;
+        case PromiseState_Rejected:
+            global.gAsyncCaller.call(this._callThenCallback, thenDeferred, failCallback);
+            break;
+        }
+
+        return thenDeferred.promise();
+    }
+
+
+
+    var _callbackArgs = [];
+    var _doneCallbacks = [];
+    var _failCallbacks = [];
+    var _state = PromiseState_Pending;
+
+    var _thenDeferreds = [];
+    var _thenDoneCallbacks = [];
+    var _thenFailCallbacks = [];
+
+    Constructor() {}
+
+    Finalize() {
+        invalidate _callbackArgs;
+        invalidate _doneCallbacks;
+        invalidate _failCallbacks;
+        _thenDeferreds.dispose();
+        invalidate _thenDeferreds;
+        invalidate _thenDoneCallbacks;
+        invalidate _thenFailCallbacks;
+    }
+
+    Func(_doCallbacks)(callbacks:Array) {
+        for (var i = 0; i < callbacks.count; ++i) {
+            var callback = callbacks[i];
+            var context = Scripts.getObjectContext(callback);
+            if (callback isvalid && (context === null || context isvalid)) {
+                callback(this._callbackArgs*);
+            } else {
+                global.gLog.warn(WARN_DEFERRED_INVALID_CALLBACK);
+            }
+        }
+    }
+
+    Func(_callThenCallback)(thenDeferred:Deferred, callback:Function) {
+        checkArgs
+        if (callback !== void) {
+            var promise = callback(this._callbackArgs*);
+            assert(promise instanceof "Promise")
+            promise.done(thenDeferred.resolve).fail(thenDeferred.reject);
+            return;
+        }
+        if (this._state === PromiseState_Resolved) {
+            global.gAsyncCaller.call(thenDeferred.resolve, this._callbackArgs*);
+        } else {
+            global.gAsyncCaller.call(thenDeferred.reject, this._callbackArgs*);
+        }
+    }
+}

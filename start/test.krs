@@ -1,0 +1,14 @@
+
+テキスト表示テスト
+
+@stage place=道 stime=昼 size=0
+背景を表示しました
+
+@stage place=道 stime=夜 size=0
+背景を変更しました
+
+@stage place=道 stime=夜 size=1
+背景のサイズを変更しました
+
+おわり
+

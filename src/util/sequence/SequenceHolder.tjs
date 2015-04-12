@@ -1,0 +1,141 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(SequenceHolder)
+{
+    property isSkipping { getter { return this._isSkipping; } }
+    property running { getter { return this._sequence !== null; } }
+
+    Func(onTick)(tick:int) {
+        checkArgs
+        assert(this.running)
+        this._currentTick = tick;
+        if (this._sequence !== null) this._sequence.onTick(tick);
+    }
+
+    Func(trigger)(label:string) {
+        checkArgs
+        assert(this.running)
+        if (this._sequence !== null) this._sequence.trigger(...);
+    }
+
+    // 渡されたシーケンスの先頭から実行する
+    Func(run)(sequence:AbstractSequence) {
+        checkArgs
+        this._isSkipping = false;
+        return this._runFrom(sequence.getHead());
+    }
+
+    Func(skip)(sequence:AbstractSequence? = null) {
+        checkArgs
+        this._isSkipping = true;
+        if (sequence === null) {
+            assert(this.running)
+            this._sequence.skip();
+            return this._resume(this._sequence);
+        } else {
+            assert(!this.running)
+            return this._runFrom(sequence.getHead());
+        }
+    }
+
+    Func(getConsumedTick)() { return this._consumedTick - this._beginTick; }
+    Func(resetTick)(tick:int) {
+        checkArgs
+        assert(!this.running)
+        this._beginTick = tick;
+        this._currentTick = tick;
+        this._consumedTick = tick;
+    }
+
+
+    var _beginTick;
+    var _currentTick;
+    var _consumedTick;
+    var _isSkipping = false;
+    var _sequence = null;
+    var _asyncInvalidater = null;
+
+    Constructor(tick:int) {
+        checkArgs
+        m4_ifelse(DEBUG, 1, global.logMemoryLeakForDebug("SequenceHolder", this);)
+        this.resetTick(tick);
+        global.includeObservable(this);
+    }
+
+    Finalize() {
+        if (this._sequence !== null) {
+            this._sequence.invalidateAll();
+            assert(!this._sequence isvalid)
+        }
+        if (this._asyncInvalidater !== null) {
+            invalidate this._asyncInvalidater;
+        }
+        global.finalizeObservable(this);
+    }
+
+    // 指定されたシーケンスを実行する
+    Func(_runFrom)(sequence:AbstractSequence, *) {
+        checkArgs
+        assert(sequence isvalid)
+
+        // シーケンスを順に辿り、各ノードに対して_runCallbackを呼び出す
+        this._sequence = sequence;
+        while (true) {
+            var promise = this._runCallback(this._sequence, this._consumedTick, this._currentTick - this._consumedTick);
+
+            // 途中で一時停止した場合、再開時に_resumeが呼ばれるようにする
+            if (promise !== void) {
+                promise.done(this._resume);
+                return SequenceHolderResult_Suspend;
+            }
+
+            // 実行に消費した時間を記録
+            this._consumedTick += this._sequence.getConsumedTick();
+            assert(this._consumedTick <= this._currentTick)
+
+            // 実行完了したシーケンスを削除して次へ
+            var nextSequence = this._sequence.getNext();
+            invalidate this._sequence;
+            if (nextSequence === null) break;
+            nextSequence._previous = null;
+            this._sequence = nextSequence;
+        }
+
+        // シーケンスの末尾まで実行が完了した
+        this._sequence = null;
+        this._triggerEvent(SequenceHolderEvent_Completed, this);
+        return SequenceHolderResult_Completed;
+    }
+
+    // シーケンスの実行を再開する
+    Func(_resume)(sender:SuspendableSequence) {
+        checkArgs
+        assert(sender === _sequence)
+        // 実行完了したシーケンスを削除
+        if (this._asyncInvalidater === null) this._asyncInvalidater = new AsyncInvalidater();
+        this._asyncInvalidater.register(sender);
+
+        // 実行に消費した時間を記録
+        if (!this._isSkipping) {
+            this._consumedTick += this._sequence.getConsumedTick();
+            assert(this._consumedTick <= this._currentTick)
+        } else {
+            this._consumedTick = this._currentTick;
+        }
+
+        // 次がある場合は実行を再開
+        // 次がない（末尾まで実行完了した）場合は最後まで実行完了を通知
+        this._sequence = this._sequence.getNext();
+        if (this._sequence !== null) {
+            return this._runFrom(this._sequence);
+        } else {
+            this._triggerEvent(SequenceHolderEvent_Completed, this);
+            return SequenceHolderResult_Completed;
+        }
+    }
+
+    Func(_runCallback)(sequence:AbstractSequence, beginTick:int, consumableTime:int) {
+        return this._isSkipping ? sequence.skip() : sequence.run(beginTick, consumableTime);
+    }
+}

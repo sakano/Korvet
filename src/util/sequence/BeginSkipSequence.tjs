@@ -1,0 +1,105 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(BeginSkipSequence, SuspendableSequence)
+{
+    OverrideFunc(run)(beginTick:int, consumableTick:int) {
+        typeNotNull(this._child, ASSERT_BEGINSKIPSEQUENCE_EMPTY)
+        this._currentTick = beginTick + consumableTick;
+        if (this._child === null) return;
+        return this._runChildSequence(beginTick, consumableTick, false);
+    }
+
+    OverrideFunc(skip)() {
+        typeNotNull(this._child, ASSERT_BEGINSKIPSEQUENCE_EMPTY)
+        if (this._child === null) return;
+        if (this._holder !== null) {
+            this._holder.skip();
+        } else {
+            this._runChildSequence(0, 0, true);
+        }
+    }
+
+    OverrideFunc(onTick)(tick:int) {
+        typeNotNull(this._holder)
+        this._currentTick = tick;
+        this._holder.onTick(...);
+    }
+
+    OverrideFunc(trigger)(label:string) {
+        typeNotNull(this._holder)
+        if (this._skipLabels.find(label) >= 0) {
+            this._holder.skip();
+            this._resume();
+        } else {
+            this._holder.trigger(...);
+        }
+    }
+
+
+
+    var _skipLabels;
+    var _holder = null;
+    var _currentTick;
+
+    Constructor(labels*) {
+        _skipLabels = labels;
+        _appendToChildOnce = true;
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate _skipLabels;
+        if (_holder !== null) invalidate _holder;
+    }
+
+    OverrideFunc(_cloneSelf) { return new global.BeginSkipSequence(_skipLabels*); }
+
+    OverrideFunc(_isEndSequence)(sequence:AbstractSequence) {
+        return sequence instanceof "EndSkipSequence";
+    }
+
+    Func(_runChildSequence)(beginTick:int, consumableTick:int, skip = false) {
+        typeNull(this._holder)
+        // 新しくホルダを生成してシーケンスを実行
+        this._holder = new global.SequenceHolder(beginTick);
+        var result = skip ? this._holder.skip(this._child.getHead()) : this._holder.run(this._child.getHead());
+
+        // 実行完了したら終了
+        if (result === SequenceHolderResult_Completed) {
+            this._child = null;
+            return;
+        }
+        assert(!skip)
+
+        // 消費可能時間内に完了できたら、消費時間を記録して終了
+        if (consumableTick > 0) {
+            this._holder.onTick(beginTick + consumableTick);
+            if (!this._holder.running) {
+                this._child = null;
+                this._consumedTick = this._holder.getConsumedTick();
+                return;
+            }
+        }
+
+        // 実行完了したときに_onChildSequenceCompletedが呼ばれるようにして一時停止
+        this._holder.bindEvent(SequenceHolderEvent_Completed, this._onChildSequenceCompleted);
+        return _suspend();
+    }
+
+    // 子シーケンスの実行が終了した時に呼ばれる
+    Func(_onChildSequenceCompleted) {
+        this._child = null;
+        this._consumedTick = this._holder.getConsumedTick();
+        if (!this._holder.isSkipping) this._resume();
+    }
+}
+
+
+
+ClassExtends(EndSkipSequence, DoNothingSequence)
+{
+    Constructor() { super.DoNothingSequence(); }
+    Finalize() { super.finalize(); }
+    OverrideFunc(_cloneSelf) { return new global.EndSkipSequence(); }
+}

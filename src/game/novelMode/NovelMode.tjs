@@ -1,0 +1,226 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(NovelMode,GameMode)
+{
+    Func(onTick)() {
+        this._runner.onTick(...);
+        if (this._inTransition) {
+            for (var i = 0; i < this._drawables.count; ++i) {
+                var drawable = this._drawables[i];
+                drawable.handler.draw(drawable.foreLayer, drawable.backLayer);
+            }
+        } else {
+            for (var i = 0; i < this._drawables.count; ++i) {
+                var drawable = this._drawables[i];
+                drawable.handler.draw(drawable.foreLayer);
+            }
+        }
+    }
+
+    Func(resumeCommandLoopAsync)() {
+        global.gAsyncCaller.callOnce(this._resumeCommandLoop);
+    }
+
+
+
+    var _parser;
+    var _runner;
+
+    var _commandHandlers = [];
+    var _drawables = [];
+
+    var _screenLayer;
+    var _foreLayer;
+    var _backLayer;
+
+    var _worldMatrix;
+
+    var _transInfo;
+    var _inTransition = false;
+
+    Constructor(game, currentTick) {
+        super.GameMode(game);
+
+        this.bindMapWindowEvent(%[
+            ObservableWindowEventType_LeftClick   => this._onLeftClick,
+            ObservableWindowEventType_RightClick  => this._onRightClick,
+            ObservableWindowEventType_MiddleClick => this._onMiddleClick,
+            ObservableWindowEventType_MouseWheel  => this._onMouseWheel
+        ]);
+
+        this._runner = new global.SequenceRunner(currentTick);
+
+        this._screenLayer = getScreen();
+        this._screenLayer.visible = true;
+
+        this._foreLayer = this._createParentLayer(this._screenLayer);
+        this._backLayer = this._createParentLayer(this._screenLayer);
+        this._foreLayer.visible = true;
+
+        this._worldMatrix = new global.ImageMatrix();
+        this._worldMatrix.x = this. _foreLayer.width/2;
+        this._worldMatrix.y = this._foreLayer.height/2;
+
+        this._initParser();
+        this._initCommandHandlers();
+
+        this.resumeCommandLoopAsync();
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate this._parser;
+        invalidate this._runner;
+        this._commandHandlers.dispose();
+        invalidate this._commandHandlers;
+        this._drawables.dispose();
+        invalidate this._drawables;
+        invalidate this._screenLayer;
+        invalidate this._foreLayer;
+        invalidate this._backLayer;
+        invalidate this._worldMatrix;
+    }
+
+    Func(_initParser)() {
+        this._parser = new global.KorvetParser();
+        this._parser.setModule(new global.PageBeginEndParserModule(), PriorityQueue_Normal);
+        this._parser.initStorage("test.krs");
+    }
+
+    Func(_initCommandHandlers)() {
+        var drawableHandler = new global.DrawableCommandHandler();
+        drawableHandler.setParentMatrix(this._worldMatrix);
+        this._drawables.add(%[
+            foreLayer : this._createTargetLayer(this._foreLayer),
+            backLayer : null,
+            handler : drawableHandler
+        ]);
+        this._commandHandlers.add(drawableHandler);
+
+        this._commandHandlers.add(new global.MessageCommandHandler(this));
+    }
+
+    Func(_createTargetLayer)(parentLayer:Layer) {
+        var targetLayer = new global.Layer(parentLayer.window, parentLayer);
+        targetLayer.setSize(parentLayer.width, parentLayer.height);
+        targetLayer.visible = true;
+        return targetLayer;
+    }
+
+    Func(_createParentLayer)(parentLayer:Layer) {
+        var layer = new global.Layer(parentLayer.window, parentLayer);
+        layer.setSize(parentLayer.width, parentLayer.height);
+        layer.focusable = false;
+        layer.ignoreHintSensing = true;
+        layer.useAttention = false;
+        //layer.type = ltBinder;
+        layer.face = dfAuto;
+        layer.setSize(parentLayer.width, parentLayer.height);
+        layer.fill(0);
+        //layer.hasImage = false;
+        layer.visible = false;
+        return layer;
+    }
+
+    Func(_trigger)(label:string) {
+        checkArgs
+        this._runner.trigger(...);
+    }
+
+    Func(_waitTrigger)(label:string, callback:Function, args*) {
+        checkArgs
+        this._runner.run(global.SequenceRunner.sequence().wait(label).call(callback, args*));
+    }
+
+    Func(_resumeCommandLoop)() {
+        while (true) {
+            var commandInfo = %[];
+            var error = _parser.getNextCommand(commandInfo);
+            if (commandInfo.isEmpty()) break;
+            var ret = this._doCommand(commandInfo);
+            if (ret) return;
+        }
+    }
+
+    Func(_doCommand)(commandInfo:Dictionary) {
+        var interrupt = false;
+        for (var i = 0; i < this._commandHandlers.count; ++i) {
+            var result = this._commandHandlers[i].onCommand(commandInfo);
+            if (result === void) continue;
+            if (result.trans !== void && (this._transInfo === void || this._transInfo.priority > result.trans.priority)) {
+                this._transInfo = result.trans;
+            }
+            // if (result.action !== void) notImplemented();
+            // if (result.delays !== void) notImplemented();
+            if (result.sequence !== void)  this._runner.run(result.sequence);
+            if (result.interrupt) interrupt = true;
+        }
+
+        switch (commandInfo.name) {
+        case "__beginpage":
+            this._onPageBegin();
+            break;
+        }
+
+        return interrupt;
+    }
+
+    Func(_onPageBegin)() {
+        if (this._transInfo !== void) {
+            this._beginTransition(this._transInfo);
+            this._transInfo = void;
+
+            this._waitTrigger("click", this._stopTransition);
+        }
+    }
+
+    Func(_beginTransition)(transInfo:Dictionary) {
+        this._stopTransition();
+
+        this._inTransition = true;
+        for (var i = 0; i < this._drawables.count; ++i) {
+            assert(this._drawables[i].backLayer === null)
+            this._drawables[i].backLayer = this._createTargetLayer(this._backLayer);
+        }
+
+        this._foreLayer.beginTransition(
+            transInfo.type, true, this._backLayer, transInfo.option
+        ).done(this._onTransitionCompleted);
+    }
+
+    Func(_stopTransition)() {
+        this._foreLayer.stopTransition();
+    }
+
+    Func(_onTransitionCompleted)(dest:Layer, src:Layer) {
+        assert(this._inTransition)
+        this._inTransition = false;
+        this._foreLayer <-> this._backLayer;
+        for (var i = 0; i < this._drawables.count; ++i) {
+            var drawable = this._drawables[i];
+            drawable.foreLayer.parent = this._foreLayer;
+            invalidate drawable.backLayer;
+            drawable.backLayer = null;
+            drawable.handler.swapForeBack();
+            drawable.handler.draw(drawable.foreLayer,, true);
+        }
+        this._trigger("endtrans");
+    }
+
+    Func(_onLeftClick)(x:int, y:int, shift:int) {
+        this._trigger("click");
+    }
+
+    Func(_onRightClick)(x:int, y:int ,shift:int) {
+        this._trigger("click");
+    }
+
+    Func(_onMiddleClick)(x:int, y:int, shift:int) {
+        this._trigger("click");
+    }
+
+    Func(_onMouseWheel)(shift:int, delta:int, x:int, y:int) {
+        this._trigger("click");
+    }
+}

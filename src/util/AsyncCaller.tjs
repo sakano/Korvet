@@ -1,0 +1,73 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(AsyncCaller)
+{
+    property mode {
+        setter(v) { this._trigger.mode = v; }
+        getter { return this._trigger.mode; }
+    }
+
+    Func(call)(callback:Function, args*) {
+        checkArgs
+        this._callbacks.add(callback);
+        this._args.add(args);
+        assert(this._callbacks.count === this._args.count)
+        this._trigger.trigger();
+    }
+
+    Func(callOnce)(callback:Function, args*) {
+        checkArgs
+        if (this._findEqualCallback(...) >= 0) return;
+        call(...);
+    }
+
+    var _trigger;
+    var _callbacks = [];
+    var _args = [];
+
+    Constructor(mode=atmNormal) {
+        this._trigger = global.AsyncTrigger.create(this._do, "");
+        this._trigger.cached = true;
+        this._trigger.mode = mode;
+    }
+
+    Finalize() {
+        this._trigger.cancel();
+        this._do();
+
+        invalidate this._callbacks;
+        invalidate this._args;
+        invalidate this._trigger;
+    }
+
+    Func(_do) {
+        // 実行中にcallbackが追加されても動作するようにクローンしてから実行
+        var callbacks = this._callbacks.cloneShallow();
+        var args = this._args.cloneShallow();
+        this._callbacks.clear();
+        this._args.clear();
+
+        for (var index = 0; index < callbacks.count; ++index) {
+            var callback = callbacks[index];
+            var context = Scripts.getObjectContext(callback);
+            if (callback isvalid && (context === null || context isvalid)) {
+                callback(args[index]*);
+            } else {
+                assert(false);
+                global.gLog.warn(WARN_ASYNCCALLER_INVALID_CALLBACK);
+            }
+        }
+    }
+
+    Func(_findEqualCallback)(callback:Function, args*) {
+        for (var index = 0; index < this._callbacks.count; ++index) {
+            if (this._callbacks[index] !== callback) return index;
+            if (this._args[index].count !== args.count) return index;
+            for(var argIndex = 0; argIndex < this._args.count; ++argIndex) {
+                if (!global.equals(this._args[argIndex], args[argIndex])) return index;
+            }
+        }
+        return -1;
+    }
+}

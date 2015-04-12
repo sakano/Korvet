@@ -1,0 +1,327 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(ResizableWindow, ObservableWindow)
+{
+    property primaryLayer {
+        getter { return _baseLayer; }
+    }
+
+    property resizable {
+        setter(v) {
+            typeBool(v)
+            _resizable = !!v;
+            _triggerEvent(ResizableWindowEventType_ResizableChanged, _resizable);
+        }
+        getter { return _resizable; }
+    }
+
+    property fullScreen {
+        setter(toScreen) {
+            typeBool(toScreen)
+            if (toScreen) { changeToFullscreenMode(); }
+            else          { changeToWindowMode(); }
+        }
+        getter { return _fullScreen; }
+    }
+
+    Func(changeToFullscreenMode)() {
+        if (_fullScreen) return;
+        _fullScreen = true;
+
+        _beforeFullscreenSize = %[
+            left : left,
+            top : top,
+            width : width,
+            height : height,
+            maximized : maximized,
+        ];
+        borderStyle = bsNone;
+        disableMove = true;
+        resetExSystemMenu();
+
+        setPos(_currentMonitor.monitor.x, _currentMonitor.monitor.y);
+        setSize(_currentMonitor.monitor.w, _currentMonitor.monitor.h);
+
+        _triggerEvent(ResizableWindowEventType_FullscreenChanged, true);
+    }
+
+    Func(changeToWindowMode)() {
+        if (!_fullScreen) return;
+        _fullScreen = false;
+
+        borderStyle = bsSizeable;
+        disableMove = false;
+        resetExSystemMenu();
+        with (_beforeFullscreenSize) {
+            setPos(.left, .top);
+            setSize(.width, .height);
+            if (.maximized) {
+                maximize();
+            }
+        }
+
+        _triggerEvent(ResizableWindowEventType_FullscreenChanged, false);
+    }
+
+    OverrideFunc(onMoveSizeBegin)() {
+        super.onMoveSizeBegin();
+        _resizing = true;
+    }
+
+    OverrideFunc(onResizing)(rect:Dictionary) {
+        super.onResizing(...);
+        var win = _calcWindowSizeAndPos(...);
+        rect.x = win.x;
+        rect.y = win.y;
+        rect.w = win.width;
+        rect.h = win.height;
+        return true;
+    }
+
+    OverrideFunc(onMoveSizeEnd)() {
+        super.onMoveSizeEnd();
+        _resizing = false;
+        _onCurrentMonitorMayChanged();
+    }
+
+    OverrideFunc(onResize)() {
+        super.onResize();
+        if (!(fullScreen || maximized)) {
+            // XXX Win+Leftなどで移動されたときはonResizingが呼ばれないのでここで調整
+            var win = _calcWindowSizeAndPos(%[x:left, y:top,w:width, h:height,type:wrtRight]);
+            setPos(win.x, win.y);
+            setSize(win.width, win.height);
+        }
+        if (!_resizing) {
+            // フルスクリーンや最大化の状態が変更されたとき
+            _setLayerSizeAndPos(); 
+        }
+    }
+
+    OverrideFunc(onDisplayChanged)() {
+        super.onDisplayChanged();
+        var previousFullscreen = fullScreen;
+        fullScreen = false;
+        _onCurrentMonitorMayChanged();
+        fullScreen = previousFullscreen;
+    }
+
+
+
+
+    var _currentMonitor; // 現在ウィンドウが属しているモニタの情報
+
+    var _orgInnerWidth, _orgInnerHeight; // サイズ変更されていない状態でのサイズ
+    var _minInnerWidth, _minInnerHeight; // 最小サイズ
+
+    var _resizing = false; // サイズ変更中か
+
+    var _primaryLayer; // 最大化時などの余白部分も含む
+    var _baseLayer; // 余白部分を含まない
+
+    var _resizable = true;
+
+    var _beforeFullscreenSize;
+    var _fullScreen = false;
+
+    Constructor(parent:Window? = null, width:int, height:int) {
+        checkArgs
+        super.ObservableWindow(parent);
+        _initSize(width, height, false);
+        _initLayer();
+        _onCurrentMonitorMayChanged();
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate _baseLayer;
+        invalidate _primaryLayer;
+    }
+
+    Func(_initLayer)() {
+        _primaryLayer = new global.Layer(this, null);
+        _primaryLayer.name = "window.primaryLayer";
+        _primaryLayer.visible = true;
+
+        _baseLayer = new global.Layer(this, _primaryLayer);
+        _baseLayer.name = "window.baseLayer";
+        _baseLayer.setSize(_orgInnerWidth,_orgInnerHeight);
+        _baseLayer.fill(0xFF000000);
+        _baseLayer.visible = true;
+    }
+
+    Func(_initSize)(width:int, height:int, layerInitialized:bool = true) {
+        checkArgs
+        if (fullScreen) changeToWindowMode();
+        _orgInnerWidth = width;
+        _orgInnerHeight = height;
+        _minInnerWidth = _orgInnerWidth \ 4;
+        _minInnerHeight = _orgInnerHeight \ 4;
+        setInnerSize(width, height);
+
+        if (layerInitialized) {
+            _onCurrentMonitorMayChanged();
+        }
+    }
+
+    Func(_getHeightFromWidth)(w:number) { return (int)(w * _orgInnerHeight / _orgInnerWidth); }
+    Func(_getWidthFromHeight)(h:number) { return (int)(h * _orgInnerWidth  / _orgInnerHeight); }
+
+    Func(_getEdgeWidth)()  {
+        assert(!fullScreen)
+        return width - innerWidth;
+    }
+
+    Func(_getEdgeHeight)() {
+        assert(!fullScreen)
+        return height - innerHeight;
+    }
+
+    Func(_onCurrentMonitorMayChanged)() {
+        if (fullScreen) return;
+        _setStandardDirection();
+        drawDevice.recreate(); // XXX https://github.com/krkrz/krkrz/issues/135
+        _setWindowSize();
+        _setLayerSizeAndPos();
+    }
+
+    Func(_setStandardDirection)() {
+        with (_currentMonitor = System.getMonitorInfo(true, this)) {
+            var maxInnerWidth = .monitor.w - _getEdgeWidth();
+            var maxInnerHeight = .monitor.h - _getEdgeHeight();
+            // 横と縦どちらを基準にするか
+            .limitWindowSizeByWidth = (maxInnerWidth / maxInnerHeight) < (_orgInnerWidth / _orgInnerHeight);
+        }
+    }
+
+    Func(_setWindowSize)() {
+        var size = _calcLimitedWindowSize(innerWidth, innerHeight);
+        setSize(size.windowWidth, size.windowHeight);
+    }
+
+    Func(_setLayerSizeAndPos)() {
+        _baseLayer.setPos(0,0);
+        if (fullScreen || maximized) {
+            if ((innerWidth / innerHeight) < (_orgInnerWidth / _orgInnerHeight)) {
+                setZoom(innerWidth, _orgInnerWidth);
+                var r = zoomNumer/zoomDenom;
+                _baseLayer.top = (innerHeight - _orgInnerHeight*r)/ (2*r);
+                _primaryLayer.setSize(_orgInnerWidth, (innerHeight * r));
+            } else {
+                setZoom(innerHeight, _orgInnerHeight);
+                var r = zoomNumer/zoomDenom;
+                _baseLayer.left = (innerWidth - _orgInnerWidth * r)/ (2*r);
+                _primaryLayer.setSize((innerWidth * r), _orgInnerHeight);
+            }
+            _drawPrimaryLayer();
+            return;
+        }
+        if (innerHeight / _orgInnerHeight > innerWidth/_orgInnerWidth) {
+            setZoom(innerHeight, _orgInnerHeight);
+        } else {
+            setZoom(innerWidth, _orgInnerWidth);
+        }
+        _primaryLayer.setSize(_orgInnerWidth,_orgInnerHeight);
+    }
+
+    Func(_drawPrimaryLayer)() {
+        _primaryLayer.fill(0xFF000000);
+    }
+
+    Func(_calcWindowSizeAndPos)(rect:Dictionary) {
+        checkArgs
+        var win = _calcAspectRatioKeepedInnerSize(rect.type, rect.w, rect.h);
+        win = _calcLimitedWindowSize(win.innerWidth, win.innerHeight);
+        var pos = _calcAdjastedWindowPosition(rect.type, rect.x, rect.y, rect.w - win.windowWidth, rect.h - win.windowHeight);
+        return %[ x:pos.x, y:pos.y, width:win.windowWidth, height:win.windowHeight ];
+    }
+
+    // 最小～ウィンドウ一杯までの範囲に制限されたウィンドウサイズを返す
+    Func(_calcLimitedWindowSize)(innerWidth:int, innerHeight:int) {
+        checkArgs
+        var edgeWidth = _getEdgeWidth();
+        var edgeHeight = _getEdgeHeight();
+        if (_currentMonitor.limitWindowSizeByWidth) {
+            // 横幅を基準にウィンドウサイズを制限する
+            if (innerWidth < _minInnerWidth) {
+                // 横幅が最小幅未満なら最小幅に設定
+                innerWidth = _minInnerWidth;
+                innerHeight = _getHeightFromWidth(innerWidth);
+            } else if (innerWidth > _currentMonitor.monitor.w - edgeWidth) {
+                // 横幅が画面幅以上なら画面幅に設定
+                innerWidth = _currentMonitor.monitor.w - edgeWidth;
+                innerHeight = _getHeightFromWidth(innerWidth);
+            }
+        } else {
+            // 高さを基準にウィンドウサイズを制限する
+            if (innerHeight < _minInnerHeight) {
+                // 高さが最小高さ未満なら最小高さに設定
+                innerHeight = _minInnerHeight;
+                innerWidth = innerHeight * _orgInnerWidth / _orgInnerHeight;
+            } else if (innerHeight > _currentMonitor.monitor.h - edgeHeight) {
+                // 高さが画面高さ以上なら画面高さに設定
+                innerHeight = _currentMonitor.monitor.h - edgeHeight;
+                innerWidth = innerHeight * _orgInnerWidth \ _orgInnerHeight;
+            }
+        }
+        return %[ windowWidth:innerWidth + edgeWidth, windowHeight:innerHeight + edgeHeight ];
+    }
+
+    // アスペクト比を維持した画面サイズを返す
+    Func(_calcAspectRatioKeepedInnerSize)(type:int, winWidth:int, winHeight:int) {
+        checkArgs
+        var innerWidth = winWidth - _getEdgeWidth();
+        var innerHeight = winHeight - _getEdgeHeight();
+        var resultWidth = innerWidth;
+        var resultHeight = innerHeight;
+        switch (type) {
+        case wrtLeft: case wrtRight:
+            // 左または右をドラッグ時は横幅に合わせて高さを調整
+            resultHeight = _getHeightFromWidth(innerWidth);
+            break;
+        case wrtTop: case wrtBottom:
+            // 上または下をドラッグ時は高さに合わせて横幅を調整
+            resultWidth = _getWidthFromHeight(innerHeight);
+            break;
+        default:
+            // 斜め方向にドラッグ時はドラッグ量の比率が大きい方に合わせてもう一方を調整
+            if ((innerWidth/innerHeight) > (_orgInnerWidth / _orgInnerHeight)) {
+                resultHeight = _getHeightFromWidth(innerWidth);
+            } else {
+                resultWidth = _getWidthFromHeight(innerHeight);
+            }
+            break;
+        }
+        return %[ innerWidth:resultWidth, innerHeight:resultHeight ];
+    }
+
+    // ドラッグが不自然にならないように調整されたウィンドウ位置を返す
+    Func(_calcAdjastedWindowPosition)(type:int, orgX:int, orgY:int, gapWidth:number, gapHeight:number) {
+        checkArgs
+        // ウィンドウ左上が固定された（動かない）状態
+        var resultX = orgX;
+        var resultY = orgY;
+        switch (type) {
+        case wrtLeft: case wrtBottomLeft:
+             // 左または左下をドラッグ時はウィンドウ右端を固定
+            resultX = orgX + gapWidth;
+            break;
+        case wrtTop:  case wrtTopRight:
+             // 上または右上をドラッグ時はウィンドウ下端を固定
+            resultY = orgY + gapHeight;
+            break;
+        case wrtTopLeft:
+            // 左上をドラッグ時はウィンドウ右端と下端を固定
+            resultX = orgX + gapWidth;
+            resultY = orgY + gapHeight;
+            break;
+        }
+        return %[ x:resultX, y:resultY ];
+    }
+
+    OverrideFunc(_include)() {
+        super._include(...);
+        extendsSerializable(this,["resizable"]);
+    }
+}

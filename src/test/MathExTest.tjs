@@ -1,0 +1,50 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+{
+    assertAlways(Math.isNaN(NaN))
+    assertAlways(!Math.isNaN(void))
+    assertAlways(!Math.isNaN(null))
+    assertAlways(!Math.isNaN(true))
+    assertAlways(!Math.isNaN(false))
+    assertAlways(!Math.isNaN(Infinity))
+    assertAlways(!Math.isNaN(-Infinity))
+    assertAlways(!Math.isNaN(0))
+    assertAlways(!Math.isNaN(-1))
+    assertAlways(!Math.isNaN(1))
+    assertAlways(!Math.isNaN(-9999))
+    assertAlways(!Math.isNaN(9999))
+    assertAlways(!Math.isNaN(0.0))
+    assertAlways(!Math.isNaN(-1.0))
+    assertAlways(!Math.isNaN(1.0))
+    assertAlways(!Math.isNaN(-8888.0))
+    assertAlways(!Math.isNaN(8888.0))
+    assertAlways(!Math.isNaN(""))
+    assertAlways(!Math.isNaN("test"))
+    assertAlways(!Math.isNaN("0"))
+    assertAlways(!Math.isNaN("-1"))
+    assertAlways(!Math.isNaN("1"))
+    assertAlways(!Math.isNaN([]))
+    assertAlways(!Math.isNaN(%[]))
+    assertAlways(!Math.isNaN(<%%>))
+}
+{
+    var count = 10000;
+    for (var i = 0; i < count; ++i) {
+        assertAlways(Math.randomInt(0,0) === 0)
+    }
+    for (var i = 0; i < count; ++i) {
+        assertAlways(Math.randomInt(2,2) === 2)
+    }
+    for (var i = 0; i < count; ++i) {
+        var value = Math.randomInt(0,3);
+        assertAlways(0 <= value && value <= 3)
+    }
+    for (var i = 0; i < count; ++i) {
+        var value = Math.randomInt(-2,1);
+        assertAlways(-2 <= value && value <= 1)
+    }
+    for (var i = 0; i < count; ++i) {
+        var value = Math.randomInt(-8,-2);
+        assertAlways(-8 <= value && value <= -2)
+    }
+}

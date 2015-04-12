@@ -1,0 +1,228 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+{
+    var queue = new PriorityQueue();
+
+    queue.enqueue("normal", PriorityQueue_Normal);
+    assertAlways(queue.count === 1)
+    assertAlways(queue.peek() === "normal")
+    assertAlways(queue.peekPriority() === PriorityQueue_Normal)
+
+    queue.enqueue("high", PriorityQueue_High);
+    assertAlways(queue.count === 2)
+    assertAlways(queue.peek() === "high")
+    assertAlways(queue.peekPriority() === PriorityQueue_High)
+
+    queue.enqueue("low", PriorityQueue_Low);
+    assertAlways(queue.count === 3)
+    assertAlways(queue.peek() === "high")
+    assertAlways(queue.peekPriority() === PriorityQueue_High)
+
+    queue.enqueue("high2", PriorityQueue_High);
+    assertAlways(queue.count === 4)
+    assertAlways(queue.peek() === "high")
+    assertAlways(queue.peekPriority() === PriorityQueue_High)
+
+    queue.enqueue("highest", PriorityQueue_Highest);
+    assertAlways(queue.count === 5)
+    assertAlways(queue.peek() === "highest")
+    assertAlways(queue.isEmpty() === false)
+    assertAlways(queue.peekPriority() === PriorityQueue_Highest)
+
+    assertAlways(queue.peekPriority() === PriorityQueue_Highest)
+    assertAlways(queue.dequeue() === "highest")
+    assertAlways(queue.count === 4)
+    assertAlways(queue.peekPriority() === PriorityQueue_High)
+    assertAlways(queue.dequeue() === "high")
+    assertAlways(queue.count === 3)
+    assertAlways(queue.peekPriority() === PriorityQueue_High)
+    assertAlways(queue.dequeue() === "high2")
+    assertAlways(queue.count === 2)
+    assertAlways(queue.peekPriority() === PriorityQueue_Normal)
+    assertAlways(queue.dequeue() === "normal")
+    assertAlways(queue.count === 1)
+    assertAlways(queue.peekPriority() === PriorityQueue_Low)
+    assertAlways(queue.dequeue() === "low")
+    assertAlways(queue.count === 0)
+    assertAlways(queue.peekPriority() === void)
+    assertAlways(queue.dequeue() === void)
+    assertAlways(queue.count === 0)
+    assertAlways(queue.isEmpty() === true)
+
+    queue.enqueue("high", PriorityQueue_High);
+    queue.enqueue("lowest", PriorityQueue_Lowest);
+    queue.enqueue("normal", PriorityQueue_Normal);
+    queue.enqueue("low", PriorityQueue_Low);
+    queue.enqueue("highest", PriorityQueue_Highest);
+
+    assertAlways(queue.isEmpty() === false)
+    assertAlways(queue.peekPriority() === PriorityQueue_Highest)
+    assertAlways(queue.dequeue() === "highest")
+    assertAlways(queue.peekPriority() === PriorityQueue_High)
+    assertAlways(queue.dequeue() === "high")
+    assertAlways(queue.peekPriority() === PriorityQueue_Normal)
+    assertAlways(queue.dequeue() === "normal")
+    assertAlways(queue.peekPriority() === PriorityQueue_Low)
+    assertAlways(queue.dequeue() === "low")
+    assertAlways(queue.peekPriority() === PriorityQueue_Lowest)
+    assertAlways(queue.dequeue() === "lowest")
+    assertAlways(queue.dequeue() === void)
+    assertAlways(queue.isEmpty() === true)
+
+    invalidate queue;
+}
+{
+    var queue = new PriorityQueue();
+
+    queue.enqueue("value");
+    queue.enqueue("value2");
+    queue.enqueue("value3");
+
+    assertAlways(queue.count === 3)
+    assertAlways(queue.peekPriority() === PriorityQueue_Normal)
+    assertAlways(queue.dequeue() === "value")
+    assertAlways(queue.count === 2)
+    assertAlways(queue.peekPriority() === PriorityQueue_Normal)
+    assertAlways(queue.dequeue() === "value2")
+    assertAlways(queue.count === 1)
+    assertAlways(queue.peekPriority() === PriorityQueue_Normal)
+    assertAlways(queue.dequeue() === "value3")
+    assertAlways(queue.count === 0)
+    assertAlways(queue.peekPriority() === void)
+    assertAlways(queue.isEmpty() === true)
+
+    queue.enqueue("value");
+    assertAlways(queue.peekPriority() === PriorityQueue_Normal)
+    assertAlways(queue.peek() === "value")
+    queue.enqueue("value2");
+    assertAlways(queue.peekPriority() === PriorityQueue_Normal)
+    assertAlways(queue.peek() === "value")
+    queue.enqueue("value3");
+    assertAlways(queue.peekPriority() === PriorityQueue_Normal)
+    assertAlways(queue.peek() === "value")
+    assertAlways(queue.count === 3)
+
+    assertAlways(queue.isEmpty() === false)
+    queue.clear();
+    assertAlways(queue.isEmpty() === true)
+    assertAlways(queue.count === 0)
+    assertAlways(queue.peekPriority() === void)
+    assertAlways(queue.peek() === void)
+    assertAlways(queue.dequeue() === void)
+
+    invalidate queue;
+}
+{
+    var queue = new PriorityQueue();
+
+    var cloned = queue.clone();
+    assertAlways(cloned.count === 0)
+    assertAlways(cloned.peekPriority() === void)
+    assertAlways(cloned.peek() === void)
+    assertAlways(cloned.dequeue() === void)
+    assertAlways(cloned.isEmpty() === true)
+    invalidate cloned;
+
+    queue.enqueue("normal", PriorityQueue_Normal);
+    queue.enqueue("high", PriorityQueue_High);
+
+    cloned = queue.clone();
+    assertAlways(cloned.equals(queue))
+    assertAlways(queue.equals(cloned))
+
+    assertAlways(cloned.count === 2)
+    assertAlways(cloned.isEmpty() === false)
+    assertAlways(cloned.peek() === "high")
+    assertAlways(cloned.peekPriority() === PriorityQueue_High)
+    assertAlways(cloned.dequeue() === "high")
+    assertAlways(cloned.count === 1)
+    assertAlways(cloned.isEmpty() === false)
+    assertAlways(cloned.peek() === "normal")
+    assertAlways(cloned.peekPriority() === PriorityQueue_Normal)
+    assertAlways(cloned.dequeue() === "normal")
+    assertAlways(cloned.count === 0)
+    assertAlways(cloned.isEmpty() === true)
+    assertAlways(cloned.peek() === void)
+    assertAlways(cloned.peekPriority() === void)
+    assertAlways(cloned.dequeue() === void)
+
+    assertAlways(!cloned.equals(queue))
+    assertAlways(!queue.equals(cloned))
+
+    assertAlways(queue.count === 2)
+    assertAlways(queue.isEmpty() === false)
+    assertAlways(queue.peek() === "high")
+    assertAlways(queue.peekPriority() === PriorityQueue_High)
+    assertAlways(queue.dequeue() === "high")
+    assertAlways(queue.count === 1)
+    assertAlways(queue.isEmpty() === false)
+    assertAlways(queue.peek() === "normal")
+    assertAlways(queue.peekPriority() === PriorityQueue_Normal)
+    assertAlways(queue.dequeue() === "normal")
+    assertAlways(queue.count === 0)
+    assertAlways(queue.isEmpty() === true)
+    assertAlways(queue.peek() === void)
+    assertAlways(queue.peekPriority() === void)
+    assertAlways(queue.dequeue() === void)
+
+    queue.clear();
+    assertAlways(queue.count === 0)
+    assertAlways(queue.isEmpty() === true)
+    assertAlways(queue.peekPriority() === void)
+    assertAlways(queue.peek() === void)
+    assertAlways(queue.dequeue() === void)
+
+    assertAlways(queue.equals(cloned))
+    assertAlways(cloned.equals(queue))
+
+    invalidate queue;
+    invalidate cloned;
+}
+{
+    var queue = new PriorityQueue();
+    assertAlways(queue.toString() == "")
+
+    queue.enqueue("value", PriorityQueue_Normal);
+    assertAlways(queue.toString() == '"value"[normal]')
+
+    queue.enqueue(123, PriorityQueue_High);
+    assertAlways(queue.toString() == &--'(int)123[high], "value"[normal]'--&)
+
+    queue.enqueue(null, PriorityQueue_High);
+    assertAlways(queue.toString() == &--'(int)123[high], null[high], "value"[normal]'--&)
+
+    queue.clear();
+    assertAlways(queue.toString() == '')
+
+    invalidate queue;
+}
+{
+    var queue = new PriorityQueue();
+    var cloned = queue.clone();
+
+    var data = queue.serialize();
+    queue.deserialize(data);
+    assertAlways(queue.equals(cloned))
+
+
+    queue.enqueue("value");
+    assertAlways(!queue.equals(cloned))
+
+    data = queue.serialize();
+    assertAlways(!queue.equals(cloned))
+
+    cloned.deserialize(data);
+    assertAlways(queue.equals(cloned))
+
+
+    queue.enqueue("high", PriorityQueue_High);
+    assertAlways(!queue.equals(cloned))
+
+    cloned.deserialize(queue.serialize());
+    assertAlways(queue.equals(cloned))
+
+    invalidate queue;
+    invalidate cloned;
+    invalidate data;
+}

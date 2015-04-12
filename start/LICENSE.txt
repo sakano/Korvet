@@ -1,0 +1,6 @@
+背景画像素材はきまぐれアフターのものを使っています。
+きまぐれアフター : http://www5d.biglobe.ne.jp/~gakai/
+
+k2compat/以下のスクリプトは吉里吉里Zリポジトリで公開されている吉里吉里Ｚ向け「吉里吉里２互換実装」スクリプトです。
+公開元 : https://github.com/krkrz/krkrz/tree/master/script/Krkr2Compat
+

@@ -1,0 +1,18 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(IOError, Error)
+{
+    property filename { getter { return _filename; } }
+
+    var _filename;
+
+    Constructor(filename:string, message:string+, internalError:Error? = null) {
+        checkArgs
+        if (message === void) {
+            message = expandMessageStrings(ERROR_IO, "FILE", filename);
+        }
+        super.Error(message, internalError);
+        _filename = filename;
+    }
+}

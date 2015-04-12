@@ -1,0 +1,82 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(ObservableLayer, Layer)
+{
+    Constructor(window:Window, parent:Layer? = null) {
+        checkArgs
+        super.Layer(window, parent);
+        global.includeObservable(this);
+    }
+
+    Finalize() {
+        global.finalizeObservable(this);
+        super.finalize();
+    }
+
+    OverrideFunc(onMouseUp) {
+        super.onMouseUp(...);
+        this._triggerEvent(ObservableLayerEventType_MouseUp, *);
+    }
+
+    OverrideFunc(onMouseWheel) {
+        super.onMouseWheel(...);
+        this._triggerEvent(ObservableLayerEventType_MouseWheel, *);
+    }
+
+    OverrideFunc(onMouseEnter) {
+        super.onMouseEnter(...);
+        this._triggerEvent(ObservableLayerEventType_MouseEnter);
+    }
+
+    OverrideFunc(onMouseLeave) {
+        super.onMouseLeave(...);
+        this._triggerEvent(ObservableLayerEventType_MouseLeave);
+    }
+
+    OverrideFunc(onMouseMove) {
+        super.onMouseMove(...);
+        this._triggerEvent(ObservableLayerEventType_MouseMove, *);
+    }
+
+    OverrideFunc(onMouseDown) {
+        super.onMouseDown(...);
+        this._triggerEvent(ObservableLayerEventType_MouseDown, *);
+    }
+
+    OverrideFunc(onKeyDown) {
+        super.onKeyDown(...);
+        this._triggerEvent(ObservableLayerEventType_KeyDown, *);
+    }
+
+    OverrideFunc(onKeyUp) {
+        super.onKeyUp(...);
+        this._triggerEvent(ObservableLayerEventType_KeyUp, *);
+    }
+
+    OverrideFunc(onPaint) {
+        super.onPaint(...);
+        this._triggerEvent(ObservableLayerEventType_Paint);
+        this.callOnPaint = false;
+    }
+
+    OverrideFunc(onNodeEnabled) {
+        super.onNodeEnabled(...);
+        this._triggerEvent(ObservableLayerEventType_NodeEnabled);
+    }
+
+    OverrideFunc(onNodeDisabled) {
+        super.onNodeDisabled(...);
+        this._triggerEvent(ObservableLayerEventType_NodeDisabled);
+    }
+
+    OverrideFunc(onFocus) {
+        super.onFocus(...);
+        this._triggerEvent(ObservableLayerEventType_Focus, *);
+    }
+
+    OverrideFunc(onBlur) {
+        super.onBlur(...);
+        this._triggerEvent(ObservableLayerEventType_Blur, *);
+    }
+}

@@ -1,0 +1,2805 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+{
+    var runner = new SequenceRunner(0);
+    var sequence = SequenceRunner.sequence;
+
+    var temporaryWindow = new Window();
+    var foreLayer = new global.Layer(temporaryWindow, null);
+    var backLayer = new global.Layer(temporaryWindow, foreLayer);
+
+    var called = [];
+    var func = LMD() { push("func"); } incontextof called;
+    var func2 = LMD() { push("func2"); } incontextof called;
+    var func3 = LMD() { push("func3"); } incontextof called;
+    var func4 = LMD() { push("func4"); } incontextof called;
+    var func5 = LMD() { push("func5"); } incontextof called;
+    var func6 = LMD() { push("func6"); } incontextof called;
+    var funcArg = LMD(args*) { args.unshift("arg"); push(args.join("*")); } incontextof called;
+
+    Class(Properties) {
+        var values = [];
+
+        property targetProperty {
+            getter { return this.values[0]; }
+            setter(v) { this.values[0] = v; }
+        }
+        property targetProperty2 {
+            getter { return this.values[1]; }
+            setter(v) { this.values[1] = v; }
+        }
+        property targetProperty3 {
+            getter { return this.values[2]; }
+            setter(v) { this.values[2] = v; }
+        }
+
+        Func(clear) {
+            values[0] = values[1] = values[2] = 0;
+        }
+    }
+    var props = new Properties();
+
+    var init = LMD() {
+        called.clear();
+        assertAlways(runner._holders.count === 0)
+        props.clear();
+        runner.onTick(0);
+    } incontextof %[ called:called, props:props, runner:runner];
+
+    var env = %[
+        runner:runner,
+        sequence:sequence,
+
+        temporaryWindow:temporaryWindow,
+        foreLayer:foreLayer,
+        backLayer:backLayer,
+        called:called,
+        func:func,
+        func2:func2,
+        func3:func3,
+        func4:func4,
+        func5:func5,
+        func6:func6,
+        funcArg:funcArg,
+        props:props,
+        init:init,
+    ];
+
+    {
+        init();
+        runner.run(sequence().call(func));
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func).call(func2).call(func3).call(func4));
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+    }
+    {
+        init();
+        runner.run(sequence().call(funcArg));
+        assertAlways(called.join(":") === "arg")
+    }
+    {
+        init();
+        runner.run(sequence().call(funcArg, "hoge", "fuga"));
+        assertAlways(called.join(":") === "arg*hoge*fuga")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .wait(1000)
+            .call(func2)
+            .wait(1000)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(1500);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.onTick(4000);
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .call(func)
+            .wait(1000)
+            .call(func2)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(500);
+        assertAlways(called.join(":") === "")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1500);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .wait("click")
+            .call(func2)
+            .wait("click")
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .wait("click")
+            .call(func2)
+            .wait(1000)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(1001);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait("click", "click2")
+            .call(func)
+            .wait("click", 1000)
+            .call(func2)
+            .wait("click", "click2", 1000)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "")
+        runner.trigger("click3");
+        assertAlways(called.join(":") === "")
+        runner.trigger("click2");
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click3");
+        assertAlways(called.join(":") === "func")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(2001);
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click3");
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .wait(0)
+            .wait(1000)
+            .call(func));
+        assertAlways(called.join(":") === "")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .call(func)
+        );
+        assertAlways(called.join(":") === "")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .call(func)
+            .wait(1000)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .call(func)
+            .wait(1000)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .wait(1000)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .wait(1000)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000, "click")
+            .call(func)
+            .wait(1000, "click")
+            .call(func2)
+            .wait(1000, "click")
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000, "click")
+            .call(func)
+            .wait(1000, "click")
+            .call(func2)
+            .wait(1000, "click")
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000, "click")
+            .call(func)
+            .wait(1000, "click")
+            .call(func2)
+            .wait(1000, "click")
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .call(func)
+            .wait(1000)
+        );
+        assertAlways(called.join(":") === "")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .wait(1000)
+            .call(func)
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .wait(1000)
+            .call(func)
+        );
+        assertAlways(called.join(":") === "")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1)
+            .call(func)
+            .wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(100);
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1)
+            .call(func)
+            .wait("click")
+            .wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1).wait(1)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(100);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(200);
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func")
+        runner.onTick(201);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(300);
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(
+            sequence()
+            .beginSkip("click")
+            .endSkip()
+        );
+    }
+    {
+        init();
+        runner.run(
+            sequence()
+            .call(func)
+            .beginSkip("click")
+            .endSkip()
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+            .endSkip()
+            .beginSkip("click")
+            .endSkip()
+            .beginSkip("click")
+            .endSkip()
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+            .endSkip()
+            .wait(1000)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+            .endSkip()
+            .wait(1000)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .wait(1000)
+                .call(func3)
+            .endSkip()
+            .wait(1000)
+            .call(func4)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .wait(1000)
+                .call(func3)
+            .endSkip()
+            .wait(1000)
+            .call(func4)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .beginSkip("click2")
+                    .wait(1000)
+                    .call(func3)
+                .endSkip()
+                .wait(1000)
+                .call(func4)
+            .endSkip()
+            .wait(1000)
+            .call(func5)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .beginSkip("click2")
+                    .wait(1000)
+                    .call(func3)
+                .endSkip()
+                .wait(1000)
+                .call(func4)
+            .endSkip()
+            .wait(1000)
+            .call(func5)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click2");
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .beginSkip("click2")
+                    .wait(1000)
+                    .call(func3)
+                .endSkip()
+                .wait(1000)
+                .call(func4)
+            .endSkip()
+            .wait(1000)
+            .call(func5)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click2");
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .beginSkip("click2")
+                    .beginSkip("click3")
+                        .wait(1000)
+                        .call(func3)
+                    .endSkip()
+                    .wait(1000)
+                    .call(func4)
+                .endSkip()
+                .wait(1000)
+                .call(func5)
+            .endSkip()
+            .wait(1000)
+            .call(func6)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5:func6")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .beginSkip("click2")
+                    .beginSkip("click3")
+                        .wait(1000)
+                        .call(func3)
+                    .endSkip()
+                    .wait(1000)
+                    .call(func4)
+                .endSkip()
+                .wait(1000)
+                .call(func5)
+            .endSkip()
+            .wait(1000)
+            .call(func6)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5:func6")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .beginSkip("click2")
+                    .beginSkip("click3")
+                        .wait(1000)
+                        .call(func3)
+                    .endSkip()
+                    .wait(1000)
+                    .call(func4)
+                .endSkip()
+                .wait(1000)
+                .call(func5)
+            .endSkip()
+            .wait(1000)
+            .call(func6)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5:func6")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .beginSkip("click2")
+                    .beginSkip("click3")
+                        .wait(1000)
+                        .call(func3)
+                    .endSkip()
+                    .wait(1000)
+                    .call(func4)
+                .endSkip()
+                .wait(1000)
+                .call(func5)
+            .endSkip()
+            .wait(1000)
+            .call(func6)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+        runner.onTick(4000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5:func6")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .beginSkip("click2")
+                    .beginSkip("click3")
+                        .wait(1000)
+                        .call(func3)
+                    .endSkip()
+                    .wait(1000)
+                    .call(func4)
+                .endSkip()
+                .wait(1000)
+                .call(func5)
+            .endSkip()
+            .wait(1000)
+            .call(func6)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+        runner.onTick(4000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+        runner.onTick(5000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5:func6")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .beginSkip("click2")
+                    .beginSkip("click3")
+                        .wait(1000)
+                        .call(func3)
+                    .endSkip()
+                    .wait(1000)
+                    .call(func4)
+                .endSkip()
+                .wait(1000)
+                .call(func5)
+            .endSkip()
+            .wait(1000)
+            .call(func6)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click4");
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click2");
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5:func6")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .beginSkip("click2")
+                    .beginSkip("click3")
+                        .wait(1000)
+                        .call(func3)
+                    .endSkip()
+                    .wait(1000)
+                    .call(func4)
+                .endSkip()
+                .wait(1000)
+                .call(func5)
+            .endSkip()
+            .wait(1000)
+            .call(func6)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click4");
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click2");
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5:func6")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .beginSkip("click2")
+                    .beginSkip("click3")
+                        .wait(1000)
+                        .call(func3)
+                    .endSkip()
+                    .wait(1000)
+                    .call(func4)
+                .endSkip()
+                .wait(1000)
+                .call(func5)
+            .endSkip()
+            .wait(1000)
+            .call(func6)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click3");
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.trigger("click2");
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5:func6")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func2)
+                .beginSkip("click2")
+                    .beginSkip("click3")
+                        .wait(1000)
+                        .call(func3)
+                    .endSkip()
+                    .wait(1000)
+                    .call(func4)
+                .endSkip()
+                .wait(1000)
+                .call(func5)
+            .endSkip()
+            .wait(1000)
+            .call(func6)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click3");
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.trigger("click2");
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5:func6")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+            .endSkip()
+        );
+        runner.skipAllSequences();
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+            .endSkip()
+            .call(func)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.skipAllSequences();
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+            .endSkip()
+            .wait(1000)
+            .call(func)
+        );
+        assertAlways(called.join(":") === "")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+                .wait(1000)
+            .endSkip()
+            .call(func)
+        );
+        assertAlways(called.join(":") === "")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+                .wait(1000, "click")
+            .endSkip()
+            .call(func)
+        );
+        assertAlways(called.join(":") === "")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+                .wait(1000)
+                .beginSkip("click2")
+                    .wait(1000)
+                .endSkip()
+                .beginSkip("click2")
+                    .beginSkip("click2")
+                    .beginSkip("click2")
+                    .endSkip()
+                    .endSkip()
+                    .wait(1000)
+                .endSkip()
+                .call(func)
+            .endSkip()
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .wait(100)
+            .call(func2)
+            .beginSkip("click")
+                .wait(100)
+                .call(func3)
+            .endSkip()
+            .wait(10)
+            .call(func4)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(100);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(190);
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.onTick(199);
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.onTick(200);
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .wait(100)
+            .call(func2)
+            .beginSkip("click")
+                .wait(100)
+                .call(func3)
+                .beginSkip("click2")
+                    .wait(100)
+                    .call(func4)
+                .endSkip()
+                .wait(100)
+                .call(func5)
+            .endSkip()
+            .wait(10)
+            .call(func6)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(100);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(190);
+        assertAlways(called.join(":") === "func:func2")
+        runner.trigger("click2");
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(200);
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.onTick(299);
+        assertAlways(called.join(":") === "func:func2:func3")
+        runner.trigger("click2");
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+        runner.onTick(398);
+        assertAlways(called.join(":") === "func:func2:func3:func4")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+        runner.onTick(407);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5")
+        runner.onTick(408);
+        assertAlways(called.join(":") === "func:func2:func3:func4:func5:func6")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .wait(100)
+                .wait(100)
+                .call(func2)
+            .endSkip()
+            .wait(10)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(209);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(210);
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(0)
+            .endLoop()
+        );
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(1)
+            .endLoop()
+        );
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(2)
+            .endLoop()
+        );
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(0)
+                .call(func)
+            .endLoop()
+        );
+        assertAlways(called.join(":") === "")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(1)
+                .call(func)
+            .endLoop()
+        );
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(2)
+                .call(func)
+            .endLoop()
+        );
+        assertAlways(called.join(":") === "func:func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(2)
+                .call(funcArg, "hoge", "fuga")
+            .endLoop()
+        );
+        assertAlways(called.join(":") === "arg*hoge*fuga:arg*hoge*fuga")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(2)
+                .wait(100)
+            .endLoop()
+            .call(func)
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(10);
+        assertAlways(called.join(":") === "")
+        runner.onTick(100);
+        assertAlways(called.join(":") === "")
+        runner.onTick(199);
+        assertAlways(called.join(":") === "")
+        runner.onTick(200);
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(2)
+                .call(func)
+                .call(func2)
+            .endLoop()
+        );
+        assertAlways(called.join(":") === "func:func2:func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(3)
+                .wait(1000)
+                .call(func)
+            .endLoop()
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func:func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(1)
+                .beginLoop(1)
+                .endLoop()
+            .endLoop()
+        );
+        runner.run(sequence()
+            .beginLoop(0)
+                .beginLoop(0)
+                .endLoop()
+            .endLoop()
+        );
+        runner.run(sequence()
+            .beginLoop(2)
+                .beginLoop(0)
+                .endLoop()
+            .endLoop()
+        );
+        runner.run(sequence()
+            .beginLoop(1)
+                .beginLoop(2)
+                    .beginLoop(0)
+                    .endLoop()
+                .endLoop()
+            .endLoop()
+        );
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(2)
+                .call(func)
+                .beginLoop(3)
+                    .call(func2)
+                .endLoop()
+                .call(func3)
+            .endLoop()
+        );
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3:func:func2:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(2)
+                .call(func)
+                .beginLoop(3)
+                    .call(func2)
+                .endLoop()
+                .call(func3)
+                .wait(1000)
+            .endLoop()
+        );
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3:func:func2:func2:func2:func3")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3:func:func2:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(2)
+                .wait(1000)
+                .call(func)
+                .beginLoop(3)
+                    .wait(1000)
+                    .call(func2)
+                .endLoop()
+                .wait(1000)
+                .call(func3)
+            .endLoop()
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2:func2")
+        runner.onTick(4000);
+        assertAlways(called.join(":") === "func:func2:func2:func2")
+        runner.onTick(5000);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3")
+        runner.onTick(6000);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3:func")
+        runner.onTick(7000);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3:func:func2")
+        runner.onTick(8000);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3:func:func2:func2")
+        runner.onTick(9000);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3:func:func2:func2:func2")
+        runner.onTick(10000);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3:func:func2:func2:func2:func3")
+        runner.onTick(100000);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3:func:func2:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginLoop(Infinity)
+                .wait(10)
+                .call(func2)
+            .endLoop()
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(10);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(20);
+        assertAlways(called.join(":") === "func:func2:func2")
+        runner.onTick(30);
+        assertAlways(called.join(":") === "func:func2:func2:func2")
+        runner.onTick(40);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginLoop(Infinity)
+                .wait(10)
+                .call(func2)
+            .endLoop()
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginLoop(Infinity)
+                .wait(10)
+                .call(func2)
+            .endLoop()
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(80);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2:func2:func2:func2")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2:func2:func2:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .beginLoop(Infinity)
+                    .wait(10)
+                    .call(func2)
+                .endLoop()
+            .endSkip()
+            .wait(1)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(80);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2:func2:func2:func2")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2:func2:func2:func2:func2")
+        runner.onTick(81);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2:func2:func2:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .beginLoop(Infinity)
+                    .wait(10)
+                    .call(func2)
+                .endLoop()
+            .endSkip()
+            .wait(1)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(80);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2:func2:func2:func2")
+        runner.onTick(85);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2:func2:func2:func2")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2:func2:func2:func2:func2")
+        runner.onTick(86);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2:func2:func2:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginLoop(5)
+                .wait(10)
+                .call(func2)
+            .endLoop()
+            .wait(1)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(50);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2")
+        runner.onTick(51);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginLoop(5)
+                .wait(10)
+                .call(func2)
+            .endLoop()
+            .wait(1)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(51);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .beginLoop(3)
+                .wait(10)
+                .beginLoop(3)
+                    .wait(100)
+                .endLoop()
+                .call(func)            
+            .endLoop()
+            .wait(1)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1930);
+        assertAlways(called.join(":") === "func:func:func")
+        runner.onTick(1931);
+        assertAlways(called.join(":") === "func:func:func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .beginLoop(3)
+                .wait(10)
+                .beginLoop(3)
+                    .wait(100)
+                .endLoop()
+                .call(func)            
+            .endLoop()
+            .wait(1)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1931);
+        assertAlways(called.join(":") === "func:func:func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+            .beginLoop(3)
+                .wait(1000)
+                .call(func)
+            .endLoop()
+            .endSkip()
+        );
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func:func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+            .beginLoop(3)
+                .wait(1000)
+                .call(func)
+            .endLoop()
+            .endSkip()
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func:func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+            .beginLoop(3)
+                .wait(1000)
+                .call(func)
+            .endLoop()
+            .endSkip()
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func:func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+            .beginLoop(3)
+                .wait(1000)
+                .call(func)
+            .endLoop()
+            .endSkip()
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func:func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(3)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func)
+            .endSkip()
+            .endLoop()
+        );
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func:func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(3)
+            .beginSkip("click")
+                .wait(1000)
+                .call(func)
+            .endSkip()
+            .endLoop()
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func:func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+                .beginLoop(3)
+                    .wait(1000)
+                    .call(func)
+                    .beginLoop(2)
+                        .wait(1000)
+                        .call(func2)
+                        .wait(1000)
+                    .endLoop()
+                .endLoop()
+            .endSkip()
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func2:func:func2:func2:func:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+                .beginLoop(3)
+                    .beginSkip("click2")
+                        .wait(1000)
+                        .call(func)
+                    .endSkip()
+                    .beginLoop(2)
+                        .wait(1000)
+                        .call(func2)
+                    .endLoop()
+                .endLoop()
+            .endSkip()
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "")
+        runner.trigger("click2");
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func2:func2")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2:func2:func")
+        runner.trigger("click2");
+        assertAlways(called.join(":") === "func:func2:func2:func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:func2:func:func2:func2:func:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+                .beginLoop(3)
+                    .beginSkip("click2")
+                        .wait(1000)
+                        .call(func)
+                    .endSkip()
+                    .beginLoop(2)
+                        .wait(1000)
+                        .call(func2)
+                    .endLoop()
+                .endLoop()
+            .endSkip()
+            .call(func3)
+        );
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2:func2:func:func2:func2:func:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .beginSkip("click")
+                .beginLoop(3)
+                    .wait(10)
+                    .beginLoop(3)
+                        .wait(100)
+                    .endLoop()
+                    .call(func)            
+                .endLoop()
+            .endSkip()
+            .wait(1)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1310);
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func:func")
+        runner.onTick(1310);
+        assertAlways(called.join(":") === "func:func:func")
+        runner.onTick(1311);
+        assertAlways(called.join(":") === "func:func:func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .beginSkip("click")
+                .beginLoop(3)
+                    .wait(10)
+                    .beginLoop(3)
+                        .wait(100)
+                    .endLoop()
+                    .call(func)            
+                .endLoop()
+            .endSkip()
+            .wait(1)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1931);
+        assertAlways(called.join(":") === "func:func:func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .beginLoop(3)
+                .beginSkip("click")
+                    .wait(10)
+                    .beginLoop(3)
+                        .wait(100)
+                    .endLoop()
+                .endSkip()
+                .call(func)            
+            .endLoop()
+            .wait(1)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1931);
+        assertAlways(called.join(":") === "func:func:func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .beginLoop(3)
+                .beginSkip("click")
+                    .wait(10)
+                    .beginLoop(3)
+                        .wait(100)
+                    .endLoop()
+                .endSkip()
+                .call(func)            
+            .endLoop()
+            .wait(1)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func")
+        runner.onTick(1310);
+        assertAlways(called.join(":") === "func:func:func")
+        runner.onTick(1311);
+        assertAlways(called.join(":") === "func:func:func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1000)
+            .beginLoop(3)
+                .beginSkip("click")
+                    .wait(10)
+                    .beginLoop(3)
+                        .wait(100)
+                    .endLoop()
+                .endSkip()
+                .call(func)            
+            .endLoop()
+            .wait(1)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1621);
+        assertAlways(called.join(":") === "func:func:func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .factory(LMD() {
+                return sequence().call(func);
+            } incontextof env));
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .factory(LMD(args*) {
+                return sequence().call(funcArg, args*);
+            } incontextof env, "hoge")
+        );
+        assertAlways(called.join(":") === "arg*hoge")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .factory(LMD() {
+                return sequence().call(func).wait(1000).call(func2);
+            } incontextof env));
+        assertAlways(called.join(":") === "func")
+        runner.onTick(500);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(999);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .factory(LMD() {
+                return sequence().call(func2);
+            } incontextof env)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .wait(100)
+            .factory(LMD() {
+                return sequence().call(func2).wait(100);
+            } incontextof env)
+            .wait(100)
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(100);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(200);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(300);
+        assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(3)
+                .factory(LMD(args*) {
+                    return env.sequence().call(env.funcArg, counter++, args*);
+                } incontextof %[ env:env, counter:0 ], "hoge")
+            .endLoop()
+        );
+        assertAlways(called.join(":") === "arg*0*hoge:arg*1*hoge:arg*2*hoge")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginLoop(2)
+                .call(func2)
+                .factory(LMD(args*) {
+                    return env.sequence().call(env.funcArg, counter++);
+                } incontextof %[ env:env, counter:0 ])
+                .call(func3)
+            .endLoop()
+            .call(func4)
+        );
+        assertAlways(called.join(":") === "func:func2:arg*0:func3:func2:arg*1:func3:func4")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1)
+            .call(func)
+            .beginLoop(2)
+                .call(func2)
+                .factory(LMD(args*) {
+                    return env.sequence().call(env.funcArg, counter++);
+                } incontextof %[ env:env, counter:0 ])
+                .call(func3)
+            .endLoop()
+            .call(func4)
+        );
+        assertAlways(called.join(":") === "")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2:arg*0:func3:func2:arg*1:func3:func4")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(1)
+            .beginSkip("click")
+                .wait(1)
+                .call(func)
+                .beginLoop(2)
+                    .call(func2)
+                    .factory(LMD(args*) {
+                        return env.sequence().call(env.funcArg, counter++);
+                    } incontextof %[ env:env, counter:0 ])
+                    .call(func3)
+                .endLoop()
+                .call(func4)
+            .endSkip()
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1);
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2:arg*0:func3:func2:arg*1:func3:func4")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .factory(LMD(args*) {
+                return env.sequence().beginLoop(2).call(env.func).endLoop();
+            } incontextof %[ env:env, counter:0 ])
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func:func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .factory(LMD(args*) {
+                return env.sequence().beginSkip("click").wait(1000).call(env.func).endSkip();
+            } incontextof %[ env:env, counter:0 ])
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .factory(LMD(args*) {
+                return env.sequence().beginLoop(2)
+                    .beginSkip("click").wait(1000).call(env.func).endSkip()
+                    .endLoop();
+            } incontextof %[ env:env, counter:0 ])
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .factory(LMD(args*) {
+                return env.sequence().beginLoop(2)
+                    .beginSkip("click").wait(1000).call(env.func).endSkip()
+                    .endLoop();
+            } incontextof %[ env:env, counter:0 ])
+            .call(func2)
+        );
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+                .factory(LMD(args*) {
+                    return env.sequence().beginLoop(2)
+                        .beginSkip("click2").wait(1000).call(env.func).endSkip()
+                        .endLoop();
+                } incontextof %[ env:env, counter:0 ])
+            .endSkip()
+            .call(func2)
+        );
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func:func2")
+    }
+    {
+        init();
+        var loopFactory = LMD() {
+            var s = env.sequence().wait(1000).call(env.func);
+            if (end) return s;
+            else     return s.factory(loopFactory);
+        };
+        loopFactory = (loopFactory incontextof loopFactory);
+        loopFactory.end = false;
+        loopFactory.env = env;
+        loopFactory.loopFactory = loopFactory;
+        runner.run(sequence()
+            .factory(loopFactory)
+            .wait(500)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func:func")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func:func")
+        loopFactory.end = true;
+        runner.onTick(4000);
+        assertAlways(called.join(":") === "func:func:func:func")
+        runner.onTick(5000);
+        assertAlways(called.join(":") === "func:func:func:func:func")
+        runner.onTick(5500);
+        assertAlways(called.join(":") === "func:func:func:func:func:func2")
+        invalidate loopFactory;
+    }
+    {
+        init();
+        var loopFactory = LMD() {
+            var s = env.sequence().wait(1000).call(env.func);
+            if (end) return s;
+            else     return s.factory(loopFactory);
+        };
+        loopFactory = (loopFactory incontextof loopFactory);
+        loopFactory.end = false;
+        loopFactory.env = env;
+        loopFactory.loopFactory = loopFactory;
+        runner.run(sequence()
+            .factory(loopFactory)
+            .wait(500)
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "")
+        loopFactory.end = true;
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func:func2")
+        invalidate loopFactory;
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).to(500, 1000)
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 1000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == i/2)
+        }
+        assertAlways(props.targetProperty === 500)
+    }
+    {
+        init();
+        props.targetProperty = 1000;
+        runner.run(sequence()
+            .action(&props.targetProperty).to(1200, 1000)
+        );
+        assertAlways(props.targetProperty === 1000)
+        for (var i = 0; i <= 1000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == (1000 + i / 5))
+        }
+        assertAlways(props.targetProperty === 1200)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).setBefore(1000).to(1500, 1000)
+        );
+        assertAlways(props.targetProperty === 1000)
+        for (var i = 0; i <= 1000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == 1000 + i / 2)
+        }
+        assertAlways(props.targetProperty === 1500)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).to(1000, 100).setAfter(-123)
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i < 100; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == i * 10)
+        }
+        runner.onTick(100);
+        assertAlways(props.targetProperty === -123)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).setBefore(-1000).to(-500, 1000).setAfter(0)
+        );
+        assertAlways(props.targetProperty === -1000)
+        for (var i = 0; i < 1000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == -1000 + i / 2)
+        }
+        runner.onTick(1000);
+        assertAlways(props.targetProperty === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).to(1000, 100)
+            .action(&props.targetProperty).to(0, 100)
+            .action(&props.targetProperty).to(-100, 100)
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 100; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == i * 10)
+        }
+        assertAlways(props.targetProperty === 1000)
+        for (var i = 0; i <= 100; ++i) {
+            runner.onTick(i + 100);
+            assertAlways(props.targetProperty == 1000 - i * 10)
+        }
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 100; ++i) {
+            runner.onTick(i + 200);
+            assertAlways(props.targetProperty == -i)
+        }
+        assertAlways(props.targetProperty === -100)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).to(1000, 100)
+            .call(func)
+            .action(&props.targetProperty).to(-1000, 200)
+            .call(func2)
+        );
+        assertAlways(props.targetProperty === 0)
+        assertAlways(called.join(":") === "")
+        for (var i = 0; i < 100; ++i) {
+            runner.onTick(i);
+            assertAlways(called.join(":") === "")
+            assertAlways(props.targetProperty == i * 10)
+        }
+        runner.onTick(100);
+        assertAlways(called.join(":") === "func")
+        assertAlways(props.targetProperty === 1000)
+        for (var i = 0; i < 200; ++i) {
+            runner.onTick(i + 100);
+            assertAlways(called.join(":") === "func")
+            assertAlways(props.targetProperty == 1000 - i * 10)
+        }
+        runner.onTick(200 + 100);
+        assertAlways(called.join(":") === "func:func2")
+        assertAlways(props.targetProperty === -1000)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty, %[delay:200]).to(1000, 100)
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i < 200; ++i) {
+            assertAlways(props.targetProperty === 0)
+        }
+        for (var i = 0; i <= 100; ++i) {
+            runner.onTick(i + 200);
+            assertAlways(props.targetProperty == i * 10)
+        }
+        assertAlways(props.targetProperty === 1000)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).wave(ActionHandler_SquareWave, %[
+                value:123, value2:345,
+                time:100, time2:100
+            ])
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 10000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == (i % 200 < 100 ? 123 : 345))
+        }
+        assertAlways(props.targetProperty === 123)
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty, %[
+                value:123, value2:345,
+                time:100, time2:100
+            ]).wave(ActionHandler_SquareWave)
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 3000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == (i % 200 < 100 ? 123 : 345))
+        }
+        assertAlways(props.targetProperty === 123)
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).wave(ActionHandler_SquareWave, %[
+                value:123, value2:345,
+                time:100, time2:100,
+                delay:300
+            ])
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i < 300; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == 0)
+        }
+        for (var i = 0; i <= 10000; ++i) {
+            runner.onTick(i + 300);
+            assertAlways(props.targetProperty == (i % 200 < 100 ? 123 : 345))
+        }
+        assertAlways(props.targetProperty === 123)
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty)
+                .to(1000, 1000)
+                .wave(ActionHandler_SquareWave, %[ value:0, value2:-100, time:100 ])
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 1000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == i + (i % 200 < 100 ? 0 : -100))
+        }
+        assertAlways(props.targetProperty === 1000)
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === 1000)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).wave(ActionHandler_SquareWave, %[
+                value:123, value2:345,
+                time:100, time2:100, duration:1000
+            ])
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i < 1000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == (i % 200 < 100 ? 123 : 345))
+        }
+        runner.onTick(1000);
+        assertAlways(props.targetProperty === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).wave(ActionHandler_TriangleWave, %[ value:0, value2:100, time:100 ])
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 3000; ++i) {
+            runner.onTick(i);
+            if (i % 200 <= 100) {
+                assertAlways(props.targetProperty == (i % 200))
+            } else {
+                assertAlways(props.targetProperty == 200 - (i % 200))
+            }
+        }
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).wave(ActionHandler_TriangleWave, %[ value:-100, value2:0, time:100 ])
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 3000; ++i) {
+            runner.onTick(i);
+            if (i % 200 <= 100) {
+                assertAlways(props.targetProperty == (i % 200) - 100)
+            } else {
+                assertAlways(props.targetProperty == 100 - (i % 200))
+            }
+        }
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).wave(ActionHandler_TriangleWave, %[ value:100, value2:0, time:100 ])
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 3000; ++i) {
+            runner.onTick(i);
+            if (i % 200 <= 100) {
+                assertAlways(props.targetProperty == 100 - (i % 200))
+            } else {
+                assertAlways(props.targetProperty == (i % 200) - 100)
+            }
+        }
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).wave(ActionHandler_TriangleWave, %[ value:0, value2:-100, time:100 ])
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 3000; ++i) {
+            runner.onTick(i);
+            if (i % 200 <= 100) {
+                assertAlways(props.targetProperty == - (i % 200))
+            } else {
+                assertAlways(props.targetProperty == (i % 200) - 200)
+            }
+        }
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).wave(ActionHandler_TriangleWave, %[ value:0, value2:150, time:150, time2:50 ])
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 3000; ++i) {
+            runner.onTick(i);
+            if (i % 200 <= 150) {
+                assertAlways(props.targetProperty == (i % 200))
+            } else {
+                assertAlways(props.targetProperty == 150 - ((i % 200) - 150)*3)
+            }
+        }
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(10)
+                .action(&props.targetProperty).setBefore(-111)
+                .wait(100)
+                .action(&props.targetProperty).setBefore(10)
+                .wait(100)
+            .endLoop()
+            .action(&props.targetProperty).setBefore(-111)
+        );
+        runner.run(sequence()
+            .action(&props.targetProperty2).wave(ActionHandler_SquareWave, %[ value:-111, value2:10, time:100 ])
+        );
+        assertAlways(props.targetProperty === -111)
+        assertAlways(props.targetProperty2 === 0)
+
+        for (var i = 0; i <= 2000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == props.targetProperty2)
+        }
+        assertAlways(props.targetProperty === -111)
+        assertAlways(props.targetProperty2 === -111)
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === -111)
+        assertAlways(props.targetProperty2 === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(3)
+                .action(&props.targetProperty).setBefore(-1000).to(1000, 1000)
+                .action(&props.targetProperty).to(-1000, 1000)
+            .endLoop()
+        );
+        runner.run(sequence()
+            .action(&props.targetProperty2).wave(ActionHandler_TriangleWave, %[ value:-1000, value2:1000, time:1000 ])
+        );
+        assertAlways(props.targetProperty === -1000)
+        assertAlways(props.targetProperty2 === 0)
+
+        for (var i = 0; i <= 6000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == props.targetProperty2)
+        }
+        assertAlways(props.targetProperty === -1000)
+        assertAlways(props.targetProperty2 === (real)-1000)
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === -1000)
+        assertAlways(props.targetProperty2 === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+                .action(&props.targetProperty).wave(ActionHandler_TriangleWave, %[ value:-100, value2:0, time:100 ])
+            .endSkip()
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 3000; ++i) {
+            runner.onTick(i);
+            if (i % 200 <= 100) {
+                assertAlways(props.targetProperty == (i % 200) - 100)
+            } else {
+                assertAlways(props.targetProperty == 100 - (i % 200))
+            }
+        }
+        runner.trigger("click");
+        assertAlways(props.targetProperty === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("click")
+                .beginLoop(10)
+                    .action(&props.targetProperty).setBefore(-1000).to(1000, 1000)
+                    .action(&props.targetProperty).to(-1000, 1000)
+                .endLoop()
+            .endSkip()
+            .call(func)
+        );
+        runner.run(sequence()
+            .beginSkip("click")
+                .action(&props.targetProperty2).wave(ActionHandler_TriangleWave, %[ value:-1000, value2:1000, time:1000 ])
+            .endSkip()
+            .call(func2)
+        );
+        assertAlways(props.targetProperty === -1000)
+        assertAlways(props.targetProperty2 === 0)
+
+        for (var i = 0; i <= 6000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == props.targetProperty2)
+        }
+        assertAlways(props.targetProperty === -1000)
+        assertAlways(props.targetProperty2 === (real)-1000)
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(props.targetProperty === -1000)
+        assertAlways(props.targetProperty2 === 0)
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).to(500, 1000)
+        );
+        assertAlways(props.targetProperty === 0)
+        runner.onTick(500);
+        assertAlways(props.targetProperty == 250)
+        runner.onTick(1000);
+        assertAlways(props.targetProperty === 500)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).to(500, 1000)
+        );
+        assertAlways(props.targetProperty === 0)
+        runner.onTick(1000);
+        assertAlways(props.targetProperty === 500)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .action(&props.targetProperty).to(500, 1000)
+        );
+        assertAlways(props.targetProperty === 0)
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === 500)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(100)
+            .action(&props.targetProperty).to(500, 1000)
+        );
+        assertAlways(props.targetProperty === 0)
+        runner.onTick(1100);
+        assertAlways(props.targetProperty === 500)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(100)
+            .action(&props.targetProperty).to(500, 1000)
+        );
+        assertAlways(props.targetProperty === 0)
+        runner.onTick(600);
+        assertAlways(props.targetProperty == 250)
+        runner.onTick(1100);
+        assertAlways(props.targetProperty === 500)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(100)
+            .action(&props.targetProperty).to(500, 1000)
+        );
+        assertAlways(props.targetProperty === 0)
+        runner.onTick(600);
+        assertAlways(props.targetProperty == 250)
+        runner.onTick(1100);
+        assertAlways(props.targetProperty === 500)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(100)
+            .action(&props.targetProperty).to(500, 1000)
+            .action(&props.targetProperty2).to(200, 1000)
+        );
+        assertAlways(props.targetProperty === 0)
+        assertAlways(props.targetProperty2 === 0)
+        runner.onTick(2100);
+        assertAlways(props.targetProperty === 500)
+        assertAlways(props.targetProperty2 === 200)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(100)
+            .action(&props.targetProperty).to(500, 1000)
+            .action(&props.targetProperty2).to(200, 1000)
+            .wait(1)
+            .call(func)
+        );
+        assertAlways(called.join(":") === "")
+        assertAlways(props.targetProperty === 0)
+        assertAlways(props.targetProperty2 === 0)
+        runner.onTick(2101);
+        assertAlways(called.join(":") === "func")
+        assertAlways(props.targetProperty === 500)
+        assertAlways(props.targetProperty2 === 200)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(100)
+            .beginLoop(1)
+                .action(&props.targetProperty).to(500, 1000)
+                .action(&props.targetProperty2).to(200, 1000)
+            .endLoop()
+            .action(&props.targetProperty3).to(1000, 1000)
+        );
+        assertAlways(props.targetProperty === 0)
+        assertAlways(props.targetProperty2 === 0)
+        assertAlways(props.targetProperty3 === 0)
+        runner.onTick(2200);
+        assertAlways(props.targetProperty === 500)
+        assertAlways(props.targetProperty2 === 200)
+        assertAlways(props.targetProperty3 == 100)
+        runner.onTick(2300);
+        assertAlways(props.targetProperty === 500)
+        assertAlways(props.targetProperty2 === 200)
+        assertAlways(props.targetProperty3 == 200)
+        runner.onTick(3300);
+        assertAlways(props.targetProperty === 500)
+        assertAlways(props.targetProperty2 === 200)
+        assertAlways(props.targetProperty3 === 1000)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginConcurrent()
+            .endConcurrent()
+        );
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginConcurrent()
+            .endConcurrent()
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(2)
+                .beginConcurrent()
+                .endConcurrent()
+            .endLoop()
+        );
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("test")
+                .beginConcurrent()
+                .endConcurrent()
+            .endSkip()
+        );
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginSkip("test")
+                .beginLoop(3)
+                    .beginConcurrent()
+                    .endConcurrent()
+                .endLoop()
+            .endSkip()
+        );
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginLoop(2)
+                .beginSkip("test")
+                    .beginConcurrent()
+                    .endConcurrent()
+                .endSkip()
+            .endLoop()
+        );
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginConcurrent()
+                .action(&props.targetProperty).to(200, 100)
+            .endConcurrent()
+        );
+        assertAlways(props.targetProperty === 0)
+        for (var i = 0; i <= 100; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == i*2)
+        }
+        assertAlways(props.targetProperty === 200)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginConcurrent()
+                .action(&props.targetProperty).to(200, 100)
+                .action(&props.targetProperty2).to(-200, 100)
+            .endConcurrent()
+        );
+        assertAlways(props.targetProperty === 0)
+        assertAlways(props.targetProperty2 === 0)
+        for (var i = 0; i <= 100; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == i*2)
+            assertAlways(props.targetProperty2 == -i*2)
+        }
+        assertAlways(props.targetProperty === 200)
+        assertAlways(props.targetProperty2 === -200)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginConcurrent()
+                .action(&props.targetProperty).to(200, 100)
+                .action(&props.targetProperty2).to(-200, 200)
+            .endConcurrent()
+        );
+        assertAlways(props.targetProperty === 0)
+        assertAlways(props.targetProperty2 === 0)
+        for (var i = 0; i <= 200; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == Math.min(i,100)*2)
+            assertAlways(props.targetProperty2 == -i)
+        }
+        assertAlways(props.targetProperty === 200)
+        assertAlways(props.targetProperty2 === -200)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .beginConcurrent()
+                .beginLoop(20)
+                    .action(&props.targetProperty).setBefore(-111)
+                    .wait(100)
+                    .action(&props.targetProperty).setBefore(10)
+                    .wait(100)
+                .endLoop()
+                .action(&props.targetProperty2).wave(ActionHandler_SquareWave, %[ value:-111, value2:10, time:100 ])
+            .endConcurrent()
+        );
+        assertAlways(props.targetProperty === -111)
+        assertAlways(props.targetProperty2 === 0)
+        for (var i = 0; i < 2000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == props.targetProperty2)
+        }
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === 10)
+        assertAlways(props.targetProperty2 === 0)
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginConcurrent()
+                .beginLoop(10)
+                    .action(&props.targetProperty).setBefore(-1000).to(1000, 1000)
+                    .action(&props.targetProperty).to(-1000, 1000)
+                .endLoop()
+                .action(&props.targetProperty2).wave(ActionHandler_TriangleWave, %[ value:-1000, value2:1000, time:1000 ])
+            .endConcurrent()
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func")
+        assertAlways(props.targetProperty === -1000)
+        assertAlways(props.targetProperty2 === 0)
+
+        for (var i = 0; i <= 4000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == props.targetProperty2)
+        }
+        assertAlways(called.join(":") === "func")
+        assertAlways(props.targetProperty === -1000)
+        assertAlways(props.targetProperty2 === (real)-1000)
+
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === -1000)
+        assertAlways(props.targetProperty2 === 0)
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginConcurrent()
+                .wait(1000)
+                .wait(3000)
+            .endConcurrent()
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(100);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(1000);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(2000);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginConcurrent()
+                .wait(1000)
+                .wait(3000)
+            .endConcurrent()
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.skipAllSequences();
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .beginConcurrent()
+                    .wait(1000)
+                    .wait(3000)
+                .endConcurrent()
+            .endSkip()
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginSkip("click")
+                .beginConcurrent()
+                    .wait(1000)
+                    .wait(3000)
+                .endConcurrent()
+            .endSkip()
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginLoop(3)
+                .beginConcurrent()
+                    .wait(1000)
+                    .wait(3000)
+                .endConcurrent()
+                .call(func2)
+            .endLoop()
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(2999);
+        assertAlways(called.join(":") === "func")
+        runner.onTick(3000);
+        assertAlways(called.join(":") === "func:func2")
+        runner.onTick(9000);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginLoop(3)
+                .beginConcurrent()
+                    .wait(1000)
+                    .wait(3000)
+                    .wait(200)
+                .endConcurrent()
+                .call(func2)
+            .endLoop()
+            .call(func3)
+        );
+        assertAlways(called.join(":") === "func")
+        runner.onTick(8999);
+        assertAlways(called.join(":") === "func:func2:func2")
+        runner.onTick(9000);
+        assertAlways(called.join(":") === "func:func2:func2:func2:func3")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginConcurrent()
+                .beginLoop(10)
+                    .action(&props.targetProperty).setBefore(-1000).to(1000, 1000)
+                    .action(&props.targetProperty).to(-1000, 1000)
+                .endLoop()
+                .action(&props.targetProperty2).wave(ActionHandler_TriangleWave, %[ value:-1000, value2:1000, time:1000 ])
+                .action(&props.targetProperty3).wave(ActionHandler_TriangleWave, %[ value:1000, value2:-1000, time:1000 ])
+            .endConcurrent()
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func")
+        assertAlways(props.targetProperty === -1000)
+        assertAlways(props.targetProperty2 === 0)
+        assertAlways(props.targetProperty3 === 0)
+
+        for (var i = 0; i <= 4000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty == props.targetProperty2)
+            assertAlways(props.targetProperty2 === -props.targetProperty3)
+        }
+        assertAlways(called.join(":") === "func")
+        assertAlways(props.targetProperty === -1000)
+        assertAlways(props.targetProperty2 === (real)-1000)
+        assertAlways(props.targetProperty3 === (real)1000)
+
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === -1000)
+        assertAlways(props.targetProperty2 === 0)
+        assertAlways(props.targetProperty3 === 0)
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .call(func)
+            .beginConcurrent()
+                .action(&props.targetProperty).setBefore(1000).wave(ActionHandler_TriangleWave, %[ value:-1000, value2:1000, time:1000 ])
+                .action(&props.targetProperty2).setBefore(0).wave(ActionHandler_TriangleWave, %[ value:-1000, value2:1000, time:1000 ]).setAfter(-1)
+                .action(&props.targetProperty3).wave(ActionHandler_TriangleWave, %[ value:1000, value2:-1000, time:1000 ]).setAfter(345)
+            .endConcurrent()
+            .call(func2)
+        );
+        assertAlways(called.join(":") === "func")
+        assertAlways(props.targetProperty === 1000)
+        assertAlways(props.targetProperty2 === 0)
+        assertAlways(props.targetProperty3 === 0)
+
+        for (var i = 0; i <= 4000; ++i) {
+            runner.onTick(i);
+            assertAlways(props.targetProperty - 1000 == props.targetProperty2)
+            assertAlways(props.targetProperty2 === -props.targetProperty3)
+        }
+        assertAlways(called.join(":") === "func")
+        assertAlways(props.targetProperty === (real)0)
+        assertAlways(props.targetProperty2 === (real)-1000)
+        assertAlways(props.targetProperty3 === (real)1000)
+
+        runner.skipAllSequences();
+        assertAlways(props.targetProperty === 1000)
+        assertAlways(props.targetProperty2 === -1)
+        assertAlways(props.targetProperty3 === 345)
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait(100)
+            .beginConcurrent()
+                .action(&props.targetProperty).to(500, 1000)
+                .action(&props.targetProperty2).to(100, 1000)
+                .action(&props.targetProperty3).to(-100, 500)
+            .endConcurrent()
+        );
+        assertAlways(props.targetProperty === 0)
+        assertAlways(props.targetProperty2 === 0)
+        assertAlways(props.targetProperty3 === 0)
+        runner.onTick(600);
+        assertAlways(props.targetProperty == 250)
+        assertAlways(props.targetProperty2 == 50)
+        assertAlways(props.targetProperty3 === -100)
+        runner.onTick(1100);
+        assertAlways(props.targetProperty === 500)
+        assertAlways(props.targetProperty2 === 100)
+        assertAlways(props.targetProperty3 === -100)
+    }
+
+
+    init();
+    invalidate env;
+    invalidate foreLayer;
+    invalidate backLayer;
+    invalidate temporaryWindow;
+    invalidate runner;
+    invalidate called;
+    invalidate Properties;
+}

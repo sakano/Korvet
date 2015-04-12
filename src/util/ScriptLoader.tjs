@@ -1,0 +1,7 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+function execStorage(path) {
+    global.gLog.info(@"Loading script. ${path}");
+    Scripts.execStorage(...);
+}

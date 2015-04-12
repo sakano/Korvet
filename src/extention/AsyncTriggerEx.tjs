@@ -1,0 +1,8 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+setStaticMember(AsyncTrigger, "create", LMD() {
+    var trigger = new global.AsyncTrigger(...);
+    m4_ifelse(DEBUG, 1, global.logMemoryLeakForDebug("AsyncTrigger", trigger);)
+    return trigger;
+} incontextof global);

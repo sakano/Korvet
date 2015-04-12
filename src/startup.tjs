@@ -1,0 +1,150 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Debug.notice(
+    "Korvet Non-Commercial License\n"
+    "Copyright (C) 2015 Biscrat\n"
+    "\n"
+    "本ソフトウェア及びその二次的著作物は、以下の条件を全て満たす場合にのみ改変、複製、再頒布することができます。\n"
+    "1.再頒布する場合、上記の著作権表示及び本許諾表示をソフトウェアのすべての複製または重要な部分に表記してください。\n"
+    "2.非営利目的での、いかなる金銭や対価の支払いにも関与しない場合に限ります。\n"
+    "\n"
+    "ソフトウェアは「現状のまま」で、明示であるか暗黙であるかを問わず、何らの保証もなく提供されます。ここでいう保証とは、商品性、特定の目的への適合性、および権利非侵害についての保証も含みますが、それに限定されるものではありません。 作者または著作権者は、契約行為、不法行為、またはそれ以外であろうと、ソフトウェアに起因または関連し、あるいはソフトウェアの使用またはその他の扱いによって生じる一切の請求、損害、その他の義務について何らの責任も負わないものとします。\n"
+);
+
+Font.rasterizer = frFreeType;
+System.graphicCacheLimit = gcsAuto;
+
+// link plugins
+Plugins.link("scriptsEx.dll");
+Plugins.link("layerExDraw.dll");
+Plugins.link("fstat.dll");
+Plugins.link("wuvorbis.dll");
+Plugins.link("windowEx.dll");
+Plugins.link("lineParser.dll");
+
+// load scripts
+Scripts.execStorage("Syntax.tjs");
+Scripts.execStorage("Logger.tjs");
+Scripts.execStorage("ScriptLoader.tjs");
+
+var gLog = new Logger();
+
+execStorage("Error.tjs");
+execStorage("IOError.tjs");
+execStorage("FileNotFoundError.tjs");
+execStorage("ParseError.tjs");
+
+execStorage("ISerializable.tjs");
+
+execStorage("Object.tjs");
+execStorage("Utils.tjs");
+
+execStorage("ArrayEx.tjs");
+execStorage("DictionaryEx.tjs");
+execStorage("MathEx.tjs");
+execStorage("ImageEx.tjs");
+execStorage("StoragesEx.tjs");
+execStorage("ScriptsEx.tjs");
+execStorage("AsyncTriggerEx.tjs");
+//execStorage("linqArray.tjs");
+
+execStorage("AsyncInvalidater.tjs");
+execStorage("AsyncCaller.tjs");
+
+execStorage("Enumerable.tjs");
+execStorage("Event.tjs");
+
+execStorage("MultiMap.tjs");
+execStorage("PriorityQueue.tjs");
+
+execStorage("Promise.tjs");
+execStorage("Deferred.tjs");
+
+execStorage("SequenceHolder.tjs");
+execStorage("AbstractSequence.tjs");
+execStorage("BeginLoopSequence.tjs");
+execStorage("BeginSkipSequence.tjs");
+execStorage("BeginConcurrentSequence.tjs");
+execStorage("BasicSequences.tjs");
+execStorage("TransitionSequence.tjs");
+execStorage("ActionSequence.tjs");
+execStorage("SequenceRunner.tjs");
+
+execStorage("AbstractActionHandler.tjs");
+execStorage("EasingActionHandler.tjs");
+execStorage("SquareWaveActionHandler.tjs");
+execStorage("TriangleActionHandler.tjs");
+
+execStorage("Sound.tjs");
+execStorage("KorvetParserModule.tjs");
+execStorage("KorvetParser.tjs");
+
+execStorage("Drawing2DMatrix.tjs");
+execStorage("ImageMatrix.tjs");
+execStorage("Image.tjs");
+execStorage("ScaleLevelImage.tjs");
+
+execStorage("ObservableLayer.tjs");
+execStorage("MouseGesture.tjs");
+execStorage("ObservableWindow.tjs");
+execStorage("ResizableWindow.tjs");
+
+execStorage("Config.tjs");
+execStorage("Game.tjs");
+execStorage("GameMode.tjs");
+execStorage("DrawableCommandHandler.tjs");
+execStorage("MessageCommandHandler.tjs");
+execStorage("NovelMode.tjs");
+
+m4_ifelse(DEBUG, 1, {
+    global.__gLogMemoryLeak = %[];
+    Func(logMemoryLeakForDebug)(tag:string, object:any) {
+        checkArgs
+        m4_ifelse(CHECK_MEMORY_LEAK, 1, {
+            // 作成したオブジェクトを記録しておく
+            if (global.__gLogMemoryLeak[tag] === void) {
+                global.__gLogMemoryLeak[tag] = [];
+            }
+            global.__gLogMemoryLeak[tag].add(object);
+        })
+    }
+
+    Func(checkMemoryLeakForDebug)() {
+        // 記録されたオブジェクトが有効ならエラー
+        var tags = global.__gLogMemoryLeak.getKeys();
+        for (var i = 0; i < tags.count; ++i) {
+            var array = global.__gLogMemoryLeak[tags[i]];
+            var object = array.pop();
+            while (object !== void) {
+                if (object isvalid) {
+                    global.gLog.fatal(
+                            global.expandMessageStrings(FATAL_UNINVALIDATED_OBJECT_DETECTED, "TYPE", tags[i], "MES", toString(object))
+                    );
+                }
+                object = array.pop();
+            }
+        }
+        invalidate tags;
+    }
+
+    Func(cleanMemoryLeakLogForDebug)() {
+        var tags = global.__gLogMemoryLeak.getKeys();
+        for (var i = 0; i < tags.count; ++i) {
+            var array = global.__gLogMemoryLeak[tags[i]];
+            var validObjects = [];
+            var object = array.pop();
+            while (object !== void) {
+                if (object isvalid) {
+                    validObjects.add(object);
+                }
+                object = array.pop();
+            }
+            invalidate array;
+            global.__gLogMemoryLeak[tags[i]] = validObjects;
+        }
+        invalidate tags;
+    }
+})
+
+var gAsyncCaller = new AsyncCaller();

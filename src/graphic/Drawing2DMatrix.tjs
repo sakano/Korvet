@@ -1,0 +1,138 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(Drawing2DMatrix)
+{
+    var _11, _12, _13;
+    var _21, _22, _23;
+
+    Constructor() { reset(); }
+
+    /**
+     * Reset this matrix to be identity matrix.
+     */
+    Func(reset)() {
+        _11 = _22 = 1;
+        _12 = _13 = _21 = _23 = 0;
+    }
+
+    /**
+     * Clone the specified matrix.
+     */
+    Func(copyFrom)(src:Drawing2DMatrix) {
+        checkArgs
+        with (src) {
+            _11 = ._11;
+            _12 = ._12;
+            _13 = ._13;
+            _21 = ._21;
+            _22 = ._22;
+            _23 = ._23;
+        }
+    }
+
+    /**
+     * Multiply this matrix by the translation matrix.
+     * @param number x The value to translate along the X axis.
+     * @param number y The value to translate along the Y axis.
+     */
+    Func(translate)(x:number, y:number) {
+        checkArgs
+        _13 += _11 * x + _12 * y;
+        _23 += _21 * x + _22 * y;
+    }
+
+    /**
+     * Multiply this matrix by the scaling matrix.
+     * @param number angle The clockwise angle of the rotaion.
+     */
+    Func(scale)(x:number, y:number) {
+        checkArgs
+        _11 *= x;
+        _21 *= x;
+        _12 *= y;
+        _22 *= y;    
+    }
+
+    /**
+     * Multiply this matrix by the rotation matrix.
+     * @param number angle The clockwise angle of the rotaion.
+     */
+    Func(rotate)(angle:number) {
+        checkArgs
+        if (angle === 0) return;
+        angle *= MATH_PI / 180;
+        var sin = Math.sin(angle);
+        var cos = Math.cos(angle);
+        var t11 = _11, t21 = _21;
+        _11 = t11 * cos  + _12 * sin;
+        _12 = t11 * -sin + _12 * cos;
+        _21 = t21 * cos  + _22 * sin;
+        _22 = t21 * -sin + _22 * cos;
+    }
+
+    /**
+     * Multiply this matrix by the shear matrix.
+     * @param number x The value to shear horizontally.
+     * @param number y The value to shear vertically.
+     */
+    Func(shear)(x:number, y:number) {
+        checkArgs
+        var t11 = _11, t21 = _21;
+        _11 += _12 * y;
+        _12 += t11 * x;
+        _21 += _22 * y;
+        _22 += t21 * x;
+    }
+
+    /**
+     * Multiply this matrix by the specified matrix.
+     * @param object rhs The matrix object.
+     */
+    Func(multiply)(rhs:Drawing2DMatrix) {
+        checkArgs
+        var t11 = _11, t12 = _12, t21 = _21, t22 = _22;
+        with (rhs) {
+            _11 = t11 * ._11 + t12 * ._21;
+            _12 = t11 * ._12 + t12 * ._22;
+            _13 = t11 * ._13 + t12 * ._23 + _13;
+            _21 = t21 * ._11 + t22 * ._21;
+            _22 = t21 * ._12 + t22 * ._22;
+            _23 = t21 * ._13 + t22 * ._23 + _23;
+        }
+    }
+
+    /**
+     * Apply the transform represented by this matrix.
+     * @param number x The x-coordinate value.
+     * @param number y The y-coordinate value.
+     * @return array The first element represents x, and the second represetns y.
+     */
+    Func(applyTransformToPoint)(x:number, y:number) {
+        checkArgs
+        return [
+            _11 * x + _12 * y + _13,
+            _21 * x + _22 * y + _23
+        ];
+    }
+
+    /**
+     * Apply the transform represeted by this matrix and copy the specified bitmap.
+     * @param object dest The Bitmap object to be drawn.
+     * @param object src The Bitmap object to be transformed and copied.
+     */
+    Func(operateAffine)(dest:object, src:object) {
+        if (dest instanceof "Layer") {
+            dest.operateAffine(src, 0, 0, src.width, src.height, false,
+                _13 - 0.5 , _23 - 0.5,
+                _11 * src.width  + _13 - 0.5, _21 * src.width  + _23 - 0.5,
+                _12 * src.height + _13 - 0.5, _22 * src.height + _23 - 0.5,
+                omAlpha, 255, stFastLinear|stRefNoClip);
+        } else {
+            ImageFunction.operateAffine(dest, src, _13 - 0.5 , _23 - 0.5,
+                _11 * src.width  + _13 - 0.5, _21 * src.width  + _23 - 0.5,
+                _12 * src.height + _13 - 0.5, _22 * src.height + _23 - 0.5,
+                null, null, false, omAlpha, dfAlpha, 255, stFastLinear|stRefNoClip);
+        }
+    }
+}

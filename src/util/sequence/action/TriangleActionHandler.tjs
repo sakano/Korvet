@@ -1,0 +1,54 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(TriangleActionHandler, AbstractActionHandler)
+{
+    var _value, _value2;
+    var _time, _time2, _timeTotal;
+    var _elapsedCount;
+    var _height;
+
+    OverrideFunc(_init)(option:Dictionary) {
+        typeNumber(option.value)
+        typeNumber(option.value2)
+        typeInt(option.time)
+        typeIntVoid(option.time2)
+        assert(option.time > 0)
+        assert(option.time2 === void || option.time2 > 0)
+
+        this._value = option.value;
+        this._value2 = option.value2;
+
+        if (this._value2 > this._value) this._height = this._value2 - this._value;
+        else                            this._height = this._value - this._value2;
+        this._height = this._value2 - this._value;
+
+        this._time = option.time > 0 ? option.time : 1;
+
+        if (option.time2 !== void) {
+            this._time2 = option.time2 > 0 ? option.time2 : 1;
+        } else {
+            this._time2 = this._time;
+        }
+
+        this._timeTotal = this._time + this._time2;
+
+        this._elapsedCount = 0;
+    }
+
+    OverrideFunc(_getValue)(elapsedTick:int) {
+        elapsedTick = elapsedTick - (this._timeTotal * this._elapsedCount);
+        while (elapsedTick >= this._timeTotal) {
+            elapsedTick -= this._timeTotal;
+            ++this._elapsedCount;
+        }
+        if (elapsedTick <= this._time) {
+            return this._height * elapsedTick / this._time + this._value;
+        } else {
+            return this._height - this._height * (elapsedTick - this._time) / (this._time2) + this._value;
+        }
+    }
+}
+
+// ActionHandlerとして登録
+ActionSequence.registerHandler(ActionHandler_TriangleWave, TriangleActionHandler);

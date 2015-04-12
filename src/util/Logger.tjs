@@ -1,0 +1,71 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(Logger)
+{
+    Func(log)(format:string, args*) {
+        checkArgs
+        Debug.message("[LOG]" + format.sprintf(args*));
+    }
+
+    Func(info)(format:string, args*) {
+        checkArgs
+        Debug.message("[INFO]" + format.sprintf(args*));
+    }
+
+    Func(warn)(format:string, args*) {
+        checkArgs
+        Debug.message("[WARN]" + format.sprintf(args*));
+        _trace(Debug.message);
+    }
+
+    Func(error)(format:string, args*) {
+        checkArgs
+        var message = "[ERROR]" + format.sprintf(args*);
+        m4_ifelse(DEBUG, 1, throw new Exception(message);)
+        Debug.notice(message);
+        _trace(Debug.notice);
+    }
+
+    Func(fatal)(format:string, args*) {
+        checkArgs
+        var message = "[FATAL]" + format.sprintf(args*);
+        m4_ifelse(DEBUG, 1, throw new Exception(message);)
+        Debug.notice(message);
+        _trace(Debug.notice);
+    }
+
+    Func(group)() { notImplemented(); }
+
+    Func(groupEnd)() { notImplemented(); }
+
+    Func(beginTime)(tag:string+) {
+        checkArgs
+        if (tag === void) tag = _constDefaultTimeTag;
+        _timeInfo[tag] = System.getTickCount();
+    }
+
+    Func(endTime)(tag:string+) {
+        checkArgs
+        if (tag === void) tag = _constDefaultTimeTag;
+        ("[endTime] %d (tag)", System.getTickCount() - _timeInfo[tag], tag);
+    }
+
+
+
+    var _timeInfo = %[];
+    const _constDefaultTimeTag = "default";
+
+    Constructor() {}
+
+    Finalize() {
+        invalidate _timeInfo;
+    }
+
+    Func(_trace)(outputCallback:Function) {
+        checkArgs
+        var trace = global.Scripts.getTraceString(0);
+        trace = /<--/g.replace(trace, "\n <-- ");
+        outputCallback(trace);
+    }
+}

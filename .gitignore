@@ -1,0 +1,7 @@
+# compiled files
+/data/debug/
+/data/release/
+/data/release_intermediate/
+
+# savedata
+/savedata/

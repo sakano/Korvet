@@ -1,0 +1,96 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(ImageMatrix)
+{
+    m4_define(&--TRANSFORM_PROPERTY--&,
+        var _$1 = $2;
+        property $1 {
+            setter(v) {
+                this._$1 = (int)v;
+                this._matrixUpdate = true;
+                this._triggerEvent(ImageMatrixEventType_MatrixUpdated, "$1", this._$1);
+            }
+            getter { return this._$1; }
+        })
+    TRANSFORM_PROPERTY(originX, 0)
+    TRANSFORM_PROPERTY(originY, 0)
+    TRANSFORM_PROPERTY(scaleX, 1)
+    TRANSFORM_PROPERTY(scaleY, 1)
+    TRANSFORM_PROPERTY(shearX, 0)
+    TRANSFORM_PROPERTY(shearY, 0)
+    TRANSFORM_PROPERTY(angle, 0)
+    TRANSFORM_PROPERTY(x, 0)
+    TRANSFORM_PROPERTY(y, 0)
+    m4_undefine(&--TRANSFORM_PROPERTY--&)
+
+    Func(setParent)(parent:ImageMatrix?) {
+        checkArgs
+        if (this._parentMatrix !== null) {
+            this._parentMatrix.unbindEvent(ImageMatrixEventType_MatrixUpdated, this._onParentMatrixUpdated);
+        }
+        if (parent !== null) {
+            parent.bindEvent(ImageMatrixEventType_MatrixUpdated, this._onParentMatrixUpdated);
+        }
+        this._parentMatrix = parent;
+        this._onParentMatrixUpdated();
+    }
+
+    Func(operateAffine)(dest:object, src:object) {
+        this._getMatrix().operateAffine(dest, src);
+    }
+
+    Func(copyFrom)(src:ImageMatrix) {
+        checkArgs
+        this.originX = src.originX;
+        this.originY = src.originY;
+        this.scaleX = src.scaleX;
+        this.scaleY = src.scaleY;
+        this.shearX = src.shearX;
+        this.shearY = src.shearY;
+        this.angle = src.angle;
+        this.x = src.x;
+        this.y = src.y;
+        this.setParent(src._parentMatrix);
+        this._matrixUpdate = true;
+        this._drawing2DMatrix.copyFrom(src._drawing2DMatrix);
+    }
+
+
+    var _parentMatrix = null;
+    var _matrixUpdate = true;
+    var _drawing2DMatrix = new global.Drawing2DMatrix();
+
+    Constructor() {
+        global.includeObservable(this);
+    }
+
+    Finalize() {
+        invalidate this._drawing2DMatrix;
+        global.finalizeObservable(this);
+    }
+
+    Func(_onParentMatrixUpdated)() {
+        this._matrixUpdate = true;
+        this._triggerEvent(ImageMatrixEventType_MatrixUpdated);
+    }
+
+    Func(_getMatrix)() {
+        if (this._matrixUpdate) {
+            with (this._drawing2DMatrix) {
+                if (this._parentMatrix === null) {
+                    .reset();
+                } else {
+                    .copyFrom(this._parentMatrix._getMatrix());
+                }
+                .translate(this._x + this._originX, this._y + this._originY);
+                .rotate(this._angle);
+                .shear(this._shearX, this._shearY);
+                .scale(this._scaleX, this._scaleY);
+                .translate(-this._originX, -this._originY);
+            }
+            this._matrixUpdate = false;
+        }
+        return this._drawing2DMatrix;
+    }
+}

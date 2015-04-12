@@ -1,0 +1,78 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(SequenceRunner)
+{
+    Func(onTick)(tick:int) {
+        checkArgs
+        this._currentTick = tick;
+        this._foreachHolders(LMD(holder, tick) { holder.onTick(tick); }, tick);
+    }
+
+    Func(trigger)(label:string) {
+        checkArgs
+        assert(label.length > 0)
+        this._foreachHolders(LMD(holder, label) { holder.trigger(label); }, label);
+    }
+
+    Func(run)(sequence:AbstractSequence) {
+        checkArgs
+        assert(sequence isvalid)
+        var holder = new global.SequenceHolder(this._currentTick);
+        var result = holder.run(sequence);
+        if (result === SequenceHolderResult_Completed) {
+            invalidate holder;
+        } else {
+            this._holders.add(holder);
+            holder.bindEvent(SequenceHolderEvent_Completed, this._onSequenceCompleted);
+        }
+    }
+
+    Func(skipAllSequences)() {
+        this._foreachHolders(LMD(holder) { holder.skip(); });
+    }
+
+
+    var _currentTick;
+    var _holders = [];
+    var _completedHolders = [];
+
+    Constructor(currentTick:int) {
+        checkArgs
+        this._currentTick = currentTick;
+    }
+
+    Finalize() {
+        this.skipAllSequences();
+        assert(this._holders.count === 0)
+        assert(this._completedHolders.count === 0)
+        invalidate this._holders;
+        invalidate this._completedHolders;
+    }
+
+    Func(_onSequenceCompleted)(sender:SequenceHolder) {
+        checkArgs
+        this._completedHolders.add(sender);
+    }
+
+    Func(_foreachHolders)(callback:function, *) {
+        // callbackを実行
+        for (var i = 0; i < this._holders.count; ++i) {
+            callback(this._holders[i], *);
+        }
+
+        // callback中に完了したホルダを削除
+        if (this._completedHolders.count === 0) return;
+        for (var i = 0; i < this._completedHolders.count; ++i) {
+            this._holders.remove(this._completedHolders[i]);
+            invalidate this._completedHolders[i];
+        }
+        this._completedHolders.clear();
+    }
+}
+
+setStaticMember(SequenceRunner, "sequence", LMD() {
+    var sequence = new global.DoNothingSequence();
+    m4_ifelse(DEBUG, 1, global.logMemoryLeakForDebug("Sequence", sequence);)
+    return sequence;
+});

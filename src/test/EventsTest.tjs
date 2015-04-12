@@ -1,0 +1,387 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+{
+    var ev = new Event();
+    var called = [];
+    var all = LMD(){ push("all"); } incontextof called;
+    var test = LMD(){ push("test"); } incontextof called;
+    var allRet = LMD(){ push("allRet"); return 100; } incontextof called;
+    var testRet = LMD(){ push("testRet"); return -100; } incontextof called;
+
+    ev.bind(EventType_All, all);
+    ev.trigger(EventType_All);
+    assertAlways( called.join(":") === "all" )
+
+    ev.unbind();
+    called.clear();
+    ev.bind(EventType_All, all);
+    ev.trigger("test");
+    assertAlways( called.join(":") === "all" )
+
+    ev.unbind();
+    called.clear();
+    ev.bind("test", test);
+    ev.trigger("all");
+    assertAlways( called.count === 0 )
+    ev.trigger("test");
+    assertAlways( called.join(":") === "test" )
+
+    ev.unbind();
+    called.clear();
+    ev.bind("test", test);
+    ev.bind(EventType_All, all);
+    ev.trigger("test");
+    assertAlways( called.join(":") === "test:all")
+    called.clear();
+    ev.trigger(EventType_All);
+    assertAlways( called.join(":") === "all")
+
+    ev.unbind();
+    called.clear();
+    ev.bindMap(%[
+        EventType_All => all,
+        "test" => test,
+        "test2" => testRet
+    ]);
+    ev.trigger("test");
+    assertAlways( called.join(":") === "test:all")
+
+    ev.unbind();
+    called.clear();
+    ev.bind(EventType_All, allRet);
+    ev.bind(EventType_All, all);
+    assertAlways( ev.triggerWhile(EventType_All, LMD() { return true; }) === void )
+    assertAlways( called.join(":") === "allRet:all" )
+    called.clear();
+    assertAlways( ev.triggerWhile(EventType_All, LMD(v) { return false; }) === 100 )
+    assertAlways( called.join(":") === "allRet" )
+
+    ev.unbind();
+    called.clear();
+    ev.bind(EventType_All, allRet);
+    ev.bind(EventType_All, all);
+    ev.bind("test", testRet);
+    ev.bind("test", test);
+    assertAlways( ev.triggerWhile("test", LMD() { return true; }) === void )
+    assertAlways( called.join(":") === "testRet:test:allRet:all" )
+    called.clear();
+    assertAlways( ev.triggerWhile("test", LMD(v) { return v !== void; }) === void )
+    assertAlways( called.join(":") === "testRet:test" )
+    called.clear();
+    assertAlways( ev.triggerWhile("test", LMD(v) { return v === void; }) === -100 )
+    assertAlways( called.join(":") === "testRet" )
+    called.clear();
+    assertAlways( ev.triggerWhile("all", LMD(v) { return true; }) === void )
+    assertAlways( called.join(":") === "allRet:all" )
+    called.clear();
+    assertAlways( ev.triggerWhile("all", LMD(v) { return v !== void; }) === void )
+    assertAlways( called.join(":") === "allRet:all" )
+    called.clear();
+    assertAlways( ev.triggerWhile("all", LMD(v) { return v === void; }) === 100 )
+    assertAlways( called.join(":") === "allRet" )
+
+    ev.unbind();
+    called.clear();
+    ev.bind(EventType_All, all);
+    ev.bind("test", test);
+    ev.unbind("test");
+    ev.trigger("test");
+    assertAlways( called.join(":") === "all")
+    called.clear();
+    ev.unbind(EventType_All);
+    ev.trigger(EventType_All);
+    assertAlways( called.join(":") === "")
+
+    ev.unbind();
+    called.clear();
+    ev.bind(EventType_All, all);
+    ev.bind("test", test);
+    ev.unbind(void, all);
+    ev.trigger("test");
+    assertAlways( called.join(":") === "test")
+    called.clear();
+    ev.unbind(EventType_All, test);
+    ev.trigger("test");
+    assertAlways( called.join(":") === "test")
+    called.clear();
+    ev.unbind("test", test);
+    ev.trigger("test");
+    assertAlways( called.join(":") === "")
+
+    ev.unbind();
+    called.clear();
+    ev.bind(EventType_All, all);
+    ev.bind(EventType_All, all);
+    ev.bind("test", all);
+    ev.bind("test", all);
+    ev.bind("test2", all);
+    ev.bind("test", test);
+    ev.unbind(void, all);
+    ev.trigger(EventType_All);
+    ev.trigger("test");
+    ev.trigger("test2");
+    assertAlways( called.join(":") === "test")
+
+    invalidate ev;
+    invalidate called;
+    invalidate all;
+    invalidate test;
+    invalidate allRet;
+    invalidate testRet;
+}
+{
+    var obj = %[];
+    global.includeObservable(obj);
+    assertAlways( obj.__event instanceof "Event" )
+    assertAlways( obj.bindEvent === obj.__event.bind )
+    assertAlways( obj.bindMapEvent === obj.__event.bindMap )
+    assertAlways( obj.unbindEvent === obj.__event.unbind )
+    assertAlways( obj._triggerEvent === obj.__event.trigger )
+    assertAlways( obj._triggerEventWhile === obj.__event.triggerWhile )
+
+    var called = [];
+    obj.bindEvent(EventType_All, LMD() { push("all"); } incontextof called);
+    obj._triggerEvent(EventType_All);
+    assertAlways( called.join(":") === "all" )
+    invalidate called;
+
+    global.finalizeObservable(obj);
+    assertAlways( !obj.__event isvalid )
+    invalidate obj;
+}
+{
+    var ev = new Event();
+    var called = [];
+    var test = LMD(){ push("test"); } incontextof called;
+    var test2 = LMD(){ push("test2"); } incontextof called;
+    var unbinder = LMD(){
+        ev.unbind("hoge", unbinder);
+        called.push("unbinder");
+    } incontextof %[ ev:ev, called:called ];
+    Scripts.getObjectContext(unbinder).unbinder = unbinder;
+    var test3 = LMD(){ push("test3"); } incontextof called;
+    var test4 = LMD(){ push("test4"); } incontextof called;
+
+    ev.bind("hoge", test);
+    ev.bind("hoge", test2);
+    ev.bind("hoge", unbinder);
+    ev.bind("hoge", test3);
+    ev.bind("hoge", test4);
+
+    ev.trigger("hoge");
+    assertAlways( called.join(":") === "test:test2:unbinder:test3:test4" )
+
+    called.clear();
+    ev.trigger("hoge");
+    assertAlways( called.join(":") === "test:test2:test3:test4" )
+
+    called.clear();
+    ev.unbind();
+
+    ev.bind("hoge", test);
+    ev.bind("hoge", test2);
+    ev.bind("hoge", LMD() {
+        ev.unbind();
+        called.push("unbindAll");
+    } incontextof %[ev:ev,called:called]);
+    ev.bind("hoge", test3);
+    ev.bind("hoge", test4);
+    ev.trigger("hoge");
+    assertAlways( called.join(":") === "test:test2:unbindAll:test3:test4" )
+
+    called.clear();
+    ev.trigger("hoge");
+    ev.trigger(EventType_All);
+    assertAlways( called.count === 0 )
+}
+{
+    var ev = new Event();
+    var called = [];
+    ev.bind(EventType_All, LMD() { push("all"); } incontextof called);
+    ev.trigger(EventType_All);
+    assertAlways( called.count === 1 )
+    assertAlways( called[0] === "all" )
+    ev.trigger(EventType_All);
+    ev.trigger("hoge");
+    assertAlways( called.count === 3 )
+    assertAlways( called[0] === called[1] && called[1] === called[2] && called[2] === "all" )
+
+    called.clear();
+    ev.bind("hoge", LMD() { push("hoge"); } incontextof called);
+    ev.trigger("hoge");
+    assertAlways( called.count === 2 )
+    assertAlways( called.join(":") === "hoge:all" )
+    ev.trigger("moge");
+    assertAlways( called.count === 3 )
+    assertAlways( called.join(":") === "hoge:all:all" )
+
+    called.clear();
+    ev.bind("moge", LMD() { push("moge"); } incontextof called);
+    ev.trigger("hoge");
+    assertAlways( called.count === 2 )
+    assertAlways( called.join(":") === "hoge:all" )
+    ev.trigger("moge");
+    assertAlways( called.count === 4 )
+    assertAlways( called.join(":") === "hoge:all:moge:all" )
+    ev.trigger(EventType_All);
+    assertAlways( called.count === 5 )
+    assertAlways( called.join(":") === "hoge:all:moge:all:all" )
+
+    called.clear();
+    ev.bind("hoge", LMD() { push("hoge2"); return true; } incontextof called);
+    ev.bind("hoge", LMD() { push("hoge3"); return false; } incontextof called);
+    ev.bind("hoge", LMD() { push("hoge4"); return true; } incontextof called);
+    ev.trigger("hoge");
+    assertAlways( called.count === 5 )
+    assertAlways( called.join(":") === "hoge:hoge2:hoge3:hoge4:all" )
+    assertAlways( ev.triggerWhile("hoge", LMD(v){ return v === void; }) === true )
+    assertAlways( called.count === 7 )
+    assertAlways( called.join(":") === "hoge:hoge2:hoge3:hoge4:all:hoge:hoge2" )
+    assertAlways( ev.triggerWhile(EventType_All, LMD(v){ return v !== void; }) === void )
+    assertAlways( called.count === 8 )
+    assertAlways( called.join(":") === "hoge:hoge2:hoge3:hoge4:all:hoge:hoge2:all" )
+
+    called.clear();
+    ev.bind(EventType_All, LMD() { push("all2"); return true; } incontextof called);
+    ev.bind(EventType_All, LMD() { push("all3"); } incontextof called);
+    ev.trigger(EventType_All);
+    assertAlways( called.count === 3 )
+    assertAlways( called.join(":") === "all:all2:all3" )
+    assertAlways( ev.triggerWhile(EventType_All, LMD(v){ return v !== true; }) === true )
+    assertAlways( called.count === 5 )
+    assertAlways( called.join(":") === "all:all2:all3:all:all2" )
+    assertAlways( ev.triggerWhile(EventType_All, LMD(v){ return v !== true; }) === true )
+    assertAlways( called.count === 7 )
+    assertAlways( called.join(":") === "all:all2:all3:all:all2:all:all2" )
+
+    called.clear();
+    ev.unbind();
+    ev.trigger(EventType_All);
+    assertAlways( called.count === 0 )
+    ev.trigger("hoge");
+    assertAlways( called.count === 0 )
+    ev.trigger("moge");
+    assertAlways( called.count === 0 )
+
+
+    called.clear();
+    ev.bind(EventType_All, LMD() { push("all"); return false; } incontextof called);
+    ev.bind(EventType_All, LMD() { push("all2"); return true; } incontextof called);
+    ev.bind(EventType_All, LMD() { push("all3"); return true; } incontextof called);
+    ev.trigger(EventType_All);
+    assertAlways( called.count === 3 )
+    assertAlways( called.join(":") === "all:all2:all3" )
+
+    called.clear();
+    ev.unbind(EventType_All);
+    assertAlways( ev.triggerWhile(EventType_All, LMD(v){ return true; }) === void )
+    ev.trigger(EventType_All);
+    assertAlways( called.count === 0 )
+
+    var allFunc = LMD(){ push("all"); } incontextof called;
+    var allFunc2 = LMD(){ push("all2"); } incontextof called;
+    var allFunc3 = LMD(){ push("all3"); } incontextof called;
+    ev.bind(EventType_All, allFunc);
+    ev.trigger(EventType_All);
+    assertAlways( called.count === 1 )
+    assertAlways( called[0] === "all" )
+
+    called.clear();
+    ev.unbind(void, allFunc);
+    ev.trigger(EventType_All);
+    assertAlways( ev.triggerWhile(EventType_All, LMD(v){ return true; }) === void )
+    assertAlways( called.count === 0 )
+
+    ev.bind(EventType_All, allFunc);
+    ev.bind(EventType_All, allFunc);
+    assertAlways( ev.triggerWhile(EventType_All, LMD(v){ return v === void; }) === void )
+    assertAlways( called.count === 2 )
+    assertAlways( called.join(":") === "all:all" )
+
+    called.clear();
+    ev.unbind(EventType_All, allFunc);
+    assertAlways( called.count === 0 )
+
+    ev.bind(EventType_All, allFunc);
+    ev.bind(EventType_All, allFunc2);
+    ev.bind(EventType_All, allFunc3);
+    ev.trigger(EventType_All);
+    assertAlways( called.count === 3 )
+    assertAlways( called.join(":") === "all:all2:all3" )
+
+    called.clear();
+    ev.unbind(EventType_All, allFunc);
+    ev.trigger(EventType_All);
+    assertAlways( called.count === 2 )
+    assertAlways( called.join(":") === "all2:all3" )
+
+    called.clear();
+    ev.unbind(void, allFunc3);
+    assertAlways( ev.triggerWhile(EventType_All, LMD(v){ return v === true; }) === void )
+    assertAlways( called.count === 1 )
+    assertAlways( called[0] === "all2" )
+
+    called.clear();
+    ev.bind(EventType_All, allFunc2);
+    ev.trigger(EventType_All);
+    assertAlways( called.count === 2 )
+    assertAlways( called.join(":") === "all2:all2" )
+
+    called.clear();
+    ev.unbind(EventType_All, allFunc2);
+    ev.trigger(EventType_All);
+    assertAlways( called.count === 0 )
+
+    var hogeFunc = LMD(){ push("hoge"); } incontextof called;
+    var hogeFunc2 = LMD(){ push("hoge2"); } incontextof called;
+    var hogeFunc3 = LMD(){ push("hoge3"); } incontextof called;
+    ev.bind("hoge", hogeFunc);
+    ev.bind("hoge", hogeFunc2);
+    ev.bind("hoge", hogeFunc3);
+    ev.bind(EventType_All, allFunc);
+    ev.bind(EventType_All, allFunc2);
+    ev.bind(EventType_All, allFunc3);
+    ev.trigger("hoge");
+    assertAlways( called.count === 6 )
+    assertAlways( called.join(":") === "hoge:hoge2:hoge3:all:all2:all3" )
+
+    called.clear();
+    ev.unbind(void, hogeFunc);
+    ev.trigger("hoge");
+    assertAlways( called.count === 5 )
+    assertAlways( called.join(":") === "hoge2:hoge3:all:all2:all3" )
+
+    called.clear();
+    ev.unbind(void, hogeFunc);
+    ev.trigger("hoge");
+    assertAlways( called.count === 5 )
+    assertAlways( called.join(":") === "hoge2:hoge3:all:all2:all3" )
+
+    called.clear();
+    ev.unbind(EventType_All, hogeFunc2);
+    ev.trigger("hoge");
+    assertAlways( called.count === 5 )
+    assertAlways( called.join(":") === "hoge2:hoge3:all:all2:all3" )
+
+    called.clear();
+    ev.unbind("hoge", hogeFunc2);
+    ev.trigger("hoge");
+    assertAlways( called.count === 4 )
+    assertAlways( called.join(":") === "hoge3:all:all2:all3" )
+
+    called.clear();
+    ev.unbind(EventType_All);
+    ev.trigger("hoge");
+    assertAlways( called.count === 1 )
+    assertAlways( called.join(":") === "hoge3" )
+
+    called.clear();
+    ev.unbind(EventType_All);
+
+    invalidate ev;
+    invalidate called;
+    invalidate hogeFunc;
+    invalidate hogeFunc2;
+    invalidate hogeFunc3;
+}

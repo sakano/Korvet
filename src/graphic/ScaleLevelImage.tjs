@@ -1,0 +1,42 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(ScaleLavelImage, Image)
+{
+    Constructor() { super.Image(); }
+
+    Finalize() {
+        super.finalize();
+        invalidate _scaleMatrix;
+        if (_scaleData !== void) invalidate _scaleData;
+    }
+
+    OverrideFunc(load)(filename:string) {
+        checkArgs
+        super.load(...);
+        _scaleData = Scripts.evalStorage(filename + ".tjs");
+    }
+
+    OverrideFunc(draw)(dest:object, force:bool = false) {
+        checkArgs
+        if (_redraw || force) {
+            var scale = _scaleX > _scaleY ? _scaleX : _scaleY;
+            var level = _scaleData.count - 1;
+            for (var level = 0; i < _scaleData.count; ++i) {
+                if (scale <= _scaleData[i].scale) { level = i; break; }
+            }
+            if (_loadedScaleLevel !== level) {
+                _loadedScaleLevel = level;
+                _bitmap.load(_scaleData[level].filename);
+            }
+            _scaleMatrix.clone(matrix);
+            _scaleMatrix.operateAffine(dest, _bitmap);
+        }
+    }
+
+
+
+    var _loadedScaleLevel = null;
+    var _scaleData;
+    var _scaleMatrix = new Drawing2DMatrix();
+}

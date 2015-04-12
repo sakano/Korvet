@@ -1,0 +1,170 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(DoNothingSequence, AbstractSequence)
+{
+    OverrideFunc(run)  { doNothing; }
+    OverrideFunc(skip)  { doNothing; }
+
+    Constructor() {}
+    Finalize() { super.finalize(); }
+
+    OverrideFunc(_cloneSelf) { return new global.DoNothingSequence(); }
+}
+
+ClassExtends(CallbackSequence, AbstractSequence)
+{
+    OverrideFunc(run)  { this._callback(this._args*); }
+    OverrideFunc(skip) { this._callback(this._args*); }
+
+    var _callback;
+    var _args;
+
+    Constructor(callback:Function, args*) {
+        checkArgs
+        this._callback = callback;
+        this._args = args;
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate this._args;
+    }
+
+    OverrideFunc(_cloneSelf) { return new global.CallbackSequence(this._callback, this._args*); }
+}
+
+ClassExtends(FactorySequence, AbstractSequence)
+{
+    OverrideFunc(run) {
+        var sequence = this._callback(this._args*);
+        typeCheck(sequence, "AbstractSequence")
+        this._insertAfter(sequence);
+    }
+    OverrideFunc(skip) { this.run(); }
+
+    var _callback;
+    var _args;
+
+    Constructor(callback:Function, args*) {
+        checkArgs
+        this._callback = callback;
+        this._args = args;
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate this._args;
+    }
+
+    OverrideFunc(_cloneSelf) { return new global.FactorySequence(this._callback, this._args*); }
+}
+
+ClassExtends(SuspendableSequence, AbstractSequence)
+{
+    OverrideFunc(getConsumedTick) { return this._consumedTick; }
+
+
+
+    var _consumedTick = 0;
+    var _suspendDeferred = null;
+
+    Constructor() {}
+
+    Finalize() {
+        super.finalize();
+        if (this._suspendDeferred !== null) {
+            if (this._suspendDeferred.state === PromiseState_Pending) {
+                this._suspendDeferred.reject(this);
+            }
+            invalidate this._suspendDeferred;
+        }
+    }
+
+    Func(_suspend) {
+        if (this._suspendDeferred === null) {
+            this._suspendDeferred = new global.Deferred();
+        }
+        return this._suspendDeferred.promise();
+    }
+
+    Func(_resume) {
+        typeNotNull(this._suspendDeferred)
+        this._suspendDeferred.resolve(this);
+    }
+}
+
+ClassExtends(WaitSequence, SuspendableSequence)
+{
+    OverrideFunc(run)(beginTick:int, consumableTick:int) {
+        // 開始時間と現在時間を初期化
+        this._beginTick = this._currentTick = beginTick;
+
+        if (this._tick !== void) {
+            // 消費予定時間を計算
+            this._consumedTick = this._tick;
+
+            // 既に待ち時間を超過していれば終了
+            if (this._tick <= consumableTick) return;
+
+            // 終了予定時間を計算
+            this._endTick = beginTick + this._tick;
+        } else if (this._labels.count === 0) {
+            // 時間もラベルも指定されていなければ消費時間なしで終了
+            this._consumedTick = 0;
+            return;
+        }
+
+        // 時間かラベルが指定されていれば一時停止
+        return this._suspend();
+    }
+
+    OverrideFunc(skip) { doNothing(); }
+
+    OverrideFunc(onTick)(tick:int) {
+        // 現在時間を更新
+        this._currentTick = tick;
+
+        // 終了予定時間を経過したら再開を通知
+        if (this._endTick !== void && this._endTick <= tick) {
+            this._resume();
+        }
+
+    }
+
+    OverrideFunc(trigger)(label:string) {
+        // 待っているラベルが通知されたら再開を通知
+        if (this._labels.find(label) >= 0) {
+            this._consumedTick = this._currentTick - this._beginTick;
+            this._resume();
+        }
+    }
+
+
+
+    var _tick;
+    var _endTick;
+
+    var _labels = [];
+    var _beginTick;
+    var _currentTick;
+
+    Constructor(waits*) {
+        // 待機時間とラベルをメンバに設定する
+        waits.foreach(LMD(index, wait) {
+            if (typeof wait === "String") {
+                this._labels.add(wait);
+            } else {
+                typeInt(wait)
+                this._tick = wait;
+            }
+        } incontextof this);
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate _labels;
+    }
+
+    OverrideFunc(_cloneSelf) { return new global.WaitSequence(this._tick, this._labels*); }
+}

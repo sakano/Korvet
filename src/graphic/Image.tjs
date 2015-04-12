@@ -1,0 +1,94 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(Image)
+{
+    property width {
+        getter {
+            if (_bitmap === null) {
+                assert(false)
+                return 0;
+            }
+            return _bitmap.width;
+        }
+    }
+
+    property height {
+        getter {
+            if (_bitmap === null) {
+                assert(false)
+                return 0;
+            }
+            return _bitmap.height;
+        }
+    }
+
+    property redraw {
+        getter { return _redraw; }
+    }
+
+    Func(load)(filename:string) {
+        checkArgs
+        if (_bitmap === null) {
+            _bitmap = new Bitmap(filename);
+        } else {
+            _bitmap.load(filename);
+        }
+        _redraw = true;
+    }
+
+    Func(draw)(dest, force:bool = false) {
+        checkArgs
+        if (_redraw || force) {
+            _matrix.operateAffine(dest, _bitmap);
+            _redraw = false;
+        }
+    }
+
+    Func(setParent)(parent:object? = null) {
+        assert(parent instanceof "Image" || parent instanceof "ImageMatrix" || parent === null)
+        if (parent instanceof "Image") {
+            _matrix.setParent(parent._matrix);
+        } else {
+            _matrix.setParent(parent);
+        }
+    }
+
+    Func(copyFrom)(src:Image) {
+        checkArgs
+        if (src._bitmap !== null) {
+            if (this._bitmap === null) {
+                this._bitmap = new Bitmap();
+            }
+            this._bitmap.copyFrom(src._bitmap);
+        } else {
+            if (this._bitmap !== null) {
+                invalidate this._bitmap;
+                this._bitmap = null;
+            }
+        }
+        this._matrix.copyFrom(src._matrix);
+        this._redraw = src._redraw;
+    }
+
+
+
+    var _bitmap = null;
+    var _matrix = new ImageMatrix();
+    var _redraw = true;
+
+    Constructor() {
+        //global.includeObservable(this);
+        _matrix.bindEvent(ImageMatrixEventType_MatrixUpdated, _onMatrixUpdated);
+    }
+
+    Finalize() {
+        invalidate _matrix;
+        if (_bitmap !== null) { invalidate _bitmap; }
+        //global.finalizeObservable(this);
+    }
+
+    Func(_onMatrixUpdated)() {
+        _redraw = true;
+    }
+}

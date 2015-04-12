@@ -1,0 +1,24 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+// expandMessageString()
+assertAlways( expandMessageStrings("") === "" )
+assertAlways( expandMessageStrings("{}") === "{}" )
+assertAlways( expandMessageStrings("hoge") === "hoge" )
+assertAlways( expandMessageStrings("{fuga}") === "{fuga}" )
+assertAlways( expandMessageStrings("{piyo}", "piyo", "") === "" )
+assertAlways( expandMessageStrings("{piyo}", "piyo", "str") === "str" )
+assertAlways( expandMessageStrings("{foo} foo {bar} {bar}{bar}", "foo", "f", "bar", "b") === "f foo b bb" )
+assertAlways( expandMessageStrings("{foo} foo {bar} {1}{@@}", "foo", "f", "bar", "b", "1", 123, "@@" , "++") === "f foo b 123++" )
+assertAlways( expandMessageStrings("{}{TES}{{TEST}}{{TES}}{", "TES", "hoge") === "{}hoge{{TEST}}{hoge}{" )
+assertAlways( expandMessageStrings("{HOGE}{hoge}{fuga}{piyo}}", "foo", "", "bar", "bar") === "{HOGE}{hoge}{fuga}{piyo}}" )
+
+// createStringWithRegExp()
+assertAlways( createStringWithRegExp(/[a-z]/, "", "") === "" )
+assertAlways( createStringWithRegExp(/[a-z]/, "", "$1") === "" )
+assertAlways( createStringWithRegExp(/[a-z]/, "abc", "$0") === "a" )
+assertAlways( createStringWithRegExp(/[a-z]+/, "abc", "$0") === "abc" )
+assertAlways( createStringWithRegExp(/([a-z])[a-z]+/, "abc", "$0-$1") === "abc-a" )
+assertAlways( createStringWithRegExp(/([a-z])([a-z])([a-z])/, "abc", "$3$1$2$0") === "cababc" )
+assertAlways( createStringWithRegExp(/([a-z])([a-z])([a-z])/, "abcdefgh", "$3$1$2$0") === "cababc" )
+assertAlways( createStringWithRegExp(/([a-z])([a-z])([a-z])([a-z])([a-z])([a-z])([a-z])([a-z])([a-z])([a-z])/, "abcdefghij", "$10$9$8$7$6$5$4$3$2$1_$0") === "jihgfedcba_abcdefghij" )

@@ -1,0 +1,106 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(TransitionSequence, SuspendableSequence)
+{
+    OverrideFunc(run)(beginTick:int, consumableTick:int) {
+        this._beginTick = beginTick;
+
+        // トランジションを実行開始
+        var promise = this._beginTransition();
+
+        // 消費可能時間内に終了できるならすぐに停止
+        if (this._duration <= consumableTick) {
+            this.skip();
+            return;
+        }
+
+        // トランジション終了時に_onTransitionCompletedが呼ばれるようにして一時停止
+        promise.done(this._onTransitionCompleted);
+        return this._suspend();
+    }
+
+    OverrideFunc(skip) {
+        if (!this._inTransition) {
+            this._beginTransition();
+        }
+        this._inTransition = false;
+        this._foreLayer.stopTransition();
+    }
+
+    OverrideFunc(onTick)(tick:int) {
+        this._elapsedTick = tick - this._beginTick;
+    }
+
+    var _foreLayer;
+    var _backLayer;
+
+    var _type;
+    var _option;
+    var _withChildren;
+
+    var _duration;
+    var _beginTick;
+    var _elapsedTick;
+
+    var _inTransition = false;
+
+    Constructor(foreLayer:Layer, backLayer:Layer, type:string, option:Dictionary, withChildren:bool = true) {
+        checkArgs
+        typeInt(option.time)
+        assert(option.time > 0)
+        this._foreLayer = foreLayer;
+        this._backLayer = backLayer;
+        this._type = type;
+        this._option = option.cloneShallow();
+        this._withChildren = withChildren;
+
+        this._duration = this._option.time;
+        if (this._duration <= 0) this._duration = 1;
+
+        this._consumedTick = this._duration;
+
+        typeStringVoid(this._option.callback)
+        var methodType = this._option.callback !== void ? this._option.callback : TransTickMethod_Linear;
+        var callback = global.TransitionSequence.methods[methodType];
+        typeFunction(callback, ASSERT_TRANSITIONSEQUENCE_INVALID_CALLBACK)
+        this._option.callback = (global.TransitionSequence.methods[type] incontextof this);
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate _option;
+    }
+
+    Func(_beginTransition)() {
+        this._inTransition = true;
+        return this._foreLayer.beginTransition(this._type, this._withChildren, this._backLayer, this._option);
+    }
+
+    Func(_onTransitionCompleted)(dest:Layer, src:Layer) {
+        if (!this._inTransition) return;
+        this._inTransition = false;
+        this._resume();
+    }
+}
+
+// callbackメソッドの一覧
+setStaticMember(TransitionSequence, "methods", %[]);
+
+// callbackメソッドを追加する関数
+setStaticMember(TransitionSequence, "registerMethod", LMD(methodType:string, callback:Function) {
+    checkArgs
+    assert(TransitionSequence.methods[methodType] === void)
+    TransitionSequence.methods[methodType] = callback;
+});
+
+// 基本的なcallbackメソッドを追加
+TransitionSequence.registerMethod(TransTickMethod_Linear, LMD() {
+    return this._elapsedTick;
+});
+TransitionSequence.registerMethod(TransTickMethod_QuadraticIn, LMD() {
+    return this._elapsedTick * this._elapsedTick / this._duration;
+});
+TransitionSequence.registerMethod(TransTickMethod_QuadraticOut, LMD() {
+    return - this._elapsedTick * (this._elapsedTick / this._duration - 2);
+});

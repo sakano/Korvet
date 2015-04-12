@@ -1,0 +1,142 @@
+m4_dnl // TransitionTypes
+m4_define(&--TransitionType_Crossfade--&, &--"crossfade"--&)m4_dnl
+m4_define(&--TransitionType_Universal--&, &--"universal"--&)m4_dnl
+m4_define(&--TransitionType_Scroll--&, &--"scroll"--&)m4_dnl
+m4_dnl
+m4_dnl // TransTickMethod
+m4_define(&--TransTickMethod_Linear--&, &--"l"--&)m4_dnl
+m4_define(&--TransTickMethod_QuadraticIn--&, &--"qui"--&)m4_dnl
+m4_define(&--TransTickMethod_QuadraticOut--&, &--"quo"--&)m4_dnl
+m4_dnl
+m4_dnl // ActionType
+m4_define(&--ActionHandler_Easing--&, &--"ez"--&)m4_dnl
+m4_define(&--ActionHandler_SquareWave--&, &--"sq"--&)m4_dnl
+m4_define(&--ActionHandler_TriangleWave--&, &--"tr"--&)m4_dnl
+m4_dnl
+m4_dnl // EasingMethod
+m4_define(&--EasingMethod_Linear--&, &--"l"--&)m4_dnl
+m4_define(&--EasingMethod_QuadraticIn--&, &--"qui"--&)m4_dnl
+m4_define(&--EasingMethod_QuadraticOut--&, &--"quo"--&)m4_dnl
+m4_dnl
+m4_dnl // PromiseStates
+m4_define(&--PromiseState_Pending--&, &--0--&)m4_dnl
+m4_define(&--PromiseState_Resolved--&, &--1--&)m4_dnl
+m4_define(&--PromiseState_Rejected--&, &---1--&)m4_dnl
+m4_dnl
+m4_dnl // PriorityQueue
+m4_define(&--PriorityQueue_Highest--&,     &---3--&)m4_dnl
+m4_define(&--PriorityQueue_High--&,        &---2--&)m4_dnl
+m4_define(&--PriorityQueue_AboveNormal--&, &---1--&)m4_dnl
+m4_define(&--PriorityQueue_Normal--&,      &--0--&)m4_dnl
+m4_define(&--PriorityQueue_BelowNormal--&, &--1--&)m4_dnl
+m4_define(&--PriorityQueue_Low--&,         &--2--&)m4_dnl
+m4_define(&--PriorityQueue_Lowest--&,      &--3--&)m4_dnl
+m4_dnl
+m4_dnl // KorvetParserCommandPriority
+m4_define(&--KorvetParserCommandPriority_Highest--&,     PriorityQueue_Highest)m4_dnl
+m4_define(&--KorvetParserCommandPriority_High--&,        PriorityQueue_High)m4_dnl
+m4_define(&--KorvetParserCommandPriority_AboveNormal--&, PriorityQueue_AboveNormal)m4_dnl
+m4_define(&--KorvetParserCommandPriority_Normal--&,      PriorityQueue_Normal)m4_dnl
+m4_define(&--KorvetParserCommandPriority_BelowNormal--&, PriorityQueue_BelowNormal)m4_dnl
+m4_define(&--KorvetParserCommandPriority_Low--&,         PriorityQueue_Low)m4_dnl
+m4_define(&--KorvetParserCommandPriority_Lowest--&,      PriorityQueue_Lowest)m4_dnl
+m4_dnl // KorvetParserModulePriority
+m4_define(&--KorvetParserModulePriority_Highest--&,     PriorityQueue_Highest)m4_dnl
+m4_define(&--KorvetParserModulePriority_High--&,        PriorityQueue_High)m4_dnl
+m4_define(&--KorvetParserModulePriority_AboveNormal--&, PriorityQueue_AboveNormal)m4_dnl
+m4_define(&--KorvetParserModulePriority_Normal--&,      PriorityQueue_Normal)m4_dnl
+m4_define(&--KorvetParserModulePriority_BelowNormal--&, PriorityQueue_BelowNormal)m4_dnl
+m4_define(&--KorvetParserModulePriority_Low--&,         PriorityQueue_Low)m4_dnl
+m4_define(&--KorvetParserModulePriority_Lowest--&,      PriorityQueue_Lowest)m4_dnl
+m4_dnl
+m4_dnl // MouseGestureTypes
+m4_define(&--MouseGestureType_FourDirection--&, &--0--&)m4_dnl
+m4_define(&--MouseGestureType_EightDirection--&, &--1--&)m4_dnl
+m4_dnl // MouseGestureDirection
+m4_define(&--MouseGestureDirection_Up--&, &--0--&)m4_dnl
+m4_define(&--MouseGestureDirection_UpRight--&, &--1--&)m4_dnl
+m4_define(&--MouseGestureDirection_Right--&, &--2--&)m4_dnl
+m4_define(&--MouseGestureDirection_DownRight--&, &--3--&)m4_dnl
+m4_define(&--MouseGestureDirection_Down--&, &--4--&)m4_dnl
+m4_define(&--MouseGestureDirection_DownLeft--&, &--5--&)m4_dnl
+m4_define(&--MouseGestureDirection_Left--&, &--6--&)m4_dnl
+m4_define(&--MouseGestureDirection_UpLeft--&, &--7--&)m4_dnl
+m4_dnl
+m4_dnl // EventTypes
+m4_define(&--EventType_All--&, &--"a"--&)m4_dnl
+m4_dnl // SoundEventTypes
+m4_define(&--SoundEventType_Play--&, &--"ply_so"--&)m4_dnl
+m4_define(&--SoundEventType_Stop--&, &--"stp_so"--&)m4_dnl
+m4_define(&--SoundEventType_Label--&, &--"label_so"--&)m4_dnl
+m4_define(&--SoundEventType_SetLoop--&, &--"setlp_so"--&)m4_dnl
+m4_define(&--SoundEventType_SetVolume--&, &--"setvol_so"--&)m4_dnl
+m4_define(&--SoundEventType_SetPan--&, &--"setpan_so"--&)m4_dnl
+m4_dnl // MouseGestureEventTypes
+m4_define(&--MouseGestureEventType_Gesture--&, &--"gesture_mg"--&)m4_dnl
+m4_define(&--MouseGestureEventType_Overflow--&, &--"overflow_mg"--&)m4_dnl
+m4_define(&--MouseGestureEventType_MouseUp--&, &--"mup_mg"--&)m4_dnl
+m4_dnl // ObservableWindowEventTypes
+m4_define(&--ObservableWindowEventType_KeyDown--&, &--"kdown_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_KeyUp--&, &--"kup_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_Activate--&, &--"acti_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_Deactivate--&, &--"deacti_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_DisplayRotate--&, &--"disprot_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_FileDrop--&, &--"fldrop_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MouseEnter--&, &--"menter_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MouseLeave--&, &--"mleave_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MouseDown--&, &--"mdown_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MouseUp--&, &--"mup_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_LeftClick--&, &--"lc_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_RightClick--&, &--"rc_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MiddleClick--&, &--"mc_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MouseMove--&, &--"mmv_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MouseWheel--&, &--"mwhl_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MouseGesture--&, &--"mgestr_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MouseGestureOverflow--&, &--"moverf_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MaximizeQuery--&, &--"maxq_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_Maximize--&, &--"max_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_Minimize--&, &--"min_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_Show--&, &--"show_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_Hide--&, &--"hide_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MoveSizeBegin--&, &--"mvsb_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MoveSizeEnd--&, &--"mvse_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_Moving--&, &--"mving_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_Move--&, &--"mv_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_Resizing--&, &--"resizing_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_DisplayChanged--&, &--"displaychanged_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_EnterMenuLoop--&, &--"etrmenulp_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_ExitMenuLoop--&, &--"exitmenulp_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_ScreenSave--&, &--"scrnsv_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_MonitorPower--&, &--"mntrpwer_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_CloseQuery--&, &--"clsq_ow"--&)m4_dnl
+m4_define(&--ObservableWindowEventType_Close--&, &--"cls_ow"--&)m4_dnl
+m4_dnl // ResizableWindowEventTypes
+m4_define(&--ResizableWindowEventType_ResizableChanged--&, &--"rszblchgd_rw"--&)m4_dnl
+m4_define(&--ResizableWindowEventType_FullscreenChanged--&, &--"flscrnchgd_rw"--&)m4_dnl
+m4_dnl // ImageEventTypes
+m4_define(&--ImageMatrixEventType_MatrixUpdated--&, &--"mtxupd_im"--&)m4_dnl
+m4_dnl // SequenceHolderEvent
+m4_define(&--SequenceHolderEvent_Completed--&, &--"cmpl_sh"--&)m4_dnl
+m4_dnl // ObservableLayerEventTypes
+m4_define(&--ObservableLayerEventType_MouseUp--&, &--"mu_ol"--&)m4_dnl
+m4_define(&--ObservableLayerEventType_MouseWheel--&, &--"mw_ol"--&)m4_dnl
+m4_define(&--ObservableLayerEventType_MouseEnter--&, &--"me_ol"--&)m4_dnl
+m4_define(&--ObservableLayerEventType_MouseLeave--&, &--"ml_ol"--&)m4_dnl
+m4_define(&--ObservableLayerEventType_MouseMove--&, &--"mm_ol"--&)m4_dnl
+m4_define(&--ObservableLayerEventType_MouseDown--&, &--"md_ol"--&)m4_dnl
+m4_define(&--ObservableLayerEventType_KeyDown--&, &--"kd_ol"--&)m4_dnl
+m4_define(&--ObservableLayerEventType_KeyUp--&, &--"ku_ol"--&)m4_dnl
+m4_define(&--ObservableLayerEventType_Paint--&, &--"pt_ol"--&)m4_dnl
+m4_define(&--ObservableLayerEventType_NodeEnabled--&, &--"ne_ol"--&)m4_dnl
+m4_define(&--ObservableLayerEventType_NodeDisabled--&, &--"nd_ol"--&)m4_dnl
+m4_define(&--ObservableLayerEventType_Focus--&, &--"fs_ol"--&)m4_dnl
+m4_define(&--ObservableLayerEventType_Blur--&, &--"bl_ol"--&)m4_dnl
+m4_dnl
+m4_dnl
+m4_dnl // SequenceResult
+m4_define(&--SequenceHolderResult_Completed--&, &--0--&)m4_dnl
+m4_define(&--SequenceHolderResult_Suspend--&, &--1--&)m4_dnl
+m4_dnl // ReadIniFile
+m4_define(&--IniFileType_SectionRequired--&, &--0--&)m4_dnl
+m4_define(&--IniFileType_SectionOptional--&, &--1--&)m4_dnl
+m4_dnl

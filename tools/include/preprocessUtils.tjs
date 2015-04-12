@@ -1,0 +1,67 @@
+m4_define(&--assert--&, &--m4_ifelse(DEBUG, 1,m4_dnl
+    &--if (!($1)) { __assertImpl("__escape_string($1)", "__CLASS_NAME", "__FUNC_NAME", "m4___file__", m4___line__, $2); }--&)--&)m4_dnl
+m4_dnl
+m4_dnl
+m4_dnl
+m4_define(&--assertAlways--&,m4_dnl
+    &--if (!($1)) { __assertImpl("__escape_string($1)", "__CLASS_NAME", "__FUNC_NAME", "m4___file__", m4___line__, $2); }--&)m4_dnl
+m4_dnl
+m4_dnl
+m4_dnl
+m4_define(&--exception--&, m4_ifelse(DEBUG, 1,m4_dnl
+    { var exceptionOccured = false; try {m4_dnl
+        $1;m4_dnl
+    } catch() {m4_dnl
+        exceptionOccured = true;m4_dnl
+    } assert(exceptionOccured); }))m4_dnl
+m4_dnl
+m4_dnl
+m4_dnl
+m4_define(&--notImplemented--&, &--m4_ifelse(DEBUG, 1,m4_dnl
+    &--{__notImplementedImpl($1, "__CLASS_NAME", "__FUNC_NAME", "m4___file__", m4___line__);}--&)--&)m4_dnl
+m4_dnl
+m4_define(&--doNothing--&)m4_dnl
+m4_dnl
+m4_dnl
+m4_dnl
+m4_define(&--FILE_INCLUDE_GUARD--&, m4_ifelse(DEBUG, 1,&--&--m4_dnl
+    if (typeof global["__file_include_guard_flags_" + Storages.extractStorageName("m4___file__")] !== "undefined") {m4_dnl
+        throw new global.Exception(m4_dnl
+            @"The file has been executed twice.\n"m4_dnl
+            "  File: ${Storages.extractStorageName('m4___file__')}(m4___line__)");m4_dnl
+    }m4_dnl
+    global["__file_include_guard_flags_" + Storages.extractStorageName("m4___file__")] = true;m4_dnl
+--&--&))m4_dnl
+m4_dnl
+m4_dnl
+m4_dnl
+m4_define(&--typeCheck--&,         &--assert($1 instanceof $2,                &--m4_ifelse($3,,&--"'__escape_string($1)' must be %s.(%s)".sprintf($2,$1)--&,         $3)--&)--&)m4_dnl
+m4_define(&--typeCheckNullable--&, &--assert($1 === null || $1 instanceof $2, &--m4_ifelse($3,,&--"'__escape_string($1)' must be null or %s.(%s)".sprintf($2,$1)--&, $3)--&)--&)m4_dnl
+m4_dnl
+m4_define(&--typeVoid--&,     &--assert($1 === void,                &--m4_ifelse($2,,&--"'__escape_string($1)' must be void.(%s)".sprintf($1)--&,    $2)--&)--&)m4_dnl
+m4_define(&--typeNull--&,     &--assert($1 === null,                &--m4_ifelse($2,,&--"'__escape_string($1)' must not be null.(%s)".sprintf($1)--&,$2)--&)--&)m4_dnl
+m4_define(&--typeObject--&,   &--assert(typeof $1 === "Object",     &--m4_ifelse($2,,&--"'__escape_string($1)' must be object.(%s)".sprintf($1)--&,  $2)--&)--&)m4_dnl
+m4_define(&--typeString--&,   &--assert(typeof $1 === "String",     &--m4_ifelse($2,,&--"'__escape_string($1)' must be string.(%s)".sprintf($1)--&,  $2)--&)--&)m4_dnl
+m4_define(&--typeInt--&,      &--assert(typeof $1 === "Integer",    &--m4_ifelse($2,,&--"'__escape_string($1)' must be int.(%s)".sprintf($1)--&,     $2)--&)--&)m4_dnl
+m4_define(&--typeReal--&,     &--assert(typeof $1 === "Real",       &--m4_ifelse($2,,&--"'__escape_string($1)' must be real.(%s)".sprintf($1)--&,    $2)--&)--&)m4_dnl
+m4_define(&--typeOctet--&,    &--assert(typeof $1 === "Octet",      &--m4_ifelse($2,,&--"'__escape_string($1)' must be octet.(%s)".sprintf($1)--&,   $2)--&)--&)m4_dnl
+m4_define(&--typeFunction--&, &--assert($1 instanceof "Function",   &--m4_ifelse($2,,&--"'__escape_string($1)' must be function.(%s)".sprintf($1)--&,$2)--&)--&)m4_dnl
+m4_define(&--typeProperty--&, &--assert($1 instanceof "Property",   &--m4_ifelse($2,,&--"'__escape_string($1)' must be property.(%s)".sprintf($1)--&,$2)--&)--&)m4_dnl
+m4_define(&--typeClass--&,    &--assert($1 instanceof "Class",      &--m4_ifelse($2,,&--"'__escape_string($1)' must be class.(%s)".sprintf($1)--&,   $2)--&)--&)m4_dnl
+m4_define(&--typeNumber--&,   &--assert($1 instanceof "Number",     &--m4_ifelse($2,,&--"'__escape_string($1)' must be number.(%s)".sprintf($1)--&,  $2)--&)--&)m4_dnl
+m4_define(&--typeBool--&,     &--assert($1 === true || $1 === false,&--m4_ifelse($2,,&--"'__escape_string($1)' must be bool.(%s)".sprintf($1)--&,    $2)--&)--&)m4_dnl
+m4_dnl
+m4_define(&--typeObjectVoid--&,   &--assert($1 === void || typeof $1 === "Object",      &--m4_ifelse($2,,&--"'__escape_string($1)' must be object.(%s)".sprintf($1)--&  ,$2)--&)--&)m4_dnl
+m4_define(&--typeStringVoid--&,   &--assert($1 === void || typeof $1 === "String",      &--m4_ifelse($2,,&--"'__escape_string($1)' must be string.(%s)".sprintf($1)--&  ,$2)--&)--&)m4_dnl
+m4_define(&--typeIntVoid--&,      &--assert($1 === void || typeof $1 === "Integer",     &--m4_ifelse($2,,&--"'__escape_string($1)' must be int.(%s)".sprintf($1)--&     ,$2)--&)--&)m4_dnl
+m4_define(&--typeRealVoid--&,     &--assert($1 === void || typeof $1 === "Real",        &--m4_ifelse($2,,&--"'__escape_string($1)' must be real.(%s)".sprintf($1)--&    ,$2)--&)--&)m4_dnl
+m4_define(&--typeOctetVoid--&,    &--assert($1 === void || typeof $1 === "Octet",       &--m4_ifelse($2,,&--"'__escape_string($1)' must be octet.(%s)".sprintf($1)--&   ,$2)--&)--&)m4_dnl
+m4_define(&--typeFunctionVoid--&, &--assert($1 === void || $1 instanceof "Function",    &--m4_ifelse($2,,&--"'__escape_string($1)' must be function.(%s)".sprintf($1)--&,$2)--&)--&)m4_dnl
+m4_define(&--typePropertyVoid--&, &--assert($1 === void || $1 instanceof "Property",    &--m4_ifelse($2,,&--"'__escape_string($1)' must be property.(%s)".sprintf($1)--&,$2)--&)--&)m4_dnl
+m4_define(&--typeClassVoid--&,    &--assert($1 === void || $1 instanceof "Class",       &--m4_ifelse($2,,&--"'__escape_string($1)' must be class.(%s)".sprintf($1)--&   ,$2)--&)--&)m4_dnl
+m4_define(&--typeNumberVoid--&,   &--assert($1 === void || $1 instanceof "Number",      &--m4_ifelse($2,,&--"'__escape_string($1)' must be number.(%s)".sprintf($1)--&  ,$2)--&)--&)m4_dnl
+m4_define(&--typeBoolVoid--&,     &--assert($1 === void || $1 === true || $1 === false, &--m4_ifelse($2,,&--"'__escape_string($1)' must be bool.(%s)".sprintf($1)--&    ,$2)--&)--&)m4_dnl
+m4_dnl
+m4_define(&--typeNotVoid--&, &--assert($1 !== void, &--m4_ifelse($2,,&--"'__escape_string($1)' must not be void.(%s)".sprintf($1)--&,$2)--&)--&)m4_dnl
+m4_define(&--typeNotNull--&, &--assert($1 !== null, &--m4_ifelse($2,,&--"'__escape_string($1)' must not be null.(%s)".sprintf($1)--&,$2)--&)--&)m4_dnl
+m4_dnl

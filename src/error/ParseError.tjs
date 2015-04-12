@@ -1,0 +1,43 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(ParseError, IOError)
+{
+    property lineNumber { getter { return _lineNumber; } }
+    property line { getter { return _line; } }
+
+
+    var _lineNumber;
+    var _line;
+
+    Constructor(filename:string, lineNumber:int, line:string, message:string+, internalError:Error? = null) {
+        checkArgs
+        if (message === void) {
+            message = expandMessageStrings(ERROR_PARSE, "FILE", filename, "LNUM", lineNumber, "LINE", line);
+        }
+        super.Error(message, internalError);
+        _filename = filename;
+        _lineNumber = lineNumber;
+        _line = line;
+    }
+}
+
+ClassExtends(KorvetParserError, ParseError)
+{
+    property index { getter { return _index; } }
+
+
+
+    var _index;
+
+    Constructor(filename:string, lineNumber:int, line:string, index:int, message:string+, internalError:Error? = null) {
+        checkArgs
+        if (message === void) {
+            message = expandMessageStrings(ERROR_KORVET_PARSE,
+                "MES", internalError !== null ? internalError.message : "",
+                "FILE", filename, "LNUM", lineNumber, "LINE", line, "INDEX", index);
+        }
+        super.ParseError(filename, lineNumber, line, message, internalError);
+        _index = index;
+    }
+}

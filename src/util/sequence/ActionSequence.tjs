@@ -1,0 +1,256 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(ActionSequence, SuspendableSequence)
+{
+    OverrideFunc(run)(beginTick:int, consumableTick:int) {
+        assert(!this._running)
+        // 初期値があれば適用
+        if (this._beforeValue !== void) {
+            this._targetProperty = this._beforeValue;
+        }
+
+        // 実行するアクションが無ければ最終値を適用して終了
+        if (this._options.count === 0) {
+            this._applyResultValue();
+            this._consumedTick = 0;
+            return;
+        }
+
+        // アクションを開始
+        this._run(beginTick);
+
+        // 消費可能時間内に実行可能かチェック
+        var canSkip = true;
+        var longestDuration = 0;
+        for (var i = 0; i < this._handlers.count; ++i) {
+            var handler = this._handlers[i];
+            if (handler.duration === void || handler.duration > consumableTick) {
+                canSkip = false;
+                break;
+            } else if (longestDuration < handler.duration) {
+                longestDuration = handler.duration;
+            }
+        }
+        // もし実行可能なら実行完了
+        if (canSkip) {
+            this._running = false;
+            this._consumedTick = longestDuration;
+            this._applyResultValue();
+            return;
+        }
+
+        // 現在の値を適用
+        if(consumableTick > 0) {
+            this.onTick(beginTick + consumableTick);
+        }
+
+        // 実行完了までシーケンスの実行を中断
+        assert(this._running)
+        return this._suspend();
+    }
+
+    OverrideFunc(skip)() {
+        // 開始されていなければ開始
+        if (!this._running) {
+            this._run(0);
+        }
+
+        this._running = false;
+
+        // 最終値を適用
+        this._applyResultValue();
+    }
+
+    OverrideFunc(onTick)(elapsedTick:int) {
+        assert(this._running)
+        if (!this._running) return;
+
+        var tick = elapsedTick - this._beginTick;
+        // 各ハンドラの現在の値を合計する
+        var value = 0;
+        for (var i = 0; i < this._handlers.count; ++i) {
+            value += this._handlers[i].getValue(tick);
+        }
+
+        // 終了済みでなければ計算した合計値を適用
+        if (this._running) {
+            this._targetProperty = this._baseValue + value;
+        }
+    }
+
+    Func(setBefore)(value:number) {
+        checkArgs
+        typeVoid(this._beforeValue, ASSERT_ACTIONSEQUENCE_SETBEFORE_CALLED_TWICE)
+        this._beforeValue = value;
+        return this;
+    }
+
+    Func(setAfter)(value:number) {
+        checkArgs
+        typeVoid(this._afterValue, ASSERT_ACTIONSEQUENCE_SETAFTER_CALLED_TWICE)
+        this._afterValue = value;
+        return this;
+    }
+
+    Func(to)(value:number, duration:int+, method:string = EasingMethod_Linear) {
+        checkArgs
+        return this.wave(ActionHandler_Easing, %[
+            value : value,
+            duration : duration,
+            method : method,
+            __preprocess : LMD(self, baseValue) {
+                self.value -= baseValue;
+            }
+        ]);
+    }
+
+    Func(wave)(handlerType:string, option:Dictionary = %[]) {
+        checkArgs
+        typeClass(global.ActionSequence.handlers[handlerType], ASSERT_ACTIONSEQUENCE_HANDLER_NOT_FOUND)
+        option = _getDefaultAppliedOption(option.cloneShallow());
+        option.__handlerType = handlerType;
+        this._options.add(option);
+        return this;
+    }
+
+
+
+    var _targetProperty;
+    var _handlers = [];
+    var _options = [];
+
+    var _beforeValue;
+    var _afterValue;
+    var _baseValue;
+
+    var _defaultOption = null;
+    var _defaultOptionKeys = null;
+
+    var _running = false;
+
+    var _beginTick;
+
+    Constructor(targetProperty:Property, defaultOption:Dictionary? = null) {
+        checkArgs
+        this._targetProperty = targetProperty;
+        if (defaultOption !== null) this._defaultOption = defaultOption.cloneShallow();
+    }
+
+    Finalize() {
+        assert(!this._running)
+        super.finalize();
+        this._handlers.dispose();
+        invalidate this._handlers;
+        if (this._defaultOption     !== null) { invalidate this._defaultOption; }
+        if (this._defaultOptionKeys !== null) { invalidate this._defaultOptionKeys; }
+    }
+
+    OverrideFunc(_cloneSelf) {
+        assert(!this._running)
+        var object = new global.ActionSequence(&this._targetProperty, this._defaultOption);
+        for (var i = 0; i < this._options.count; ++i) {
+            object._options.add(this._options[i].cloneShallow());
+        }
+        object._beforeValue = this._beforeValue;
+        object._afterValue = this._afterValue;
+        if (this._defaultOption !== null) {
+            object._defaultOption = this._defaultOption.cloneShallow();
+        }
+        return object;
+    }
+
+    Func(_getDefaultAppliedOption)(option:Dictionary) {
+        if (this._defaultOption === null) return option;
+        if (this._defaultOptionKeys === null) {
+            this._defaultOptionKeys = this._defaultOption.getKeys();
+        }
+        for (var i = 0; i < this._defaultOptionKeys.count; ++i) {
+            var key = this._defaultOptionKeys[i];
+            if (option[key] !== void) continue;
+            option[key] = this._defaultOption[key];
+        }
+        return option;
+    }
+
+    Func(_run)(beginTick:int) {
+        assert(!this._running)
+        assert(this._handlers.count === 0)
+        this._running = true;
+        this._baseValue = this._targetProperty;
+        this._beginTick = beginTick;
+
+        if (this._options.count === 0) return;
+
+        // アクションハンドラを初期化
+        var promises = [];
+        for (var i = 0; i < this._options.count; ++i) {
+            var option = this._options[i];
+            var handler = global.ActionSequence.createHandler(option.__handlerType);
+            if (option.__preprocess !== void) {
+                option.__preprocess(option, this._baseValue);
+            }
+            var p = handler.init(option);
+            this._handlers.add(handler);
+            typeCheck(p, "Promise")
+            promises.add(p);
+        }
+
+        // 全ハンドラが実行完了した時_onHandlersCompletedが呼ばれるようにする
+        assert(promises.count > 0)
+        global.Deferred.when(promises*).done(this._onHandlersCompleted);
+    }
+
+    // スキップされずにアクションが実行完了されたときに呼ばれる
+    Func(_onHandlersCompleted)() {
+        assert(this._running)
+        if (!this._running) return;
+        this._running = false;
+
+        // 消費時間を計算
+        for (var i = 0; i < this._handlers.count; ++i) {
+            var d = this._handlers[i].duration;
+            if (d !== void && this._consumedTick < d) {
+                this._consumedTick = d;
+            }
+        }
+
+        // 最終値を適用して再開を通知
+        this._applyResultValue();
+        this._resume();
+    }
+
+    Func(_applyResultValue) {
+        // 最終値があれば適用
+        if (this._afterValue !== void) {
+            this._targetProperty = this._afterValue;
+            return;
+        }
+
+        if (this._handlers.count === 0) return;
+
+        // 全ハンドラの最終値を合計
+        var resultValue = 0;
+        for (var i = 0; i < this._handlers.count; ++i) {
+            var value = this._handlers[i].getResultValue();
+            if (value !== void) resultValue += value;
+        }
+        // 計算した合計値を適用
+        typeNotVoid(this._baseValue)
+        this._targetProperty = this._baseValue + resultValue;
+    }
+}
+
+setStaticMember(ActionSequence, "handlers", %[]);
+
+setStaticMember(ActionSequence, "registerHandler", LMD(handlerType:string, handlerClass:Class) {
+    checkArgs
+    typeVoid(global.ActionSequence.handlers[handlerType])
+    global.ActionSequence.handlers[handlerType] = handlerClass;
+});
+
+setStaticMember(ActionSequence, "createHandler", LMD(handlerType:string) {
+    checkArgs
+    typeNotVoid(global.ActionSequence.handlers[handlerType])
+    return new global.ActionSequence.handlers[handlerType]();
+});

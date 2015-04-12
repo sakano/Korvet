@@ -1,0 +1,116 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(Deferred)
+{
+    property state { getter { return this._getPromiseSafe().state; } }
+
+    Func(done)()    { return this._getPromiseSafe().done(...); }
+    Func(fail)()    { return this._getPromiseSafe().fail(...); }
+    Func(always)()  { return this._getPromiseSafe().always(...); }
+    Func(then)()    { return this._getPromiseSafe().then(...); }
+    Func(promise)() { return this._getPromiseSafe(); }
+
+    /**
+     * Resolve a Deferred object and call any doneCallbacks.
+     * @param mixed args* Arguments passed to callbacks
+     */
+    Func(resolve)(*) {
+        assert(this.state === PromiseState_Pending)
+        if (this.state !== PromiseState_Pending) return;
+        this._getPromiseSafe()._state = PromiseState_Resolved;
+        this._doCallbacks(this._getPromiseSafe()._doneCallbacks, *);
+        this._callThenCallbacks(this._getPromiseSafe()._thenDoneCallbacks);
+    }
+
+    /**
+     * Reject a Deferred object and call any failCallbacks.
+     * @param mixed args* Arguments passed to callbacks
+     */
+    Func(reject)(*) {
+        assert(this.state === PromiseState_Pending)
+        if (this.state !== PromiseState_Pending) return;
+        this._getPromiseSafe()._state = PromiseState_Rejected;
+        this._doCallbacks(this._getPromiseSafe()._failCallbacks, *);
+        this._callThenCallbacks(this._getPromiseSafe()._thenFailCallbacks);
+    }
+
+
+
+    var _promise = new Promise();
+
+    Constructor() { m4_ifelse(DEBUG, 1, global.logMemoryLeakForDebug("Deferred", this);) }
+
+    Finalize() {
+        assert(state !== PromiseState_Pending)
+        if (state === PromiseState_Pending) {
+            global.gLog.warn(WARN_DEFERRED_PENDING_DEFERRED_INVALIDATED);
+            reject();
+        }
+    }
+
+    Func(_getPromiseSafe) {
+        assert(this._promise isvalid)
+        if (!this._promise isvalid) {
+            global.gLog.warn(WARN_DEFERRED_INVALID_PROMISE);
+            this._promise = new Promise();
+        }
+        return this._promise;
+    }
+
+    Func(_doCallbacks)(callbacks:Array, args*) {
+        checkArgs
+        this._getPromiseSafe()._callbackArgs = args;
+        this._getPromiseSafe()._doCallbacks(callbacks);
+    }
+
+    Func(_callThenCallbacks)(callbacks:Array) {
+        checkArgs
+        var thenDeferrds = this._getPromiseSafe()._thenDeferreds;
+        for (var i = 0; i < thenDeferrds.count; ++i) {
+            this._getPromiseSafe()._callThenCallback(thenDeferrds[i], callbacks[i]);
+        }
+    }
+}
+
+/**
+ * Create a Deferred object based on one or more Promise objects.
+ * When these all objects are resolved it will be resolved.
+ * When any one of them is rejected it will be rejected.
+ * @param object promises* Promise objects
+ * @return object Promise object of created Deferred object based on these specified Deferred objects.
+ */
+setStaticMember(Deferred, "when", LMD(promises*) {
+    var whenDeferred = new global.Deferred();
+    var promise = whenDeferred.promise();
+    if (promises.count === 0) {
+        whenDeferred.resolve();
+        invalidate whenDeferred;
+        return promise;
+    }
+    whenDeferred._whenPromisesCount = promises.count;
+    whenDeferred._whenDoneCount = 0;
+
+    whenDeferred._whenDone = LMD() {
+        if (++_whenDoneCount < _whenPromisesCount) { return; }
+        resolve();
+        invalidate this;
+    } incontextof whenDeferred;
+
+    whenDeferred._whenFail = LMD() {
+        reject();
+        invalidate this;
+    } incontextof whenDeferred;
+
+    for (var i = 0; i < promises.count; ++i) {
+        typeCheck(promises[i], "Promise")
+        if (promises[i].state === PromiseState_Rejected) {
+            global.gAsyncCaller.call(whenDeferred._whenFail);
+            break;
+        }
+        promises[i]
+            .done(whenDeferred._whenDone)
+            .fail(whenDeferred._whenFail);
+    }
+    return promise;
+});

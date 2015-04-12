@@ -1,0 +1,71 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(AbstractActionHandler)
+{
+    Func(init)(option:Dictionary) {
+        checkArgs
+        typeIntVoid(option.duration)
+        typeIntVoid(option.delay)
+        if (option.duration !== void) {
+            this._duration = option.duration;
+        }
+        if (option.delay !== void) {
+            this._delay = option.delay;
+        }
+
+        this._init(...);
+
+        typeNull(this._deferred)
+        this._deferred = new Deferred();
+        return _deferred.promise();
+    }
+
+    Func(getValue)(elapsedTick:int) {
+        checkArgs
+        if (this._delay !== void) {
+            elapsedTick -= this._delay;
+            if (elapsedTick < 0) return void;
+        }
+        if (this._isCompleted(elapsedTick)) {
+            this._deferred.resolve(this);
+            invalidate this._deferred;
+            this._deferred = null;
+            return this.getResultValue();
+        }
+        return this._getValue(elapsedTick);
+    }
+
+    // アクション終了後の値を返す
+    Func(getResultValue)() { return 0; }
+
+    property duration { getter { return this._duration; } }
+
+    var _duration;
+    var _delay;
+    var _deferred = null;
+
+    Constructor() { doNothing(); }
+
+    Finalize() {
+        if (this._deferred !== null) {
+            if (this._deferred.state === PromiseState_Pending) {
+                this._deferred.reject(this);
+            }
+            invalidate this._deferred;
+        }
+    }
+
+    // 初期化する
+    AbstractFunc(_init)(option:Dictionary)
+
+    // 指定された時間の値を返す
+    AbstractFunc(_getValue)(elapsedTick:int)
+
+    // アクションが終了しているか返す
+    Func(_isCompleted)(elapsedTick:int) {
+        return this._duration !== void && elapsedTick >= this._duration;
+    }
+
+    AbstractFunc(_clone)(targetProperty:Property, option:Dictionary)
+}

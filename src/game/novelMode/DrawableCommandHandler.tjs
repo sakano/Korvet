@@ -1,0 +1,86 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+
+Class(DrawableCommandHandler)
+{
+    var image = new Image();
+    var backImage = new Image();
+    var parentMatrix = new ImageMatrix();
+    var backParentMatrix = new ImageMatrix();
+    var foreFileLoaded = false;
+    var backFileLoaded = false;
+
+    Constructor() {
+        image.setParent(parentMatrix);
+        backImage.setParent(backParentMatrix);
+    }
+
+    Func(load)(file:string, toBack:bool=false) {
+        checkArgs
+        if (toBack) {
+            backFileLoaded = true;
+            backImage.load(file);
+            backParentMatrix.originX = backImage.width/2;
+            backParentMatrix.originY = backImage.height/2;
+            backParentMatrix.x = -backImage.width/2;
+            backParentMatrix.y = -backImage.height/2;
+            backImage._matrix.originX =  backImage.width/2;
+            backImage._matrix.originY =  backImage.height/2;
+        } else {
+            foreFileLoaded = true;
+            image.load(file);
+            parentMatrix.originX = image.width/2;
+            parentMatrix.originY = image.height/2;
+            parentMatrix.x = -image.width/2;
+            parentMatrix.y = -image.height/2;
+            image._matrix.originX = image.width/2;
+            image._matrix.originY = image.height/2;
+        }
+    }
+
+    Func(swapForeBack)() {
+        image <-> backImage;
+        parentMatrix <-> backParentMatrix;
+        foreFileLoaded <-> backFileLoaded;
+    }
+
+    Func(onCommand)(commandInfo:Dictionary) {
+        if (commandInfo.name !== "stage") return void;
+
+        var info = %[];
+        commandInfo.keys.foreach(LMD(index, key, values, info) {
+            info[key] = values[index];
+        }, commandInfo.values, info);
+
+        load(@"bg${info.place}_${info.stime}_${info.size}", true);
+
+        return %[
+            trans: %[
+                priority : 3,
+                type : TransitionType_Crossfade,
+                option: %[
+                    time:2000,
+                ]
+            ]
+        ];
+    }
+
+    Func(draw)(fore:Layer? = null, back:Layer? = null, force:bool=false) {
+        checkArgs
+        if (fore !== null && (image.redraw || force)) {
+            fore.fill(0);
+            if (foreFileLoaded) image.draw(fore, true);
+        }
+        if (back !== null && (backImage.redraw || force)) {
+            back.fill(0);
+            if (backFileLoaded) backImage.draw(back, true);
+        }
+    }
+
+    Func(setParentMatrix)(matrix:ImageMatrix) {
+        checkArgs
+        parentMatrix.setParent(matrix);
+        backParentMatrix.setParent(matrix);
+    }
+}

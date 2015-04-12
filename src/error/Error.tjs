@@ -1,0 +1,29 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(Error)
+{
+    property message { getter { return _message; } }
+
+    property internalError { getter { return _internalError; } }
+
+    property allMessage {
+        getter {
+            if (_internalError !== null && typeof _internalError.allMessage !== "undefined") {
+                return message + "\r\n ---- \r\n" + _internalError.allMessage;
+            }
+            return message;
+        }
+    }
+
+
+
+    var _message;
+    var _internalError;
+
+    Constructor(message:string, internalError:Error? = null) {
+        checkArgs
+        _message = message;
+        _internalError = internalError;
+    }
+}

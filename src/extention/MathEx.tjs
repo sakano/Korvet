@@ -1,0 +1,38 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+// valueがNaNならtrue
+setStaticMember(Math, "isNaN", LMD(value) {
+    return (typeof value === "Real" && (string)value === "NaN");
+});
+
+// Math.randomの乱数種を設定
+setStaticMember(Math, "setSeed", LMD(seed) {
+    if (seed === void) seed = System.getTickCount();
+    var context = Scripts.getObjectContext(Math.random);
+    if (context.staticGenerator === void) {
+        context.staticGenerator = new Math.RandomGenerator(seed);
+    } else {
+        context.staticGenerator.randomize(seed);
+    }
+} incontextof global);
+
+// 0以上1未満の乱数を返す(RandomGeneratorを使うように修正)
+setStaticMember(Math, "random", LMD() {
+    if (this.staticGenerator === void) {
+        global.Math.setSeed();
+    }
+    return staticGenerator.random();
+} incontextof %[]);
+
+
+// min 以上 max 以下の整数の乱数を返す
+setStaticMember(Math, "randomInt", LMD(min:int, max:int) {
+    checkArgs
+    assert(min <= max)
+    if (min > max) { min <-> max; }
+    var result = (int)(Math.random() * (max - min + 1)) + min;
+    typeInt(result)
+    assert(min <= result && result <= max)
+    return result;
+});

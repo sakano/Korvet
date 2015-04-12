@@ -1,0 +1,25 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(GameMode)
+{
+    var _game;
+
+    Constructor(game) {
+        _game = game;
+    }
+
+    Finalize() {}
+
+    Func(initialize)() {}
+
+    Func(pause)() {}
+
+    Func(resume)() {}
+
+    Func(bindWindowEvent)() { _game.bindWindowEvent(...); }
+    Func(bindMapWindowEvent)() { _game.bindMapWindowEvent(...); }
+
+    Func(getScreen)() { return _game.getScreen(); }
+    Func(releaseScreen)() { _game.releaseScreen(); }
+}

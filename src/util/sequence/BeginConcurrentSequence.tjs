@@ -1,0 +1,122 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(BeginConcurrentSequence, SuspendableSequence)
+{
+    OverrideFunc(run)(beginTick:int, consumableTick:int) {
+        typeNotNull(this._child, ASSERT_BEGINCONCURRENTSEQUENCE_EMPTY)
+        assert(!this._running)
+        if (this._child === null) return;
+
+        this._running = true;
+        for (var sequence = _child.getHead(); sequence !== null; sequence = sequence.getNext()) {
+            // シーケンスを実行開始
+            var promise = sequence.run(*);
+
+            // 実行完了した時は消費時間を記録
+            if (promise === void) {
+                this._recoredConsumedTick(sequence.getConsumedTick());
+                continue;
+            }
+
+            // シーケンスが実行完了したときに_onSequenceCompletedが呼ばれるようにする
+            typeCheck(promise, "Promise")
+            promise.done(_onSequenceCompleted);
+
+            // 未完了のシーケンスを記録
+            this._sequences.add(sequence);
+        }
+
+        if (this._sequences.count === 0) return;
+        return this._suspend();
+    }
+
+    OverrideFunc(skip)() {
+        // まだ実行開始していなければ実行
+        if (!this._running) {
+            this.run(*);
+        }
+        this._running = false;
+
+        // 実行完了していないシーケンス全てをスキップ
+        this._foreachSequences(LMD(sequence) { sequence.skip(); });
+    }
+
+    OverrideFunc(onTick)() {
+        assert(this._running)
+        // 実行中のシーケンス全てに通知
+        this._foreachSequences(LMD(sequence, *) { sequence.onTick(*); }, *);
+    }
+
+    OverrideFunc(trigger)() {
+        assert(this._running)
+        // 実行中のシーケンス全てに通知
+        this._foreachSequences(LMD(sequence, *) { sequence.trigger(*); }, *);
+    }
+
+
+
+    var _sequences = [];
+    var _completedSequences = [];
+    var _running = false;
+
+    Constructor() {
+        _appendToChildOnce = true;
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate this._sequences;
+        invalidate this._completedSequences;
+    }
+
+    OverrideFunc(_cloneSelf) { return new global.BeginConcurrentSequence(); }
+
+    OverrideFunc(_isEndSequence)(sequence:AbstractSequence) {
+        return sequence instanceof "EndConcurrentSequence";
+    }
+
+    Func(_onSequenceCompleted)(sequence:AbstractSequence) {
+        // 実行完了したシーケンスを記録する
+        this._completedSequences.add(sequence);
+
+        this._recoredConsumedTick(sequence.getConsumedTick());
+
+        if (this._sequences.count === this._completedSequences.count) {
+            if (!this._running) return;
+            this._running = false;
+            // 全てのシーケンスが実行完了したら再開を通知
+            this._resume();
+        }
+    }
+
+    Func(_foreachSequences)(callback:Function, *) {
+        // callbackを実行
+        for (var i = 0; i < this._sequences.count; ++i) {
+            callback(this._sequences[i], *);
+        }
+
+        // callback中に完了したシーケンスを削除
+        if (this._completedSequences.count === 0) return;
+        for (var i = 0; i < this._completedSequences.count; ++i) {
+            this._sequences.remove(this._completedSequences[i]);
+        }
+        this._completedSequences.clear();
+    }
+
+    Func(_recoredConsumedTick)(consumedTick:int) {
+        // 最長の消費時間を記録
+        if (this._consumedTick < consumedTick) {
+            this._consumedTick = consumedTick;
+        }
+    }
+}
+
+
+
+ClassExtends(EndConcurrentSequence, DoNothingSequence)
+{
+    Constructor() { super.DoNothingSequence(); }
+    Finalize() { super.finalize(); }
+    OverrideFunc(_cloneSelf) { return new global.EndConcurrentSequence(); }
+}

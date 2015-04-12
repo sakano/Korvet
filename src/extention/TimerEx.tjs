@@ -1,0 +1,8 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+setStaticMember(Timer, "create", LMD() {
+    var timer = new global.Timer(...);
+    m4_ifelse(DEBUG, 1, global.logMemoryLeakForDebug("Timer", timer);)
+    return timer;
+} incontextof global);

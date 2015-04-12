@@ -1,0 +1,130 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(MultiMap)
+{
+    Func(put)(key:string, value:any) {
+        checkArgs
+        if (this._data[key] === void) this._data[key] = [];
+        return this._data[key].add(value);
+    }
+
+    Func(get)(key:string) {
+        checkArgs
+        if (this._data[key] === void) return [];
+        return this._data[key].cloneShallow();
+    }
+
+    Func(remove)(key:string, value:any) {
+        checkArgs
+        if (this._data[key] === void) return false;
+        var removed = this._data[key].remove(value) > 0;
+        if (removed && this._data[key].count === 0) { _deleteKey(key); }
+        return removed;
+    }
+
+    Func(removeKey)(key:string) {
+        checkArgs
+        if (this._data[key] === void) return 0;
+        var removedCount = this._data[key].count;
+        _deleteKey(key);
+        return removedCount;
+    }
+
+    Func(removeValue)(value:any) {
+        checkArgs
+        var keys = getKeys();
+        var removedTotal = 0;
+        for (var i = keys.count - 1; i >= 0; --i) {
+            var removedCount = this._data[keys[i]].remove(value);
+            removedTotal += removedCount;
+            if (removedCount > 0 && this._data[keys[i]].count === 0) { _deleteKey(keys[i]); }
+        }
+        return removedTotal;
+    }
+
+    Func(clear)() {
+        this._data.dispose();
+    }
+
+    Func(contains)(key:string, value:any) {
+        checkArgs
+        return this._data[key] !== void && this._data[key].find(value) >= 0;
+    }
+
+    Func(containsKey)(key:string) {
+        checkArgs
+        return this._data[key] !== void;
+    }
+
+    Func(containsValue)(value:any) {
+        checkArgs
+        var keys = getKeys();
+        for (var i = keys.count - 1; i >= 0; --i) {
+            if (this._data[keys[i]].find(value) >= 0) return true;
+        }
+        return false;
+    }
+
+    Func(getKeys)() {
+        return global.getKeys(this._data);
+    }
+
+    Func(values)() {
+        var values = [];
+        var keys = getKeys();
+        for (var i = keys.count - 1; i >= 0; --i) {
+            values.push(this._data[keys[i]]*);
+        }
+        return values;
+    }
+
+    Func(foreach)(callback:Function, *) {
+        checkArgs
+        return global.foreach(this._data, LMD(key:string, values:Array, callback:Function, *) {
+            return callback(key, values.cloneShallow(), *);
+        }, callback, *);
+    }
+
+    Func(clone)() {
+        var map = new global.MultiMap();
+        map._data = this._data.clone();
+        return map;
+    }
+
+    Func(toString)() {
+        return this._data.toString();
+    }
+
+    Func(equals)(target:MultiMap) {
+        checkArgs
+        if (!(target instanceof "MultiMap")) return false;
+        return global.equals(this._data, target._data);
+    }
+
+    Func(isEmpty)() {
+        return this._data.isEmpty();
+    }
+
+
+
+    var _data = %[];
+
+    Constructor() {
+        global.includeSerializable(this, [
+            "_data"
+        ]);
+    }
+
+    Finalize() {
+        clear();
+        invalidate this._data;
+        global.finalizeSerializable(this);
+    }
+
+    Func(_deleteKey)(key:string) {
+        checkArgs
+        invalidate this._data[key];
+        delete this._data[key];
+    }
+}

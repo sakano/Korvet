@@ -1,0 +1,43 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(SquareWaveActionHandler, AbstractActionHandler)
+{
+    var _value, _value2;
+    var _time, _timeTotal;
+    var _elapsedCount;
+
+    OverrideFunc(_init)(option:Dictionary) {
+        typeNumber(option.value)
+        typeNumber(option.value2)
+        typeInt(option.time)
+        typeIntVoid(option.time2)
+        assert(option.time > 0)
+        assert(option.time2 === void || option.time2 > 0)
+
+        this._value = option.value;
+        this._value2 = option.value2;
+
+        this._time = option.time > 0 ? option.time : 1;
+
+        if (option.time2 !== void) {
+            this._timeTotal = this._time + (option.time2 > 0 ? option.time2 : 1);
+        } else {
+            this._timeTotal = this._time * 2;
+        }
+
+        this._elapsedCount = 0;
+    }
+
+    OverrideFunc(_getValue)(elapsedTick:int) {
+        elapsedTick = elapsedTick - (this._timeTotal * this._elapsedCount);
+        while (elapsedTick >= this._timeTotal) {
+            elapsedTick -= this._timeTotal;
+            ++this._elapsedCount;
+        }
+        return elapsedTick < this._time ? this._value : this._value2;
+    }
+}
+
+// ActionHandlerとして登録
+ActionSequence.registerHandler(ActionHandler_SquareWave, SquareWaveActionHandler);

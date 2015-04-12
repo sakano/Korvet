@@ -1,0 +1,92 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+// レイヤ全体を指定した色に塗る
+Layer.fill = LMD(color:int = 0) {
+    checkArgs
+    fillRect(0, 0, imageWidth, imageHeight, color);
+};
+
+{
+    // トランジション中か
+    property inTransition { getter { return this._inTransition; } }
+    Layer.inTransition = &inTransition;
+    Layer._inTransition = false;
+
+
+    // inTransitionを更新し、promiseオブジェクトを返す
+    Layer._beginTransition_deferred = Layer.beginTransition;
+    Layer.beginTransition = LMD {
+        this._inTransition = true;
+        this._beginTransition_deferred(...);
+        if (this._transitionDeferred !== void) {
+            invalidate this._transitionDeferred;
+        }
+        this._transitionDeferred = new global.Deferred();
+        return this._transitionDeferred.promise();
+    };
+
+    // inTransitionを更新し、deferredに通知
+    Layer._onTransitionCompleted_deferred = Layer.onTransitionCompleted;
+    Layer.onTransitionCompleted = LMD {
+        this._inTransition = false;
+        this._onTransitionCompleted_deferred(...);
+        if (this._transitionDeferred === void) {
+            assert(false)
+            return;
+        }
+        this._transitionDeferred.resolve(...);
+        invalidate this._transitionDeferred;
+        this._transitionDeferred = void;
+    };
+
+    Layer._transitionDeferred = void;
+}
+
+/**
+ * Transform and copy an Bitmap.
+ * @param object dest The Bitmap object to be drawn.
+ * @param object src The Bitmap object to be transformed and copied.
+ * @param number originX The x-coordinate of transform origin.
+ * @param number originY The y-coordinate of transform origin.
+ * @param number scaleX The rate of magnification in the horizontal direction.
+ * @param number scaleY The rate of magnification in the vertical direction.
+ * @param number angle The clockwise angle to rotate the image.
+ * @param number translateX The value to translate the image along the X axis.
+ * @param number translateY The value to translate the image along the Y axis.
+ */
+setStaticMember(ImageFunction, "operateTransform", LMD(
+    dest, src,
+    originX = 0, originY = 0,
+    scaleX = 1, scaleY = 1,
+    angle = 0,
+    translateX = 0, translateY = 0) {
+    var _11 = scaleX, _12 = 0;
+    var _21 = 0,     _22 = scaleY;
+    if (angle !== 0) {
+        angle *= MATH_PI / 180;
+        var sin = Math.sin(angle);
+        var cos = Math.cos(angle);
+        var t11 = _11, t12 = _12;
+        _11 = t11 * cos - _21 * sin;
+        _21 = t11 * sin + _21 * cos;
+        _12 = t12 * cos - _22 * sin;
+        _22 = t12 * sin + _22 * cos;
+    }
+    var aX = -originX,            aY = -originY;
+    var bX = src.width - originX, bY = -originY;
+    var cX = -originX,            cY = src.height - originY;
+    m4_define(&--MULTIPLY_MATRIX22_VECTOR2--&,&-- {
+        var tx = ($5);
+        $5 = ($1) * tx + ($2) * ($6);
+        $6 = ($3) * tx + ($4) * ($6);
+    }--&)
+    MULTIPLY_MATRIX22_VECTOR2(_11, _12, _21, _22, aX, aY)
+    MULTIPLY_MATRIX22_VECTOR2(_11, _12, _21, _22, bX, bY)
+    MULTIPLY_MATRIX22_VECTOR2(_11, _12, _21, _22, cX, cY)
+    var dX = originX + translateX - 0.5;
+    var dY = originY + translateY - 0.5;
+    ImageFunction.operateAffine(dest, src, aX + dX, aY + dY, bX + dX, bY + dY, cX + dX, cY + dY,
+        null, null, false, omAlpha, dfAlpha, 255, stFastLinear|stRefNoClip);
+    m4_undefine(MULTIPLY_MATRIX22_VECTOR2)
+});

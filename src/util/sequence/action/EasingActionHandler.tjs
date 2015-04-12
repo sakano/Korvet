@@ -1,0 +1,53 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(EasingActionHandler, AbstractActionHandler)
+{
+    OverrideFunc(getResultValue) {
+        return this._resultValue;
+    }
+
+
+
+    var _resultValue;
+    var _interpolateMethod;
+
+    OverrideFunc(_init)(option:Dictionary) {
+        typeInt(this._duration)
+        typeNumber(option.value)
+        typeString(option.method)
+        typeFunction(global.EasingActionHandler.methods[option.method])
+        this._resultValue = option.value;
+        this._interpolateMethod = (global.EasingActionHandler.methods[option.method] incontextof this);
+    }
+
+    OverrideFunc(_getValue)(elapsedTick:int) {
+        return this._interpolateMethod(...);
+    }
+}
+
+// 補完メソッドの一覧
+setStaticMember(EasingActionHandler, "methods", %[]);
+
+// 補完メソッドを追加する関数
+setStaticMember(EasingActionHandler, "registerMethod", LMD(methodType:string, interpolateMethod:Function) {
+    checkArgs
+    assert(EasingActionHandler.methods[methodType] === void)
+    EasingActionHandler.methods[methodType] = interpolateMethod;
+});
+
+// 基本的な補完メソッドを追加
+EasingActionHandler.registerMethod(EasingMethod_Linear, LMD(elapsedTick:int) {
+    return this._resultValue * elapsedTick / this._duration;
+});
+EasingActionHandler.registerMethod(EasingMethod_QuadraticIn, LMD(elapsedTick:int) {
+    elapsedTick = elapsedTick / this._duration;
+    return this._resultValue * elapsedTick * elapsedTick;
+});
+EasingActionHandler.registerMethod(EasingMethod_QuadraticOut, LMD(elapsedTick:int) {
+    elapsedTick = elapsedTick / this._duration;
+    return -(this._resultValue * elapsedTick * (elapsedTick - 2));
+});
+
+// ActionHandlerとして登録
+ActionSequence.registerHandler(ActionHandler_Easing, EasingActionHandler);

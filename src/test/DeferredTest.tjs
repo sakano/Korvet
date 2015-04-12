@@ -1,0 +1,825 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+{
+    function doAsync() {
+        global.gAsyncCaller._do();
+    }
+
+    {
+        // check state
+        var deferred = new Deferred();
+        assertAlways( deferred.state === PromiseState_Pending )
+        deferred.resolve();
+        assertAlways( deferred.state === PromiseState_Resolved )
+        exception(deferred.reject())
+        assertAlways( deferred.state === PromiseState_Resolved )
+        exception(deferred.resolve())
+        assertAlways( deferred.state === PromiseState_Resolved )
+        invalidate deferred;
+    }
+    {
+        var deferred = new Deferred();
+        assertAlways( deferred.state === PromiseState_Pending )
+        deferred.reject();
+        assertAlways( deferred.state === PromiseState_Rejected )
+        exception(deferred.resolve());
+        assertAlways( deferred.state === PromiseState_Rejected )
+        exception(deferred.reject());
+        assertAlways( deferred.state === PromiseState_Rejected )
+        invalidate deferred;
+    }
+    {    
+        // done
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred.done(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        assertAlways( context.count === 0 )
+        deferred.resolve();
+        assertAlways( context.count === 1 )
+        assertAlways( deferred.state === PromiseState_Resolved )
+        exception(deferred.resolve())
+        assertAlways( context.count === 1 )
+        exception(deferred.reject())
+        assertAlways( context.count === 1 )
+        deferred.done(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        assertAlways( context.count === 1 )
+        doAsync();
+        assertAlways( context.count === 2 )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred.done(LMD() { assertAlways( false ) } incontextof context);
+        assertAlways( context.count === 0 )
+        deferred.reject();
+        assertAlways( context.count === 0 )
+        assertAlways( deferred.state === PromiseState_Rejected )
+        exception(deferred.resolve())
+        assertAlways( context.count === 0 )
+        exception(deferred.reject())
+        assertAlways( context.count === 0 )
+        deferred.done(LMD() { assertAlways( false ) } incontextof context);
+        assertAlways( context.count === 0 )
+        doAsync();
+        assertAlways( context.count === 0 )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred.done(LMD(arg1, arg2, arg3) {
+            assertAlways( arg1 === "value")
+            assertAlways( arg2 === null )
+            assertAlways( arg3 === void )
+            assertAlways( count++ === 0 )
+        } incontextof context);
+        deferred.done(LMD(arg1, arg2, arg3) {
+            assertAlways( arg1 === "value")
+            assertAlways( arg2 === null )
+            assertAlways( arg3 === void )
+            assertAlways( count++ === 1 )
+        } incontextof context);
+        deferred.resolve("value", null);
+        assertAlways( context.count === 2 )
+        assertAlways( deferred.state === PromiseState_Resolved )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        var promise = deferred.promise();
+        assertAlways( promise.state === PromiseState_Pending )
+        promise.done(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        assertAlways( context.count === 0 )
+        promise.done(LMD(arg1, arg2) {
+            assertAlways( count++ === 1 )
+            assertAlways( arg1 === 923455 )
+            assertAlways( arg2 === 3.443 )
+        } incontextof context);
+        assertAlways( context.count === 0 )
+        deferred.resolve(923455, 3.443);
+        assertAlways( context.count === 2 )
+        assertAlways( deferred.state === PromiseState_Resolved )
+        assertAlways( promise.state === PromiseState_Resolved )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        // fail
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred.fail(LMD() { assertAlways( false ) } incontextof context);
+        assertAlways( context.count === 0 )
+        deferred.resolve();
+        assertAlways( context.count === 0 )
+        assertAlways( deferred.state === PromiseState_Resolved )
+        exception(deferred.resolve())
+        assertAlways( context.count === 0 )
+        exception(deferred.reject())
+        assertAlways( context.count === 0 )
+        deferred.fail(LMD() { assertAlways( false ) } incontextof context);
+        assertAlways( context.count === 0 )
+        doAsync();
+        assertAlways( context.count === 0 )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred.fail(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        assertAlways( context.count === 0 )
+        deferred.reject();
+        assertAlways( context.count === 1)
+        assertAlways( deferred.state === PromiseState_Rejected )
+        exception(deferred.resolve())
+        assertAlways( context.count === 1 )
+        exception(deferred.reject())
+        assertAlways( context.count === 1 )
+        deferred.fail(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        assertAlways( context.count === 1 )
+        doAsync();
+        assertAlways( context.count === 2 )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred.fail(LMD(arg1, arg2, arg3) {
+            assertAlways( arg1 === "value")
+            assertAlways( arg2 === null )
+            assertAlways( arg3 === void )
+            assertAlways( count++ === 0 )
+        } incontextof context);
+        deferred.fail(LMD(arg1, arg2, arg3) {
+            assertAlways( arg1 === "value")
+            assertAlways( arg2 === null )
+            assertAlways( arg3 === void )
+            assertAlways( count++ === 1 )
+        } incontextof context);
+        deferred.reject("value", null);
+        assertAlways( context.count === 2 )
+        assertAlways( deferred.state === PromiseState_Rejected )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        var promise = deferred.promise();
+        assertAlways( promise.state === PromiseState_Pending )
+        promise.fail(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        assertAlways( context.count === 0 )
+        promise.fail(LMD(arg1, arg2) {
+            assertAlways( count++ === 1 )
+            assertAlways( arg1 === true )
+            assertAlways( arg2 === false )
+        } incontextof context);
+        assertAlways( context.count === 0 )
+        deferred.reject(true, false);
+        assertAlways( context.count === 2 )
+        assertAlways( deferred.state === PromiseState_Rejected )
+        assertAlways( promise.state === PromiseState_Rejected )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        // always
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred.always(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        assertAlways( context.count === 0 )
+        deferred.resolve();
+        assertAlways( context.count === 1 )
+        assertAlways( deferred.state === PromiseState_Resolved )
+        exception(deferred.resolve())
+        assertAlways( context.count === 1 )
+        exception(deferred.reject())
+        assertAlways( context.count === 1 )
+        deferred.always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        assertAlways( context.count === 1 )
+        doAsync();
+        assertAlways( context.count === 2 )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred.always(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        assertAlways( context.count === 0 )
+        deferred.reject();
+        assertAlways( context.count === 1)
+        assertAlways( deferred.state === PromiseState_Rejected )
+        exception(deferred.resolve())
+        assertAlways( context.count === 1 )
+        exception(deferred.reject())
+        assertAlways( context.count === 1 )
+        deferred.always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        assertAlways( context.count === 1 )
+        doAsync();
+        assertAlways( context.count === 2 )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred.always(LMD(arg1, arg2, arg3) {
+            assertAlways( arg1 === "value")
+            assertAlways( arg2 === null )
+            assertAlways( arg3 === void )
+            assertAlways( count++ === 0 )
+        } incontextof context);
+        deferred.always(LMD(arg1, arg2, arg3) {
+            assertAlways( arg1 === "value")
+            assertAlways( arg2 === null )
+            assertAlways( arg3 === void )
+            assertAlways( count++ === 1 )
+        } incontextof context);
+        deferred.resolve("value", null);
+        assertAlways( context.count === 2 )
+        assertAlways( deferred.state === PromiseState_Resolved )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        var promise = deferred.promise();
+        assertAlways( promise.state === PromiseState_Pending )
+        promise.always(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        assertAlways( context.count === 0 )
+        promise.always(LMD(arg1, arg2) {
+            assertAlways( count++ === 1 )
+            assertAlways( arg1 === true )
+            assertAlways( arg2 === false )
+        } incontextof context);
+        assertAlways( context.count === 0 )
+        deferred.reject(true, false);
+        assertAlways( context.count === 2 )
+        assertAlways( deferred.state === PromiseState_Rejected )
+        assertAlways( promise.state === PromiseState_Rejected )
+        invalidate deferred;
+        invalidate context;
+        invalidate promise;
+    }
+    {
+        // mix
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred
+            .done(LMD() { assertAlways( count++ === 0 ) } incontextof context)
+            .fail(LMD() { assertAlways( false ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        deferred.resolve();
+        assertAlways( context.count === 2 )
+        assertAlways( deferred.state === PromiseState_Resolved )
+        exception(deferred.resolve())
+        exception(deferred.reject())
+        assertAlways( context.count === 2 )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred
+            .done(LMD() { assertAlways( false ) } incontextof context)
+            .fail(LMD() { assertAlways( count++ === 0 ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        deferred.reject();
+        assertAlways( context.count === 2 )
+        assertAlways( deferred.state === PromiseState_Rejected )
+        exception(deferred.resolve())
+        exception(deferred.reject())
+        assertAlways( context.count === 2 )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        var promise = deferred.promise();
+        assertAlways( promise.state === PromiseState_Pending )
+        promise
+            .done(LMD() { assertAlways( count++ === 0 ) } incontextof context)
+            .fail(LMD() { assertAlways( false ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        assertAlways( context.count === 0 )
+        deferred.resolve();
+        assertAlways( context.count === 2 )
+        assertAlways( deferred.state === PromiseState_Resolved )
+        assertAlways( promise.state === PromiseState_Resolved )
+        invalidate deferred;
+        invalidate context;
+        invalidate promise;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        var promise = deferred.promise();
+        assertAlways( promise.state === PromiseState_Pending )
+        promise
+            .done(LMD() { assertAlways( false ) } incontextof context)
+            .fail(LMD() { assertAlways( count++ === 0 ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        assertAlways( context.count === 0 )
+        deferred.reject();
+        assertAlways( context.count === 2 )
+        assertAlways( deferred.state === PromiseState_Rejected )
+        assertAlways( promise.state === PromiseState_Rejected )
+        invalidate deferred;
+        invalidate context;
+        invalidate promise;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred
+            .done(LMD() { assertAlways( count++ === 0 ) } incontextof context)
+            .fail(LMD() { assertAlways( false ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 1 ) } incontextof context)
+            .fail(LMD() { assertAlways( false ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 2 ) } incontextof context)
+            .done(LMD() { assertAlways( count++ === 3 ) } incontextof context);
+        deferred.resolve();
+        assertAlways( context.count === 4 )
+        assertAlways( deferred.state === PromiseState_Resolved )
+        exception(deferred.resolve())
+        exception(deferred.reject())
+        assertAlways( context.count === 4 )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        deferred
+            .done(LMD() { assertAlways( false ) } incontextof context)
+            .fail(LMD() { assertAlways( count++ === 0 ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 1 ) } incontextof context)
+            .fail(LMD() { assertAlways( count++ === 2 ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 3 ) } incontextof context)
+            .done(LMD() { assertAlways( false ) } incontextof context);
+        deferred.reject();
+        assertAlways( context.count === 4 )
+        assertAlways( deferred.state === PromiseState_Rejected )
+        exception(deferred.resolve())
+        exception(deferred.reject())
+        assertAlways( context.count === 4 )
+        invalidate deferred;
+        invalidate context;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        var promise = deferred.promise();
+        assertAlways( promise.state === PromiseState_Pending )
+        promise
+            .done(LMD() { assertAlways( count++ === 0 ) } incontextof context)
+            .fail(LMD() { assertAlways( false ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 1 ) } incontextof context)
+            .fail(LMD() { assertAlways( false ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 2 ) } incontextof context)
+            .done(LMD() { assertAlways( count++ === 3 ) } incontextof context);
+        deferred.resolve();
+        assertAlways( context.count === 4 )
+        assertAlways( deferred.state === PromiseState_Resolved )
+        exception(deferred.resolve())
+        exception(deferred.reject())
+        assertAlways( deferred.state === PromiseState_Resolved )
+        assertAlways( context.count === 4 )
+        invalidate deferred;
+        invalidate context;
+        invalidate promise;
+    }
+    {
+        var deferred = new Deferred();
+        var context = %[ count : 0 ];
+        var promise = deferred.promise();
+        assertAlways( promise.state === PromiseState_Pending )
+        promise
+            .done(LMD() { assertAlways( false ) } incontextof context)
+            .fail(LMD() { assertAlways( count++ === 0 ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 1 ) } incontextof context)
+            .fail(LMD() { assertAlways( count++ === 2 ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 3 ) } incontextof context)
+            .done(LMD() { assertAlways( false ) } incontextof context);
+        deferred.reject();
+        assertAlways( context.count === 4 )
+        assertAlways( deferred.state === PromiseState_Rejected )
+        exception(deferred.resolve())
+        assertAlways( deferred.state === PromiseState_Rejected )
+        exception(deferred.reject())
+        assertAlways( deferred.state === PromiseState_Rejected )
+        assertAlways( context.count === 4 )
+        invalidate deferred;
+        invalidate context;
+        invalidate promise;
+    }
+    {   // when
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        var deferred2 = new Deferred();
+        var deferred3 = new Deferred();
+        var promise = Deferred.when(deferred.promise(), deferred2.promise(), deferred3.promise());
+        promise.done(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        promise.fail(LMD() { assertAlways( false ) } incontextof context);
+        promise.always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        assertAlways( promise.state === PromiseState_Pending )
+        assertAlways( context.count === 0 )
+        deferred.resolve();
+        assertAlways( promise.state === PromiseState_Pending )
+        assertAlways( context.count === 0 )
+        deferred2.resolve();
+        assertAlways( promise.state === PromiseState_Pending )
+        assertAlways( context.count === 0 )
+        deferred3.resolve();
+        assertAlways( promise.state === PromiseState_Resolved )
+        assertAlways( context.count === 2 )
+        invalidate context;
+        invalidate deferred;
+        invalidate deferred2;
+        invalidate deferred3;
+        invalidate promise;
+    }
+    {
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        var deferred2 = new Deferred();
+        var deferred3 = new Deferred();
+        var promise = Deferred.when(deferred.promise(), deferred2.promise(), deferred3.promise());
+        promise.done(LMD() { assertAlways( false ) } incontextof context);
+        promise.fail(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        promise.always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        assertAlways( promise.state === PromiseState_Pending )
+        assertAlways( context.count === 0 )
+        deferred.reject();
+        assertAlways( promise.state === PromiseState_Rejected )
+        assertAlways( context.count === 2 )
+        deferred2.reject();
+        assertAlways( promise.state === PromiseState_Rejected )
+        assertAlways( context.count === 2 )
+        deferred3.reject();
+        assertAlways( promise.state === PromiseState_Rejected )
+        assertAlways( context.count === 2 )
+        exception(deferred.resolve())
+        assertAlways( promise.state === PromiseState_Rejected )
+        assertAlways( context.count === 2 )
+        exception(deferred2.resolve())
+        assertAlways( promise.state === PromiseState_Rejected )
+        assertAlways( context.count === 2 )
+        exception(deferred3.resolve())
+        assertAlways( promise.state === PromiseState_Rejected )
+        assertAlways( context.count === 2 )
+        invalidate context;
+        invalidate deferred;
+        invalidate deferred2;
+        invalidate deferred3;
+        invalidate promise;
+    }
+    {
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        var deferred2 = new Deferred();
+        var deferred3 = new Deferred();
+        deferred.reject();
+        var promise = Deferred.when(deferred.promise(), deferred2.promise(), deferred3.promise());
+        promise.done(LMD() { assertAlways( false ) } incontextof context);
+        promise.fail(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        promise.always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        doAsync();
+        assertAlways( promise.state === PromiseState_Rejected )
+        assertAlways( context.count === 2 )
+        deferred2.reject();
+        deferred3.reject();
+        invalidate context;
+        invalidate deferred;
+        invalidate deferred2;
+        invalidate deferred3;
+        invalidate promise;
+    }
+    {
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        var deferred2 = new Deferred();
+        var deferred3 = new Deferred();
+        deferred.resolve();
+        var promise = Deferred.when(deferred.promise(), deferred2.promise(), deferred3.promise());
+        promise.done(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        promise.fail(LMD() { assertAlways( false) } incontextof context);
+        assertAlways( promise.state === PromiseState_Pending )
+        doAsync();
+        assertAlways( promise.state === PromiseState_Pending )
+        deferred2.resolve();
+        assertAlways( promise.state === PromiseState_Pending )
+        deferred3.resolve();
+        assertAlways( promise.state === PromiseState_Resolved )
+        assertAlways( context.count === 1 )
+        invalidate context;
+        invalidate deferred;
+        invalidate deferred2;
+        invalidate deferred3;
+        invalidate promise;
+    }
+    {
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        var deferred2 = new Deferred();
+        var deferred3 = new Deferred();
+        deferred.resolve();
+        deferred2.resolve();
+        deferred3.resolve();
+        var promise = Deferred.when(deferred.promise(), deferred2.promise(), deferred3.promise());
+        assertAlways( promise.state === PromiseState_Pending )
+        doAsync();
+        assertAlways( promise.state === PromiseState_Resolved )
+        promise.done(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        assertAlways( context.count === 0 )
+        doAsync();
+        assertAlways( context.count === 1 )
+        promise.fail(LMD() { assertAlways( false ) } incontextof context);
+        assertAlways( context.count === 1 )
+        doAsync();
+        assertAlways( context.count === 1 )
+        promise.always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        assertAlways( context.count === 1 )
+        doAsync();
+        assertAlways( context.count === 2 )
+        invalidate context;
+        invalidate deferred;
+        invalidate deferred2;
+        invalidate deferred3;
+        invalidate promise;
+    }
+    {
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        deferred.done(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        deferred.fail(LMD() { assertAlways( false ) } incontextof context);
+        var deferred2 = new Deferred();
+        deferred2.done(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        deferred2.fail(LMD() { assertAlways( false ) } incontextof context);
+        var deferred3 = new Deferred();
+        deferred3.done(LMD() { assertAlways( count++ === 2 ) } incontextof context);
+        deferred3.fail(LMD() { assertAlways( false ) } incontextof context);
+        var promise = Deferred.when(deferred.promise(), deferred2.promise(), deferred3.promise());
+        promise
+            .done(LMD() { assertAlways( count++ === 3 ) } incontextof context)
+            .fail(LMD() { assertAlways( false ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 4 ) } incontextof context);
+        assertAlways( promise.state === PromiseState_Pending )
+        assertAlways( context.count === 0 )
+        deferred.resolve();
+        assertAlways( promise.state === PromiseState_Pending )
+        assertAlways( context.count === 1 )
+        deferred2.resolve();
+        assertAlways( promise.state === PromiseState_Pending )
+        assertAlways( context.count === 2 )
+        deferred3.resolve();
+        assertAlways( promise.state === PromiseState_Resolved )
+        assertAlways( context.count === 5 )
+        invalidate context;
+        invalidate deferred;
+        invalidate deferred2;
+        invalidate deferred3;
+        invalidate promise;
+    }
+    {
+        var context = %[ count : 0 ];
+        var promise = Deferred.when();
+        promise.done(LMD() { assertAlways( count++ === 0 ) } incontextof context);
+        promise.fail(LMD() { assertAlways( false ) } incontextof context);
+        promise.always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
+        assertAlways( context.count === 0 )
+        doAsync();
+        assertAlways( context.count === 2 )
+        promise
+            .done(LMD() { assertAlways( count++ === 2 ) } incontextof context)
+            .fail(LMD() { assertAlways( false ) } incontextof context)
+            .always(LMD() { assertAlways( count++ === 3 ) } incontextof context);
+        assertAlways( context.count === 2 )
+        doAsync();
+        assertAlways( context.count === 4 )
+        invalidate context;
+        invalidate promise;
+    }
+    {    // invalid object
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        var promise = deferred.promise();
+        var func = LMD() { assertAlways( false ) } incontextof context;
+        promise.done(func);
+        invalidate func;
+        deferred.resolve();
+        assertAlways( promise.state === PromiseState_Resolved )
+        doAsync();
+        invalidate context;
+        invalidate deferred;
+        invalidate promise;
+    }
+    {
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        var promise = deferred.promise();
+        var func = LMD() { assertAlways( false ) } incontextof context;
+        promise.fail(func);
+        invalidate context;
+        deferred.reject();
+        doAsync();
+        assertAlways( promise.state === PromiseState_Rejected )
+        invalidate deferred;
+        invalidate promise;
+    }
+    {
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        var promise = deferred.promise();
+        var func = LMD() { assertAlways( false ) } incontextof context;
+        promise.always(func);
+        invalidate func;
+        invalidate context;
+        deferred.reject();
+        doAsync();
+        assertAlways( promise.state === PromiseState_Rejected )
+        invalidate deferred;
+        invalidate promise;
+    }
+    {   // then
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        var promise = deferred.promise();
+
+        var promise2 = promise.then(LMD(arg) {
+            assertAlways( arg === "ARG" )
+            assertAlways( count++ === 0 )
+            this.deferred2 = new global.Deferred();
+            return this.deferred2.promise();
+        } incontextof context);
+        assertAlways( promise !== promise2 )
+        assertAlways( context.count === 0 )
+
+        promise2
+            .done(LMD(arg) { assertAlways(arg === 123) assertAlways( count++ === 1 ) } incontextof context)
+            .fail(LMD() { assertAlways(false) } incontextof context);
+
+        deferred.resolve("ARG");
+        assertAlways( context.count === 1 )
+        assertAlways( promise.state === PromiseState_Resolved )
+        assertAlways( promise2.state === PromiseState_Pending )
+
+        context.deferred2.resolve(123);
+        assertAlways( context.count === 2 )
+        assertAlways( promise2.state === PromiseState_Resolved )
+
+        invalidate context.deferred2;
+        invalidate context;
+        invalidate deferred;
+        invalidate promise;
+        invalidate promise2;
+    }
+    {
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        var promise = deferred.promise();
+
+        var promise2 = promise.then(LMD(arg) {
+            assertAlways( arg === "ARG" )
+            assertAlways( count++ === 0 )
+            this.deferred2 = new global.Deferred();
+            return this.deferred2.promise();
+        } incontextof context);
+        assertAlways( promise !== promise2 )
+        assertAlways( context.count === 0 )
+
+        promise2
+            .fail(LMD(arg) { assertAlways(arg === 123) assertAlways( count++ === 1 ) } incontextof context)
+            .done(LMD() { assertAlways(false) } incontextof context);
+
+        deferred.resolve("ARG");
+        assertAlways( context.count === 1 )
+        assertAlways( promise.state === PromiseState_Resolved )
+        assertAlways( promise2.state === PromiseState_Pending )
+
+        context.deferred2.reject(123);
+        assertAlways( context.count === 2 )
+        assertAlways( promise2.state === PromiseState_Rejected )
+
+        invalidate context.deferred2;
+        invalidate context;
+        invalidate deferred;
+        invalidate promise;
+        invalidate promise2;
+    }
+    {
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        var promise = deferred.promise();
+
+        var promise2 = promise.then(
+            LMD() { assertAlways(false); },
+            LMD(arg) {
+                assertAlways( count++ === 0 )
+                this.deferred2 = new global.Deferred();
+                return this.deferred2.promise();
+            } incontextof context
+        );
+        assertAlways( promise !== promise2 )
+        assertAlways( context.count === 0 )
+
+        promise2
+            .done(LMD(arg) { assertAlways(arg === 123) assertAlways( count++ === 1 ) } incontextof context)
+            .fail(LMD() { assertAlways(false) } incontextof context)
+            .always(LMD(arg){ assertAlways(arg === 123) assertAlways( count++ === 2) } incontextof context);
+        deferred.reject();
+        assertAlways( context.count === 1 )
+        assertAlways( promise.state === PromiseState_Rejected )
+        assertAlways( promise2.state === PromiseState_Pending )
+
+        context.deferred2.resolve(123);
+        assertAlways( context.count === 3 )
+        assertAlways( promise2.state === PromiseState_Resolved )
+
+        invalidate context.deferred2;
+        invalidate context;
+        invalidate deferred;
+        invalidate promise;
+        invalidate promise2;
+    }
+    {
+        var context = %[ count : 0 ];
+        var deferred = new Deferred();
+        var promise = deferred.promise();
+
+        var promise2 = promise.then(
+            LMD() { assertAlways(false); },
+            LMD() {
+                assertAlways( count++ === 1 )
+                this.deferred2 = new global.Deferred();
+                return this.deferred2.promise();
+            } incontextof context
+        );
+        var promise3 = promise.then(
+            LMD() { assertAlways(false); },
+            LMD() {
+                assertAlways( count++ === 2 )
+                this.deferred3 = new global.Deferred();
+                return this.deferred3.promise();
+            } incontextof context
+        );
+
+        promise.done(LMD { assertAlways(false) });
+        promise.fail(LMD { assertAlways(count++ === 0) } incontextof context);
+        assertAlways( promise !== promise2 )
+        assertAlways( promise2 !== promise3 )
+        assertAlways( context.count === 0 )
+
+        promise2
+            .done(LMD() { assertAlways( count++ === 3 ) } incontextof context)
+            .fail(LMD() { assertAlways(false) } incontextof context);
+
+        promise3
+            .done(LMD() { assertAlways(false) } incontextof context)
+            .fail(LMD() { assertAlways(count++ === 4) } incontextof context);
+
+        deferred.reject();
+        assertAlways( context.count === 3 )
+        assertAlways( promise.state === PromiseState_Rejected )
+        assertAlways( promise2.state === PromiseState_Pending )
+        assertAlways( promise3.state === PromiseState_Pending )
+
+        context.deferred2.resolve();
+        assertAlways( context.count === 4 )
+        assertAlways( promise.state === PromiseState_Rejected )
+        assertAlways( promise2.state === PromiseState_Resolved )
+        assertAlways( promise3.state === PromiseState_Pending )
+
+        context.deferred3.reject();
+        assertAlways( context.count === 5 )
+        assertAlways( promise.state === PromiseState_Rejected )
+        assertAlways( promise2.state === PromiseState_Resolved )
+        assertAlways( promise3.state === PromiseState_Rejected )
+
+        promise.always(LMD() { assertAlways(count++ === 5) } incontextof context);
+        assertAlways( context.count === 5 )
+        doAsync();
+        assertAlways( context.count === 6 )
+
+        invalidate context.deferred2;
+        invalidate context.deferred3;
+        invalidate context;
+        invalidate deferred;
+        invalidate promise;
+        invalidate promise2;
+        invalidate promise3;
+    }
+
+    invalidate doAsync;
+}

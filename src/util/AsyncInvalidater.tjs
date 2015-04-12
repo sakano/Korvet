@@ -1,0 +1,34 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(AsyncInvalidater)
+{
+    Func(register)(object:object) {
+        checkArgs
+        // 指定されたオブジェクトを非同期に無効化する
+        this._objects.add(object);
+        this._trigger.trigger();
+    }
+
+
+
+    var _trigger;
+    var _objects = [];
+
+    Constructor() {
+        this._trigger = AsyncTrigger.create(_do, "");
+        this._trigger.cached = true;
+    }
+
+    Finalize() {
+        _do();
+        invalidate _trigger;
+        invalidate _objects;
+    }
+
+    Func(_do) {
+        assert(_trigger !== null)
+        // 登録されたオブジェクトを実際に無効化
+        _objects.dispose();
+    }
+}
