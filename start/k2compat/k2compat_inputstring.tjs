@@ -1,4 +1,4 @@
-// System.inputStringの互換実装
+﻿// System.inputStringの互換実装
 
 Krkr2CompatUtils.requireWIN32Dialog();
 

@@ -1,6 +1,6 @@
-”wŒi‰æ‘œ‘fŞ‚Í‚«‚Ü‚®‚êƒAƒtƒ^[‚Ì‚à‚Ì‚ğg‚Á‚Ä‚¢‚Ü‚·B
-‚«‚Ü‚®‚êƒAƒtƒ^[ : http://www5d.biglobe.ne.jp/~gakai/
+èƒŒæ™¯ç”»åƒç´ æã¯ãã¾ãã‚Œã‚¢ãƒ•ã‚¿ãƒ¼ã®ã‚‚ã®ã‚’ä½¿ã£ã¦ã„ã¾ã™ã€‚
+ãã¾ãã‚Œã‚¢ãƒ•ã‚¿ãƒ¼ : http://www5d.biglobe.ne.jp/~gakai/
 
-k2compat/ˆÈ‰º‚ÌƒXƒNƒŠƒvƒg‚Í‹g—¢‹g—¢ZƒŠƒ|ƒWƒgƒŠ‚ÅŒöŠJ‚³‚ê‚Ä‚¢‚é‹g—¢‹g—¢‚yŒü‚¯u‹g—¢‹g—¢‚QŒİŠ·À‘•vƒXƒNƒŠƒvƒg‚Å‚·B
-ŒöŠJŒ³ : https://github.com/krkrz/krkrz/tree/master/script/Krkr2Compat
+k2compat/ä»¥ä¸‹ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã¯å‰é‡Œå‰é‡ŒZãƒªãƒã‚¸ãƒˆãƒªã§å…¬é–‹ã•ã‚Œã¦ã„ã‚‹å‰é‡Œå‰é‡Œï¼ºå‘ã‘ã€Œå‰é‡Œå‰é‡Œï¼’äº’æ›å®Ÿè£…ã€ã‚¹ã‚¯ãƒªãƒ—ãƒˆã§ã™ã€‚
+å…¬é–‹å…ƒ : https://github.com/krkrz/krkrz/tree/master/script/Krkr2Compat
 

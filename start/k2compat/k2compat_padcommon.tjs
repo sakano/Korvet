@@ -1,4 +1,4 @@
-Krkr2CompatUtils.require("modeless");
+﻿Krkr2CompatUtils.require("modeless");
 
 //=============================================================
 

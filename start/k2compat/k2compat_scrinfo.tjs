@@ -1,4 +1,4 @@
-// System.screen{Width,Height}の仕様を変更する
+﻿// System.screen{Width,Height}の仕様を変更する
 
 Krkr2CompatUtils.require("deskinfo");
 

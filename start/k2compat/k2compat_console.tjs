@@ -1,4 +1,4 @@
-Krkr2CompatUtils.require("padcommon");
+﻿Krkr2CompatUtils.require("padcommon");
 
 class        DebugConsoleCompatDialog extends DebugPadCompatDialog {
 	function DebugConsoleCompatDialog { super.DebugPadCompatDialog();

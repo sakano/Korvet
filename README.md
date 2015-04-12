@@ -1,30 +1,30 @@
 # Korvet
 
-[‹g—¢‹g—¢Z](http://krkrz.github.io/)ã‚Å“®ì‚·‚éƒmƒxƒ‹ƒQ[ƒ€»ìƒVƒXƒeƒ€‚Å‚·BŠJ”­’†‚Ì‚½‚ß‚Ü‚Æ‚à‚É“®ì‚µ‚Ü‚¹‚ñB
+[å‰é‡Œå‰é‡ŒZ](http://krkrz.github.io/)ä¸Šã§å‹•ä½œã™ã‚‹ãƒŽãƒ™ãƒ«ã‚²ãƒ¼ãƒ è£½ä½œã‚·ã‚¹ãƒ†ãƒ ã§ã™ã€‚é–‹ç™ºä¸­ã®ãŸã‚ã¾ã¨ã‚‚ã«å‹•ä½œã—ã¾ã›ã‚“ã€‚
 
 
 
-## ŽÀs•û–@
-ŽÀs‘O‚Ésrc/ƒtƒHƒ‹ƒ_‚Ìtjsƒtƒ@ƒCƒ‹‚ðƒRƒ“ƒpƒCƒ‹‚·‚é•K—v‚ª‚ ‚è‚Ü‚·B
+## å®Ÿè¡Œæ–¹æ³•
+å®Ÿè¡Œå‰ã«src/ãƒ•ã‚©ãƒ«ãƒ€ã®tjsãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã™ã‚‹å¿…è¦ãŒã‚ã‚Šã¾ã™ã€‚
 
-ƒRƒ“ƒpƒCƒ‹‚É‚Í[GNU M4](https://www.gnu.org/software/m4/)‚ª•K—v‚Å‚·Bƒ_ƒEƒ“ƒ[ƒh‚µ‚ÄƒpƒX‚Ì’Ê‚Á‚Ä‚¢‚éêŠ‚É"m4.exe"‚ð’u‚¢‚Ä‚­‚¾‚³‚¢B
-[Ruby](https://www.ruby-lang.org/ja/)‚ÌŽÀsŠÂ‹«‚à•K—v‚Å‚·B‚±‚¿‚ç‚àƒCƒ“ƒXƒg[ƒ‹‚µ‚Ä‚­‚¾‚³‚¢B
+ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã«ã¯[GNU M4](https://www.gnu.org/software/m4/)ãŒå¿…è¦ã§ã™ã€‚ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã—ã¦ãƒ‘ã‚¹ã®é€šã£ã¦ã„ã‚‹å ´æ‰€ã«"m4.exe"ã‚’ç½®ã„ã¦ãã ã•ã„ã€‚
+[Ruby](https://www.ruby-lang.org/ja/)ã®å®Ÿè¡Œç’°å¢ƒã‚‚å¿…è¦ã§ã™ã€‚ã“ã¡ã‚‰ã‚‚ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¦ãã ã•ã„ã€‚
 
-"compile_debug.bat"‚ðŽÀs‚·‚é‚ÆƒfƒoƒbƒOƒ‚[ƒh—p‚Ìƒtƒ@ƒCƒ‹‚ðƒRƒ“ƒpƒCƒ‹‚µ‚Ü‚·B
-ƒRƒ“ƒpƒCƒ‹‚³‚ê‚½ƒtƒ@ƒCƒ‹‚Í"data/debug/"‚É“ü‚è‚Ü‚·B
+"compile_debug.bat"ã‚’å®Ÿè¡Œã™ã‚‹ã¨ãƒ‡ãƒãƒƒã‚°ãƒ¢ãƒ¼ãƒ‰ç”¨ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã—ã¾ã™ã€‚
+ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã•ã‚ŒãŸãƒ•ã‚¡ã‚¤ãƒ«ã¯"data/debug/"ã«å…¥ã‚Šã¾ã™ã€‚
 
-"compile_release.bat"‚ðŽÀs‚·‚é‚ÆƒŠƒŠ[ƒXƒ‚[ƒh—p‚Ìƒtƒ@ƒCƒ‹‚ðƒRƒ“ƒpƒCƒ‹‚µ‚Ü‚·B
-ƒRƒ“ƒpƒCƒ‹‚³‚ê‚½ƒtƒ@ƒCƒ‹‚Í"data/release_intermediate/"‹y‚Ñ"data/release/"‚É“ü‚è‚Ü‚·B
+"compile_release.bat"ã‚’å®Ÿè¡Œã™ã‚‹ã¨ãƒªãƒªãƒ¼ã‚¹ãƒ¢ãƒ¼ãƒ‰ç”¨ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã—ã¾ã™ã€‚
+ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã•ã‚ŒãŸãƒ•ã‚¡ã‚¤ãƒ«ã¯"data/release_intermediate/"åŠã³"data/release/"ã«å…¥ã‚Šã¾ã™ã€‚
 
-"recompile.bat"‚ðŽÀs‚·‚é‚ÆƒRƒ“ƒpƒCƒ‹Œã‚Ìƒtƒ@ƒCƒ‹‚ð‘S‚Äíœ‚µ‚Ä‚©‚çƒfƒoƒbƒOEƒŠƒŠ[ƒX—¼•û‚Ìƒtƒ@ƒCƒ‹‚ðƒRƒ“ƒpƒCƒ‹‚µ‚Ü‚·B
+"recompile.bat"ã‚’å®Ÿè¡Œã™ã‚‹ã¨ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«å¾Œã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’å…¨ã¦å‰Šé™¤ã—ã¦ã‹ã‚‰ãƒ‡ãƒãƒƒã‚°ãƒ»ãƒªãƒªãƒ¼ã‚¹ä¸¡æ–¹ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã—ã¾ã™ã€‚
 
-"exec_debug.bat"‚ðŽÀs‚·‚é‚ÆƒQ[ƒ€–{‘Ì‚ªƒfƒoƒbƒOƒ‚[ƒh‚Å‹N“®‚µ‚Ü‚·B
-"exec_release.bat"‚ðŽÀs‚·‚é‚ÆƒQ[ƒ€–{‘Ì‚ªƒŠƒŠ[ƒXƒ‚[ƒh‚Å‹N“®‚µ‚Ü‚·B
+"exec_debug.bat"ã‚’å®Ÿè¡Œã™ã‚‹ã¨ã‚²ãƒ¼ãƒ æœ¬ä½“ãŒãƒ‡ãƒãƒƒã‚°ãƒ¢ãƒ¼ãƒ‰ã§èµ·å‹•ã—ã¾ã™ã€‚
+"exec_release.bat"ã‚’å®Ÿè¡Œã™ã‚‹ã¨ã‚²ãƒ¼ãƒ æœ¬ä½“ãŒãƒªãƒªãƒ¼ã‚¹ãƒ¢ãƒ¼ãƒ‰ã§èµ·å‹•ã—ã¾ã™ã€‚
 
-ŒöŽ®‚Ì‹g—¢‹g—¢ZƒoƒCƒiƒŠ‚Å‚Í“®ì‚µ‚Ü‚¹‚ñB
-[ƒtƒH[ƒN‚µ‚Ä‚¢‚éƒo[ƒWƒ‡ƒ“](https://github.com/sakano/krkrz)‚Å“®ìŠm”F‚µ‚Ä‚¢‚Ü‚·B
+å…¬å¼ã®å‰é‡Œå‰é‡ŒZãƒã‚¤ãƒŠãƒªã§ã¯å‹•ä½œã—ã¾ã›ã‚“ã€‚
+[ãƒ•ã‚©ãƒ¼ã‚¯ã—ã¦ã„ã‚‹ãƒãƒ¼ã‚¸ãƒ§ãƒ³](https://github.com/sakano/krkrz)ã§å‹•ä½œç¢ºèªã—ã¦ã„ã¾ã™ã€‚
 
 
 
-## ƒ‰ƒCƒZƒ“ƒX
-“¯«‚Ì"LICENSE.txt"‚ðŽQÆ‚µ‚Ä‚­‚¾‚³‚¢
+## ãƒ©ã‚¤ã‚»ãƒ³ã‚¹
+åŒæ¢±ã®"LICENSE.txt"ã‚’å‚ç…§ã—ã¦ãã ã•ã„

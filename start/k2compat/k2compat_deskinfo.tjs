@@ -1,4 +1,4 @@
-// System.desktop{Left,Top,Width,Height}の仕様を変更する
+﻿// System.desktop{Left,Top,Width,Height}の仕様を変更する
 
 Krkr2CompatUtils.requireWindowEx();
 

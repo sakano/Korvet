@@ -42,7 +42,6 @@ execStorage("data/debug/test/MultiMapTest.tjs");
 execStorage("data/debug/test/PriorityQueueTest.tjs");
 execStorage("data/debug/test/RegExpTest.tjs");
 execStorage("data/debug/test/ScriptsExTest.tjs");
-execStorage("data/debug/test/SystemTest.tjs");
 execStorage("data/debug/test/UtilsTest.tjs");
 execStorage("data/debug/test/SequenceTest.tjs");
 
