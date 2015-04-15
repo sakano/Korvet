@@ -1,10 +1,10 @@
 m4_define(&--assert--&, &--m4_ifelse(DEBUG, 1,m4_dnl
-    &--if (!($1)) { __assertImpl("__escape_string($1)", "__CLASS_NAME", "__FUNC_NAME", "m4___file__", m4___line__, $2); }--&)--&)m4_dnl
+    &--if (!($1)) { __assertImpl("__escape_string($1)", "__CLASS_NAME", "__FUNC_NAME", "m4___file__", m4___line__, m4_ifelse($2,,"",$2)); }--&)--&)m4_dnl
 m4_dnl
 m4_dnl
 m4_dnl
 m4_define(&--assertAlways--&,m4_dnl
-    &--if (!($1)) { __assertImpl("__escape_string($1)", "__CLASS_NAME", "__FUNC_NAME", "m4___file__", m4___line__, $2); }--&)m4_dnl
+    &--if (!($1)) { __assertImpl("__escape_string($1)", "__CLASS_NAME", "__FUNC_NAME", "m4___file__", m4___line__, m4_ifelse($2,,"",$2)); }--&)m4_dnl
 m4_dnl
 m4_dnl
 m4_dnl

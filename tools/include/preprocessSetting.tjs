@@ -4,7 +4,7 @@ m4_dnl
 m4_define(&--KORVET_VERSION_NUMBER--&, 1.0)m4_dnl
 m4_define(&--KORVET_SYSTEM_VERSION--&, "Korvet version KORVET_VERSION_NUMBER [m4___time__]")m4_dnl
 m4_dnl
-m4_define(&--__escape_string--&, &--m4_patsubst(m4_patsubst($1, \", \\"), \', \\')--&)m4_dnl
+m4_define(&--__escape_string--&, &--m4_patsubst(m4_patsubst($1, \", \\"), ', \\')--&)m4_dnl
 m4_dnl
 m4_ifelse(DEBUG, 1, m4_include(&--preprocessDebugSetting.tjs--&))m4_dnl
 m4_include(&--preprocessConstants.tjs--&)m4_dnl
