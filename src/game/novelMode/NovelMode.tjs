@@ -70,8 +70,8 @@ ClassExtends(NovelMode,GameMode)
 
     Finalize() {
         super.finalize();
-        invalidate this._parser;
         invalidate this._runner;
+        invalidate this._parser;
         this._commandHandlers.dispose();
         invalidate this._commandHandlers;
         this._drawables.dispose();

@@ -41,12 +41,22 @@ Class(Game)
 
         this._window.visible = true;
 
-        bindWindowEvent(ObservableWindowEventType_Close, this._checkMemoryLeak);
+        bindWindowEvent(ObservableWindowEventType_Close, this._dispose);
     }
 
     Finalize() {
-        invalidate _window;
-        invalidate _mode;
+        this._dispose();
+    }
+
+    Func(_dispose)() {
+        System.removeContinuousHandler(this._onTick);
+        gAsyncCaller.callOnce(this._disposeCallback);
+    }
+
+    Func(_disposeCallback)() {
+        invalidate _mode if this._mode isvalid;
+        this._checkMemoryLeak();
+        invalidate _window if this._window isvalid;
     }
 
     Func(_checkMemoryLeak) {

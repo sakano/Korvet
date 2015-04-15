@@ -54,7 +54,6 @@ Class(AsyncCaller)
             if (callback isvalid && (context === null || context isvalid)) {
                 callback(args[index]*);
             } else {
-                assert(false);
                 global.gLog.warn(WARN_ASYNCCALLER_INVALID_CALLBACK);
             }
         }
