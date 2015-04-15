@@ -113,8 +113,7 @@ Class(KorvetParser)
         invalidate this._lineParser;
         this._modules.dispose();
         invalidate this._modules;
-        this._nextCommands.dispose();
-        invalidate this._nextCommands;
+        invalidate this._commandQueue;
     }
 
     Func(_getNextCommand)(command:Dictionary) {
