@@ -64,7 +64,7 @@ setStaticMember(ImageFunction, "operateTransform", LMD(
     var _11 = scaleX, _12 = 0;
     var _21 = 0,     _22 = scaleY;
     if (angle !== 0) {
-        angle *= MATH_PI / 180;
+        angle *= Math_PI / 180;
         var sin = Math.sin(angle);
         var cos = Math.cos(angle);
         var t11 = _11, t12 = _12;

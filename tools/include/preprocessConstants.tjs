@@ -21,14 +21,14 @@ m4_define(&--pfHiddenMember--&, &--0x00001000--&)m4_dnl
 m4_define(&--pfStaticMember--&, &--0x00010000--&)m4_dnl
 m4_dnl
 m4_dnl // 数学定数
-m4_define(&--MATH_E--&, &--2.71828182845905--&)m4_dnl
-m4_define(&--MATH_LN10--&, &--2.30258509299405--&)m4_dnl
-m4_define(&--MATH_LN2--&, &--0.693147180559945--&)m4_dnl
-m4_define(&--MATH_LOG10E--&, &--0.434294481903252--&)m4_dnl
-m4_define(&--MATH_LOG2E--&, &--1.44269504088896--&)m4_dnl
-m4_define(&--MATH_PI--&, &--3.14159265358979--&)m4_dnl
-m4_define(&--MATH_SQRT1_2--&, &--0.707106781186548--&)m4_dnl
-m4_define(&--MATH_SQRT2--&, &--1.4142135623731--&)m4_dnl
+m4_define(&--Math_E--&, &--2.71828182845905--&)m4_dnl
+m4_define(&--Math_LN10--&, &--2.30258509299405--&)m4_dnl
+m4_define(&--Math_LN2--&, &--0.693147180559945--&)m4_dnl
+m4_define(&--Math_LOG10E--&, &--0.434294481903252--&)m4_dnl
+m4_define(&--Math_LOG2E--&, &--1.44269504088896--&)m4_dnl
+m4_define(&--Math_PI--&, &--3.14159265358979--&)m4_dnl
+m4_define(&--Math_SQRT1_2--&, &--0.707106781186548--&)m4_dnl
+m4_define(&--Math_SQRT2--&, &--1.4142135623731--&)m4_dnl
 m4_dnl
 m4_dnl // 組み込み定数
 m4_define(&--bsNone--&, &--0--&)m4_dnl

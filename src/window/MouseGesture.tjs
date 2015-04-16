@@ -66,7 +66,7 @@ Class(MouseGesture)
             else return;
         } else {
             if (Math.pow(x - _previousX, 2) + Math.pow(y - _previousY, 2) >= _threshold * _threshold) {
-                m4_define(calc,(($1*MATH_PI)/8))
+                m4_define(calc,(($1*Math_PI)/8))
                 var theta = Math.atan2(y - _previousY, x - _previousX);
                 if      (theta < calc(-7)) _input(MouseGestureDirection_Left);
                 else if (theta < calc(-5)) _input(MouseGestureDirection_UpLeft);

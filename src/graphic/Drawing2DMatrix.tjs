@@ -61,7 +61,7 @@ Class(Drawing2DMatrix)
     Func(rotate)(angle:number) {
         checkArgs
         if (angle === 0) return;
-        angle *= MATH_PI / 180;
+        angle *= Math_PI / 180;
         var sin = Math.sin(angle);
         var cos = Math.cos(angle);
         var t11 = _11, t21 = _21;
