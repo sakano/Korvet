@@ -15,3 +15,5 @@ m4_include(&--preprocessUtils.tjs--&)m4_dnl
 m4_include(&--preprocessEnums.tjs--&)m4_dnl
 m4_include(&--preprocessMessages.tjs--&)m4_dnl
 m4_dnl
+m4_define(&--System_DefaultFont--&, &--"ＭＳ ゴシック"--&)m4_dnl
+m4_dnl

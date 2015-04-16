@@ -1,0 +1,263 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(TextDrawer)
+{
+    // 文字の色 0xAARRGGBB
+    property color {
+        setter(v:int) {
+            checkArgs
+            this._brush.type = GdiPlus_BrushTypeSolidColor;
+            this._brush.color = v;
+            this._updateApp = true;
+        }
+        getter {
+            assert(this._brush.type === GdiPlus_BrushTypeSolidColor)
+            return this._brush.color;
+        }
+    }
+
+    // ブラシを直接指定
+    property brush {
+        setter(v:Dictionary) {
+            checkArgs
+            this._brush.assign(v);
+            this._updateApp = true;
+        }
+        getter { return this._brush; }
+    }
+
+    // フォントの種類
+    property face {
+        setter(v:string) {
+            checkArgs
+            this._font.familyName = v;
+        }
+        getter { return this._font.familyName; }
+    }
+
+    // フォントサイズ
+    property size {
+        setter(v:int) {
+            checkArgs
+            this._font.emSize = v;
+        }
+        getter { return this._font.emSize; }
+    }
+
+    // アンチエイリアスをかけるか
+    property antialiase {
+        setter(v:bool) {
+            checkArgs
+            this._antialiase = v;
+        }
+        getter { return this._antialiase; }
+    }
+
+    // ヒンティングをするか
+    property hinting {
+        setter(v:bool) {
+            checkArgs
+            this._hinting = v;
+        }
+        getter { return this._hinting; }
+    }
+
+    // 縁取りをするか
+    property edge {
+        setter(v:bool) {
+            checkArgs
+            this._edge = v;
+            this._updateApp = true;
+        }
+        getter { return this._edge; }
+    }
+
+    // 縁取りの幅
+    property edgeWidth {
+        setter(v:int) {
+            checkArgs
+            this._edgeWidth = v;
+            this._updateApp = true;
+        }
+        getter { return this._edgeWidth; }
+    }
+
+    // 縁取りの色
+    property edgeColor {
+        setter(v:int) {
+            checkArgs
+            this._edgeColor = v;
+            this._updateApp = true;
+        }
+        getter { return this._edgeColor; }
+    }
+
+    // 影をつけるか
+    property shadow {
+        setter(v:bool) {
+            checkArgs
+            this._shadow = v;
+            this._updateApp = true;
+        }
+        getter { return this._shadow; }
+    }
+
+    // 影の色
+    property shadowColor {
+        setter(v:int) {
+            checkArgs
+            this._shadowColor = v;
+            this._updateApp = true;
+        }
+        getter { return this._shadowColor; }
+    }
+
+    // 影のXオフセット
+    property shadowOffsetX {
+        setter(v:int) {
+            checkArgs
+            this._shadowOffsetX = v;
+            this._updateApp = true;
+        }
+        getter { return this._shadowOffsetX; }
+    }
+    // 影のYオフセット
+    property shadowOffsetY {
+        setter(v:int) {
+            checkArgs
+            this._shadowOffsetY = v;
+            this._updateApp = true;
+        }
+        getter { return this._shadowOffsetY; }
+    }
+
+    // 影の幅
+    property shadowWidth {
+        setter(v:int) {
+            checkArgs
+            this._shadowWidth = v;
+            this._updateApp = true;
+        }
+        getter { return this._shadowWidth; }
+    }
+
+    // 斜体にするか
+    property italic {
+        setter(v:bool) {
+            checkArgs
+            this._setFontStyle(GdiPlus_FontStyleItalic, v);
+        }
+        getter { return this._getFontStyle(GdiPlus_FontStyleItalic); }
+    }
+
+    // 下線を引くか
+    property underline {
+        setter(v:bool) {
+            checkArgs
+            this._setFontStyle(GdiPlus_FontStyleUnderline, v);
+        }
+        getter { return this._getFontStyle(GdiPlus_FontStyleUnderline); }
+    }
+
+    // 打ち消し線を引くか
+    property strikeout {
+        setter(v:bool) {
+            checkArgs
+            this._setFontStyle(GdiPlus_FontStyleStrikeout, v);
+        }
+        getter { return this._getFontStyle(GdiPlus_FontStyleStrikeout); }
+    }
+
+    // 太字にするか
+    property bold {
+        setter(v:bool) {
+            checkArgs
+            this._setFontStyle(GdiPlus_FontStyleBold, v);
+        }
+        getter { return this._getFontStyle(GdiPlus_FontStyleBold); }
+    }
+
+    // レイヤに文字を描画
+    // @param layer 描画対象レイヤ
+    // @param x 描画位置X
+    // @param y 描画位置Y
+    // @param text 描画する文字列
+    function drawTextToLayer(layer:Layer, x:int, y:int, text:string = "") {
+        checkArgs
+        // apply antialiase and hinting
+        if (this._antialiase) {
+            if (this._hinting) { layer.textRenderingHint = GdiPlus_TextRenderingHintAntiAliasGridFit; }
+            else { layer.textRenderingHint = GdiPlus_TextRenderingHintAntiAlias; }
+        } else {
+            if (this._hinting) { layer.textRenderingHint = GdiPlus_TextRenderingHintSingleBitPerPixelGridFit; }
+            else { layer.textRenderingHint = GdiPlus_TextRenderingHintSingleBitPerPixel; }
+        }
+        // update appearance
+        if (this._updateApp) {
+            this._app.clear();
+            if (this._shadow) {
+                if (this._shadowWidth > 0) {
+                    this._app.addPen(this._shadowColor, this._shadowWidth, this._shadowOffsetX, this._shadowOffsetY);
+                }
+                this._app.addBrush(this._shadowColor, this._shadowOffsetX, this._shadowOffsetY);
+            }
+
+            if (this._edge) {
+                this._app.addPen(this._edgeColor, this._edgeWidth, 0, 0);
+            }
+
+            this._app.addBrush(this._brush, 0, 0);
+        }
+        return layer.drawPathString(this._font, this._app, x, y, text);
+    }
+
+
+
+    var _app;
+    var _font;
+    var _updateApp = true;
+    var _color = 0xFFFFFFFF;
+    var _brush = %[
+        type : GdiPlus_BrushTypeSolidColor,
+        color : 0xFFFFFFFF
+    ];
+    var _antialiase = true;
+    var _hinting = false;
+    var _edge = false;
+    var _edgeWidth = 1;
+    var _edgeColor = 0xFF000000;
+    var _shadow = false;
+    var _shadowColor = 0x99000000;
+    var _shadowOffsetX = 2;
+    var _shadowOffsetY = 2;
+    var _shadowWidth = 1;
+
+    // @param face 文字の書体
+    // @param size 文字のサイズ
+    Constructor(face:string = System_DefaultFont, size:int = 18) {
+        checkArgs
+        this._app = new global.GdiPlus.Appearance();
+        this._font = new global.GdiPlus.Font(face, size, GdiPlus_FontStyleRegular);
+    }
+
+    Finalize() {
+        invalidate this._app;
+        invalidate this._font;
+        invalidate this._brush;
+    }
+
+    Func(_setFontStyle)(style:int, value:bool) {
+        checkArgs
+        if (value) {
+            this._font.style = this._font.style | style;
+        } else {
+            this._font.style = this._font.style & ~style;
+        }
+    }
+
+    Func(_getFontStyle)(style:int) {
+        checkArgs
+        return this._font.style | style;
+    }
+}
