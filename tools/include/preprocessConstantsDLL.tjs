@@ -1,0 +1,188 @@
+m4_dnl // windowEx.dll onResizing
+m4_define(&--wrtLeft--&, &--1--&)m4_dnl
+m4_define(&--wrtTopLeft--&, &--4--&)m4_dnl
+m4_define(&--wrtTop--&, &--3--&)m4_dnl
+m4_define(&--wrtTopRight--&, &--5--&)m4_dnl
+m4_define(&--wrtRight--&, &--2--&)m4_dnl
+m4_define(&--wrtBottomRight--&, &--8--&)m4_dnl
+m4_define(&--wrtBottom--&, &--6--&)m4_dnl
+m4_define(&--wrtBottomLeft--&, &--7--&)m4_dnl
+m4_dnl
+m4_dnl // scriptsEx.dll propSet/propGet
+m4_define(&--pfMemberEnsure--&, &--0x00000200--&)m4_dnl
+m4_define(&--pfMemberMustExist--&, &--0x00000400--&)m4_dnl
+m4_define(&--pfIgnoreProp--&, &--0x00000800--&)m4_dnl
+m4_define(&--pfHiddenMember--&, &--0x00001000--&)m4_dnl
+m4_define(&--pfStaticMember--&, &--0x00010000--&)m4_dnl
+m4_dnl
+m4_dnl // layerExDraw.dll GdiPlus
+m4_dnl // Status 定義
+m4_define(&--GdiPlus_Ok--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_GenericError--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_InvalidParameter--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_OutOfMemory--&, &--3--&)m4_dnl
+m4_define(&--GdiPlus_ObjectBusy--&, &--4--&)m4_dnl
+m4_define(&--GdiPlus_InsufficientBuffer--&, &--5--&)m4_dnl
+m4_define(&--GdiPlus_NotImplemented--&, &--6--&)m4_dnl
+m4_define(&--GdiPlus_Win32Error--&, &--7--&)m4_dnl
+m4_define(&--GdiPlus_WrongState--&, &--8--&)m4_dnl
+m4_define(&--GdiPlus_Aborted--&, &--9--&)m4_dnl
+m4_define(&--GdiPlus_FileNotFound--&, &--10--&)m4_dnl
+m4_define(&--GdiPlus_ValueOverflow--&, &--11--&)m4_dnl
+m4_define(&--GdiPlus_AccessDenied--&, &--12--&)m4_dnl
+m4_define(&--GdiPlus_UnknownImageFormat--&, &--13--&)m4_dnl
+m4_define(&--GdiPlus_FontFamilyNotFound--&, &--14--&)m4_dnl
+m4_define(&--GdiPlus_FontStyleNotFound--&, &--15--&)m4_dnl
+m4_define(&--GdiPlus_NotTrueTypeFont--&, &--16--&)m4_dnl
+m4_define(&--GdiPlus_UnsupportedGdiplusVersion--&, &--17--&)m4_dnl
+m4_define(&--GdiPlus_GdiplusNotInitialized--&, &--18--&)m4_dnl
+m4_define(&--GdiPlus_PropertyNotFound--&, &--19--&)m4_dnl
+m4_define(&--GdiPlus_PropertyNotSupported--&, &--20--&)m4_dnl
+m4_dnl // FontStyle 定義
+m4_define(&--GdiPlus_FontStyleRegular--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_FontStyleBold--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_FontStyleItalic--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_FontStyleBoldItalic--&, &--3--&)m4_dnl
+m4_define(&--GdiPlus_FontStyleUnderline--&, &--4--&)m4_dnl
+m4_define(&--GdiPlus_FontStyleStrikeout--&, &--8--&)m4_dnl
+m4_dnl // BrushType定義
+m4_define(&--GdiPlus_BrushTypeSolidColor--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_BrushTypeHatchFill--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_BrushTypeTextureFill--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_BrushTypePathGradient--&, &--3--&)m4_dnl
+m4_define(&--GdiPlus_BrushTypeLinearGradient--&, &--4--&)m4_dnl
+m4_dnl // DashCap定義
+m4_define(&--GdiPlus_DashCapFlat--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_DashCapRound--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_DashCapTriangle--&, &--3--&)m4_dnl
+m4_dnl // DashStyle定義
+m4_define(&--GdiPlus_DashStyleSolid--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_DashStyleDash--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_DashStyleDot--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_DashStyleDashDot--&, &--3--&)m4_dnl
+m4_define(&--GdiPlus_DashStyleDashDotDot--&, &--4--&)m4_dnl
+m4_dnl // HatchStyle定義
+m4_define(&--GdiPlus_HatchStyleHorizontal--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleVertical--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleForwardDiagonal--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleBackwardDiagonal--&, &--3--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleCross--&, &--4--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDiagonalCross--&, &--5--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyle05Percent--&, &--6--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyle10Percent--&, &--7--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyle20Percent--&, &--8--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyle25Percent--&, &--9--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyle30Percent--&, &--10--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyle40Percent--&, &--11--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyle50Percent--&, &--12--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyle60Percent--&, &--13--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyle70Percent--&, &--14--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyle75Percent--&, &--15--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyle80Percent--&, &--16--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyle90Percent--&, &--17--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleLightDownwardDiagonal--&, &--18--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleLightUpwardDiagonal--&, &--19--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDarkDownwardDiagonal--&, &--20--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDarkUpwardDiagonal--&, &--21--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleWideDownwardDiagonal--&, &--22--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleWideUpwardDiagonal--&, &--23--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleLightVertical--&, &--24--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleLightHorizontal--&, &--25--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleNarrowVertical--&, &--26--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleNarrowHorizontal--&, &--27--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDarkVertical--&, &--28--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDarkHorizontal--&, &--29--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDashedDownwardDiagonal--&, &--30--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDashedUpwardDiagonal--&, &--31--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDashedHorizontal--&, &--32--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDashedVertical--&, &--33--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleSmallConfetti--&, &--34--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleLargeConfetti--&, &--35--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleZigZag--&, &--36--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleWave--&, &--37--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDiagonalBrick--&, &--38--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleHorizontalBrick--&, &--39--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleWeave--&, &--40--&)m4_dnl
+m4_define(&--GdiPlus_HatchStylePlaid--&, &--41--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDivot--&, &--42--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDottedGrid--&, &--43--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleDottedDiamond--&, &--44--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleShingle--&, &--45--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleTrellis--&, &--46--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleSphere--&, &--47--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleSmallGrid--&, &--48--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleSmallCheckerBoard--&, &--49--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleLargeCheckerBoard--&, &--50--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleOutlinedDiamond--&, &--51--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleSolidDiamond--&, &--52--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleTotal--&, &--53--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleLargeGrid--&, &--4--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleMin--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_HatchStyleMax--&, &--52--&)m4_dnl
+m4_dnl // LinearGradientMode 定義
+m4_define(&--GdiPlus_LinearGradientModeHorizontal--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_LinearGradientModeVertical--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_LinearGradientModeForwardDiagonal--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_LinearGradientModeBackwardDiagonal--&, &--3--&)m4_dnl
+m4_dnl // LineCap 定義
+m4_define(&--GdiPlus_LineCapFlat--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_LineCapSquare--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_LineCapRound--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_LineCapTriangle--&, &--3--&)m4_dnl
+m4_define(&--GdiPlus_LineCapNoAnchor--&, &--16--&)m4_dnl
+m4_define(&--GdiPlus_LineCapSquareAnchor--&, &--17--&)m4_dnl
+m4_define(&--GdiPlus_LineCapRoundAnchor--&, &--18--&)m4_dnl
+m4_define(&--GdiPlus_LineCapDiamondAnchor--&, &--19--&)m4_dnl
+m4_define(&--GdiPlus_LineCapArrowAnchor--&, &--20--&)m4_dnl
+m4_dnl // LineJoin 定義
+m4_define(&--GdiPlus_LineJoinMiter--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_LineJoinBevel--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_LineJoinRound--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_LineJoinMiterClipped--&, &--3--&)m4_dnl
+m4_dnl // PenAligntment 定義
+m4_define(&--GdiPlus_PenAlignmentCenter--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_PenAlignmentInset--&, &--1--&)m4_dnl
+m4_dnl // WrapMode 定義
+m4_define(&--GdiPlus_WrapModeTile--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_WrapModeTileFlipX--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_WrapModeTileFlipY--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_WrapModeTileFlipXY--&, &--3--&)m4_dnl
+m4_define(&--GdiPlus_WrapModeClamp--&, &--4--&)m4_dnl
+m4_dnl // MatrixOrder 定義
+m4_define(&--GdiPlus_MatrixOrderPrepend--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_MatrixOrderAppend--&, &--1--&)m4_dnl
+m4_dnl // ImageType 定義
+m4_define(&--GdiPlus_ImageTypeUnknown--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_ImageTypeBitmap--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_ImageTypeMetafile--&, &--2--&)m4_dnl
+m4_dnl // RotateFlip 定義
+m4_define(&--GdiPlus_RotateNoneFlipNone--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_Rotate90FlipNone--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_Rotate180FlipNone--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_Rotate270FlipNone--&, &--3--&)m4_dnl
+m4_define(&--GdiPlus_RotateNoneFlipX--&, &--4--&)m4_dnl
+m4_define(&--GdiPlus_Rotate90FlipX--&, &--5--&)m4_dnl
+m4_define(&--GdiPlus_Rotate180FlipX--&, &--6--&)m4_dnl
+m4_define(&--GdiPlus_Rotate270FlipX--&, &--7--&)m4_dnl
+m4_define(&--GdiPlus_RotateNoneFlipY--&, &--6--&)m4_dnl
+m4_define(&--GdiPlus_Rotate90FlipY--&, &--7--&)m4_dnl
+m4_define(&--GdiPlus_Rotate180FlipY--&, &--4--&)m4_dnl
+m4_define(&--GdiPlus_Rotate270FlipY--&, &--5--&)m4_dnl
+m4_define(&--GdiPlus_RotateNoneFlipXY--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_Rotate90FlipXY--&, &--3--&)m4_dnl
+m4_define(&--GdiPlus_Rotate180FlipXY--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_Rotate270FlipXY--&, &--1--&)m4_dnl
+m4_dnl // SmoothingMode 指定
+m4_define(&--GdiPlus_SmoothingModeInvalid--&, &---1--&)m4_dnl
+m4_define(&--GdiPlus_SmoothingModeDefault--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_SmoothingModeHighSpeed--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_SmoothingModeHighQuality--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_SmoothingModeNone--&, &--3--&)m4_dnl
+m4_define(&--GdiPlus_SmoothingModeAntiAlias--&, &--4--&)m4_dnl
+m4_dnl // TextRenderingHint 指定
+m4_define(&--GdiPlus_TextRenderingHintSystemDefault--&, &--0--&)m4_dnl
+m4_define(&--GdiPlus_TextRenderingHintSingleBitPerPixelGridFit--&, &--1--&)m4_dnl
+m4_define(&--GdiPlus_TextRenderingHintSingleBitPerPixel--&, &--2--&)m4_dnl
+m4_define(&--GdiPlus_TextRenderingHintAntiAliasGridFit--&, &--3--&)m4_dnl
+m4_define(&--GdiPlus_TextRenderingHintAntiAlias--&, &--4--&)m4_dnl
+m4_define(&--GdiPlus_TextRenderingHintClearTypeGridFit--&, &--5--&)m4_dnl

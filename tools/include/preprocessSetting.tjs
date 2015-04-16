@@ -7,6 +7,8 @@ m4_dnl
 m4_define(&--__escape_string--&, &--m4_patsubst(m4_patsubst($1, \", \\"), ', \\')--&)m4_dnl
 m4_dnl
 m4_ifelse(DEBUG, 1, m4_include(&--preprocessDebugSetting.tjs--&))m4_dnl
+m4_include(&--preprocessConstantsTVP.tjs--&)m4_dnl
+m4_include(&--preprocessConstantsDLL.tjs--&)m4_dnl
 m4_include(&--preprocessConstants.tjs--&)m4_dnl
 m4_include(&--preprocessSyntax.tjs--&)m4_dnl
 m4_include(&--preprocessUtils.tjs--&)m4_dnl
