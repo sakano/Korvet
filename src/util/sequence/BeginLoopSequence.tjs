@@ -103,14 +103,14 @@ ClassExtends(BeginLoopSequence, SuspendableSequence)
             }
 
             // 完了できないので、完了時に_onChildSequenceCompletedが呼ばれるようにして一時停止
-            this._holder.bindEvent(SequenceHolderEvent_Completed, this._onChildSequenceCompleted);
+            this._holder.bindEvent(SequenceHolderEventType_Completed, this._onChildSequenceCompleted);
             return this._suspend();
         }
     }
 
     // 子シーケンスの実行が終了したときに呼ばれる
     Func(_onChildSequenceCompleted) {
-        this._holder.unbindEvent(SequenceHolderEvent_Completed, this._onChildSequenceCompleted);
+        this._holder.unbindEvent(SequenceHolderEventType_Completed, this._onChildSequenceCompleted);
 
         // 消費時間を記録
         this._recordConsumedTick(this._holder.getConsumedTick());

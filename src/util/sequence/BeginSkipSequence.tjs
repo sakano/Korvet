@@ -83,7 +83,7 @@ ClassExtends(BeginSkipSequence, SuspendableSequence)
         }
 
         // 実行完了したときに_onChildSequenceCompletedが呼ばれるようにして一時停止
-        this._holder.bindEvent(SequenceHolderEvent_Completed, this._onChildSequenceCompleted);
+        this._holder.bindEvent(SequenceHolderEventType_Completed, this._onChildSequenceCompleted);
         return _suspend();
     }
 

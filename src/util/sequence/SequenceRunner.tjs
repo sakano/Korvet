@@ -24,7 +24,7 @@ Class(SequenceRunner)
             invalidate holder;
         } else {
             this._holders.add(holder);
-            holder.bindEvent(SequenceHolderEvent_Completed, this._onSequenceCompleted);
+            holder.bindEvent(SequenceHolderEventType_Completed, this._onSequenceCompleted);
         }
     }
 

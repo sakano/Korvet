@@ -104,7 +104,7 @@ Class(SequenceHolder)
 
         // シーケンスの末尾まで実行が完了した
         this._sequence = null;
-        this._triggerEvent(SequenceHolderEvent_Completed, this);
+        this._triggerEvent(SequenceHolderEventType_Completed, this);
         return SequenceHolderResult_Completed;
     }
 
@@ -130,7 +130,7 @@ Class(SequenceHolder)
         if (this._sequence !== null) {
             return this._runFrom(this._sequence);
         } else {
-            this._triggerEvent(SequenceHolderEvent_Completed, this);
+            this._triggerEvent(SequenceHolderEventType_Completed, this);
             return SequenceHolderResult_Completed;
         }
     }
