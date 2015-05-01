@@ -124,7 +124,7 @@ Class(Drawing2DMatrix)
      * @param number y The y-coordinate value.
      * @return array The first element represents x, and the second represetns y.
      */
-    Func(applyTransformToPoint)(x:number, y:number) {
+    Func(transformPoint)(x:number, y:number) {
         checkArgs
         return [
             _11 * x + _12 * y + _13,

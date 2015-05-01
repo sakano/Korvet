@@ -81,7 +81,6 @@ execStorage("KorvetParserModule.tjs");
 execStorage("KorvetParser.tjs");
 
 execStorage("Drawing2DMatrix.tjs");
-execStorage("ImageMatrix.tjs");
 execStorage("Image.tjs");
 execStorage("ScaleLevelImage.tjs");
 

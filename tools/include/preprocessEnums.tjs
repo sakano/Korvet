@@ -114,7 +114,7 @@ m4_dnl // ResizableWindowEventTypes
 m4_define(&--ResizableWindowEventType_ResizableChanged--&, &--"rszblchgd_rw"--&)m4_dnl
 m4_define(&--ResizableWindowEventType_FullscreenChanged--&, &--"flscrnchgd_rw"--&)m4_dnl
 m4_dnl // ImageEventTypes
-m4_define(&--ImageMatrixEventType_MatrixUpdated--&, &--"mtxupd_im"--&)m4_dnl
+m4_define(&--ImageEventType_MatrixUpdated--&, &--"u_im"--&)m4_dnl
 m4_dnl // SequenceHolderEvent
 m4_define(&--SequenceHolderEvent_Completed--&, &--"cmpl_sh"--&)m4_dnl
 m4_dnl // ObservableLayerEventTypes

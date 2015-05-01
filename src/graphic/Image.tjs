@@ -3,6 +3,29 @@ FILE_INCLUDE_GUARD
 
 Class(Image)
 {
+    m4_define(&--MATRIX_PROPERTY--&,
+        var _$1 = $2;
+        property $1 {
+            setter(value) {
+                value = (int)value;
+                if (this._$1 === value) return; 
+                this._$1 = value;
+                this._updateMatrix = true;
+                this._redraw = true;
+                this._triggerEvent(ImageEventType_MatrixUpdated, "$1", value);
+            }
+            getter { return this._$1; }
+        })
+    MATRIX_PROPERTY(x, 0)
+    MATRIX_PROPERTY(y, 0)
+    MATRIX_PROPERTY(originX, 0)
+    MATRIX_PROPERTY(originY, 0)
+    MATRIX_PROPERTY(scaleX, 1)
+    MATRIX_PROPERTY(scaleY, 1)
+    MATRIX_PROPERTY(shearX, 0)
+    MATRIX_PROPERTY(shearY, 0)
+    MATRIX_PROPERTY(angle, 0)
+
     property width {
         getter {
             if (_bitmap === null) {
@@ -24,71 +47,113 @@ Class(Image)
     }
 
     property redraw {
-        getter { return _redraw; }
+        getter { return this._redraw; }
+    }
+
+    Func(setParent)(parentImage:Image?) {
+        checkArgs
+        if (this._parentImage !== null) {
+            this._parentImage.unbindEvent(ImageEventType_MatrixUpdated, this._onParentImageMatrixUpdated);
+        }
+        if (parentImage !== null) {
+            parentImage.bindEvent(ImageEventType_MatrixUpdated, this._onParentImageMatrixUpdated);
+        }
+        this._parentImage = parentImage;
+        this._onParentImageMatrixUpdated();
     }
 
     Func(load)(filename:string) {
         checkArgs
-        if (_bitmap === null) {
-            _bitmap = new Bitmap(filename);
+        this.filename = "";
+        if (this._bitmap === null) {
+            this._bitmap = new Bitmap(filename);
         } else {
-            _bitmap.load(filename);
+            this._bitmap.load(filename);
         }
-        _redraw = true;
+        this._redraw = true;
+    }
+
+    Func(clearBitmap)() {
+        if (this._bitmap === null) return;
+        invalidate this._bitmap;
+        this._bitmap = null;
+        this._filename = "";
     }
 
     Func(draw)(dest, force:bool = false) {
         checkArgs
-        if (_redraw || force) {
-            _matrix.operateAffine(dest, _bitmap);
-            _redraw = false;
-        }
-    }
-
-    Func(setParent)(parent:object? = null) {
-        assert(parent instanceof "Image" || parent instanceof "ImageMatrix" || parent === null)
-        if (parent instanceof "Image") {
-            _matrix.setParent(parent._matrix);
-        } else {
-            _matrix.setParent(parent);
+        assert(dest instanceof "Layer" || dest instanceof "Bitmap")
+        assert(this._bitmap !== null)
+        if (this._redraw || force) {
+            this._getMatrix().operateAffine(dest, this._bitmap);
+            this._redraw = false;
         }
     }
 
     Func(copyFrom)(src:Image) {
-        checkArgs
-        if (src._bitmap !== null) {
-            if (this._bitmap === null) {
-                this._bitmap = new Bitmap();
+        with (src) {
+            this.x = .x;
+            this.y = .y;
+            this.originX = .originX;
+            this.originY = .originY;
+            this.scaleX = .scaleX;
+            this.scaleY = .scaleY;
+            this.shearX = .shearX;
+            this.shearY = .shearY;
+            this.angle = .angle;
+            this.setParent(._parentMatrix);
+            this._updateMatrix = true;
+            if (._bitmap === null) {
+                this.clearBitmap();
+            } else {
+                this.load(._filename);
             }
-            this._bitmap.copyFrom(src._bitmap);
-        } else {
-            if (this._bitmap !== null) {
-                invalidate this._bitmap;
-                this._bitmap = null;
-            }
+            this._redraw = true;
         }
-        this._matrix.copyFrom(src._matrix);
-        this._redraw = src._redraw;
     }
 
+    var _parentImage = null;
 
+    var _matrix = new global.Drawing2DMatrix();
+    var _updateMatrix = true;
 
+    var _filename = "";
     var _bitmap = null;
-    var _matrix = new ImageMatrix();
     var _redraw = true;
 
     Constructor() {
-        //global.includeObservable(this);
-        _matrix.bindEvent(ImageMatrixEventType_MatrixUpdated, _onMatrixUpdated);
+        global.includeObservable(this);
     }
 
     Finalize() {
-        invalidate _matrix;
-        if (_bitmap !== null) { invalidate _bitmap; }
-        //global.finalizeObservable(this);
+        this.setParentImage(null);
+        this.clearBitmap();
+        invalidate this._matrix;
+        global.finalizeObservable(this);
     }
 
-    Func(_onMatrixUpdated)() {
-        _redraw = true;
+    Func(_onParentImageMatrixUpdated) {
+        this._updateMatrix = true;
+        this._redraw = true;
+        this._triggerEvent(ImageEventType_MatrixUpdated);
+    }
+
+    Func(_getMatrix) {
+        if (this._updateMatrix) {
+            this._updateMatrix = false;
+            with (this._matrix) {
+                if (this._parentImage === null) {
+                    .reset();
+                } else {
+                    .copyFrom(this._parentImage._getMatrix());
+                }
+                .translate(this._x + this._originX, this._y + this._originY);
+                .rotate(this._angle);
+                .shear(this._shearX, this._shearY);
+                .scale(this._scaleX, this._scaleY);
+                .translate(-this._originX, -this._originY);
+            }
+        }
+        return this._matrix;
     }
 }

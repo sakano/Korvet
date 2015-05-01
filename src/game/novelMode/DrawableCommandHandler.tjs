@@ -6,8 +6,8 @@ Class(DrawableCommandHandler)
 {
     var image = new Image();
     var backImage = new Image();
-    var parentMatrix = new ImageMatrix();
-    var backParentMatrix = new ImageMatrix();
+    var parentMatrix = new Image();
+    var backParentMatrix = new Image();
     var foreFileLoaded = false;
     var backFileLoaded = false;
 
@@ -78,7 +78,7 @@ Class(DrawableCommandHandler)
         }
     }
 
-    Func(setParentMatrix)(matrix:ImageMatrix) {
+    Func(setParentMatrix)(matrix:Image) {
         checkArgs
         parentMatrix.setParent(matrix);
         backParentMatrix.setParent(matrix);

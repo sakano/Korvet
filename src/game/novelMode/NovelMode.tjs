@@ -58,7 +58,7 @@ ClassExtends(NovelMode,GameMode)
         this._backLayer = this._createParentLayer(this._screenLayer);
         this._foreLayer.visible = true;
 
-        this._worldMatrix = new global.ImageMatrix();
+        this._worldMatrix = new global.Image();
         this._worldMatrix.x = this. _foreLayer.width/2;
         this._worldMatrix.y = this._foreLayer.height/2;
 
