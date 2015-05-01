@@ -31,6 +31,22 @@ Class(Drawing2DMatrix)
         }
     }
 
+    /*
+     * Create cloned matrix.
+    */
+    Func(clone)() {
+        var matrix = new global.Drawing2DMatrix();
+        with (matrix) {
+            ._11 = this._11;
+            ._12 = this._12;
+            ._13 = this._13;
+            ._21 = this._21;
+            ._22 = this._22;
+            ._23 = this._23;
+        }
+        return matrix;
+    }
+
     /**
      * Multiply this matrix by the translation matrix.
      * @param number x The value to translate along the X axis.
@@ -87,12 +103,12 @@ Class(Drawing2DMatrix)
 
     /**
      * Multiply this matrix by the specified matrix.
-     * @param object rhs The matrix object.
+     * @param object matrix The matrix object.
      */
-    Func(multiply)(rhs:Drawing2DMatrix) {
+    Func(multiply)(matrix:Drawing2DMatrix) {
         checkArgs
         var t11 = _11, t12 = _12, t21 = _21, t22 = _22;
-        with (rhs) {
+        with (matrix) {
             _11 = t11 * ._11 + t12 * ._21;
             _12 = t11 * ._12 + t12 * ._22;
             _13 = t11 * ._13 + t12 * ._23 + _13;
@@ -122,6 +138,8 @@ Class(Drawing2DMatrix)
      * @param object src The Bitmap object to be transformed and copied.
      */
     Func(operateAffine)(dest:object, src:object) {
+        assert(dest instanceof "Layer" || dest instanceof "Bitmap")
+        assert(src instanceof "Layer" || src instanceof "Bitmap")
         if (dest instanceof "Layer") {
             dest.operateAffine(src, 0, 0, src.width, src.height, false,
                 _13 - 0.5 , _23 - 0.5,

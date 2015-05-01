@@ -51,4 +51,4 @@ if (!global.gRelaseMode) {
     global.cleanMemoryLeakLogForDebug();
 }
 
-var game = new Game();
+var gGame = new Game();
