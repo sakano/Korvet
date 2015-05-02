@@ -1,0 +1,97 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(HierarchicalMatrix)
+{
+    m4_define(&--MATRIX_PROPERTY--&,
+        var _$1 = $2;
+        property $1 {
+            setter(value) {
+                value = (int)value;
+                if (this._$1 === value) return; 
+                this._$1 = value;
+                this._updateMatrix = true;
+                this._redraw = true;
+                this._triggerEvent(HierarchicalMatrixEventType_MatrixUpdated);
+            }
+            getter { return this._$1; }
+        })
+    MATRIX_PROPERTY(x, 0)
+    MATRIX_PROPERTY(y, 0)
+    MATRIX_PROPERTY(originX, 0)
+    MATRIX_PROPERTY(originY, 0)
+    MATRIX_PROPERTY(scaleX, 1)
+    MATRIX_PROPERTY(scaleY, 1)
+    MATRIX_PROPERTY(shearX, 0)
+    MATRIX_PROPERTY(shearY, 0)
+    MATRIX_PROPERTY(angle, 0)
+
+    Func(setParentMatrix)(parentMatrix:HierarchicalMatrix?) {
+        checkArgs
+        if (this._parentMatrix !== null) {
+            this._parentMatrix.unbindEvent(HierarchicalMatrixEventType_MatrixUpdated, this._onParentMatrixUpdated);
+        }
+        if (parentMatrix !== null) {
+            parentMatrix.bindEvent(HierarchicalMatrixEventType_MatrixUpdated, this._onParentMatrixUpdated);
+        }
+        this._parentMatrix = parentMatrix;
+        this._onParentMatrixUpdated();
+    }
+
+    Func(copyFrom)(src:HierarchicalMatrix) {
+        checkArgs
+        with (src) {
+            this.x = .x;
+            this.y = .y;
+            this.originX = .originX;
+            this.originY = .originY;
+            this.scaleX = .scaleX;
+            this.scaleY = .scaleY;
+            this.shearX = .shearX;
+            this.shearY = .shearY;
+            this.angle = .angle;
+            this.setParentMatrix(._parentMatrix);
+        }
+        this._updateMatrix = true;
+    }
+
+
+
+    var _matrix = new global.Drawing2DMatrix();
+    var _updateMatrix = true;
+    var _parentMatrix = null;
+
+    Constructor() {
+        global.includeObservable(this);
+    }
+
+    Finalize() {
+        this.setParentMatrix(null);
+        invalidate this._matrix;
+        global.finalizeObservable(this);
+    }
+
+    Func(_onParentMatrixUpdated) {
+        this._updateMatrix = true;
+        this._triggerEvent(HierarchicalMatrixEventType_MatrixUpdated);
+    }
+
+    Func(_getMatrix) {
+        if (this._updateMatrix) {
+            this._updateMatrix = false;
+            with (this._matrix) {
+                if (this._parentMatrix === null) {
+                    .reset();
+                } else {
+                    .copyFrom(this._parentMatrix._getMatrix());
+                }
+                .translate(this._x + this._originX, this._y + this._originY);
+                .rotate(this._angle);
+                .shear(this._shearX, this._shearY);
+                .scale(this._scaleX, this._scaleY);
+                .translate(-this._originX, -this._originY);
+            }
+        }
+        return this._matrix;
+    }
+}

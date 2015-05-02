@@ -1,31 +1,8 @@
 ﻿// Copyright (C) 2015 Biscrat
 FILE_INCLUDE_GUARD
 
-Class(Image)
+ClassExtends(Image, HierarchicalMatrix)
 {
-    m4_define(&--MATRIX_PROPERTY--&,
-        var _$1 = $2;
-        property $1 {
-            setter(value) {
-                value = (int)value;
-                if (this._$1 === value) return; 
-                this._$1 = value;
-                this._updateMatrix = true;
-                this._redraw = true;
-                this._triggerEvent(ImageEventType_MatrixUpdated, "$1", value);
-            }
-            getter { return this._$1; }
-        })
-    MATRIX_PROPERTY(x, 0)
-    MATRIX_PROPERTY(y, 0)
-    MATRIX_PROPERTY(originX, 0)
-    MATRIX_PROPERTY(originY, 0)
-    MATRIX_PROPERTY(scaleX, 1)
-    MATRIX_PROPERTY(scaleY, 1)
-    MATRIX_PROPERTY(shearX, 0)
-    MATRIX_PROPERTY(shearY, 0)
-    MATRIX_PROPERTY(angle, 0)
-
     property width {
         getter {
             if (_bitmap === null) {
@@ -48,18 +25,6 @@ Class(Image)
 
     property redraw {
         getter { return this._redraw; }
-    }
-
-    Func(setParent)(parentImage:Image?) {
-        checkArgs
-        if (this._parentImage !== null) {
-            this._parentImage.unbindEvent(ImageEventType_MatrixUpdated, this._onParentImageMatrixUpdated);
-        }
-        if (parentImage !== null) {
-            parentImage.bindEvent(ImageEventType_MatrixUpdated, this._onParentImageMatrixUpdated);
-        }
-        this._parentImage = parentImage;
-        this._onParentImageMatrixUpdated();
     }
 
     Func(load)(filename:string) {
@@ -90,70 +55,36 @@ Class(Image)
         }
     }
 
-    Func(copyFrom)(src:Image) {
+    OverrideFunc(copyFrom)(src:Image) {
+        checkArgs
+        super.copyFrom(...);
         with (src) {
-            this.x = .x;
-            this.y = .y;
-            this.originX = .originX;
-            this.originY = .originY;
-            this.scaleX = .scaleX;
-            this.scaleY = .scaleY;
-            this.shearX = .shearX;
-            this.shearY = .shearY;
-            this.angle = .angle;
-            this.setParent(._parentMatrix);
-            this._updateMatrix = true;
             if (._bitmap === null) {
                 this.clearBitmap();
             } else {
                 this.load(._filename);
             }
-            this._redraw = true;
         }
+        this._redraw = true;
     }
 
-    var _parentImage = null;
 
-    var _matrix = new global.Drawing2DMatrix();
-    var _updateMatrix = true;
 
     var _filename = "";
     var _bitmap = null;
     var _redraw = true;
 
     Constructor() {
-        global.includeObservable(this);
+        super.HierarchicalMatrix();
     }
 
     Finalize() {
-        this.setParentImage(null);
         this.clearBitmap();
-        invalidate this._matrix;
-        global.finalizeObservable(this);
+        super.finalize();
     }
 
-    Func(_onParentImageMatrixUpdated) {
-        this._updateMatrix = true;
+    OverrideFunc(_onParentMatrixUpdated) {
+        super._onParentMatrixUpdated();
         this._redraw = true;
-        this._triggerEvent(ImageEventType_MatrixUpdated);
-    }
-
-    Func(_getMatrix) {
-        if (this._updateMatrix) {
-            this._updateMatrix = false;
-            with (this._matrix) {
-                if (this._parentImage === null) {
-                    .reset();
-                } else {
-                    .copyFrom(this._parentImage._getMatrix());
-                }
-                .translate(this._x + this._originX, this._y + this._originY);
-                .rotate(this._angle);
-                .shear(this._shearX, this._shearY);
-                .scale(this._scaleX, this._scaleY);
-                .translate(-this._originX, -this._originY);
-            }
-        }
-        return this._matrix;
     }
 }

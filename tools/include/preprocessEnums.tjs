@@ -113,8 +113,8 @@ m4_define(&--ObservableWindowEventType_Close--&, &--"cls_ow"--&)m4_dnl
 m4_dnl // ResizableWindowEventType
 m4_define(&--ResizableWindowEventType_ResizableChanged--&, &--"rszblchgd_rw"--&)m4_dnl
 m4_define(&--ResizableWindowEventType_FullscreenChanged--&, &--"flscrnchgd_rw"--&)m4_dnl
-m4_dnl // ImageEventType
-m4_define(&--ImageEventType_MatrixUpdated--&, &--"u_im"--&)m4_dnl
+m4_dnl // HierarchicalMatrixEventType
+m4_define(&--HierarchicalMatrixEventType_MatrixUpdated--&, &--"u_hm"--&)m4_dnl
 m4_dnl // SequenceHolderEventType
 m4_define(&--SequenceHolderEventType_Completed--&, &--"cmpl_sh"--&)m4_dnl
 m4_dnl // ObservableLayerEventType

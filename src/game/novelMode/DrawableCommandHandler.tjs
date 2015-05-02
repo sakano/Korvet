@@ -6,17 +6,17 @@ Class(DrawableCommandHandler)
 {
     var image = new Image();
     var backImage = new Image();
-    var parentMatrix = new Image();
-    var backParentMatrix = new Image();
+    var parentMatrix = new HierarchicalMatrix();
+    var backParentMatrix = new HierarchicalMatrix();
     var foreFileLoaded = false;
     var backFileLoaded = false;
 
     Constructor() {
-        image.setParent(parentMatrix);
-        backImage.setParent(backParentMatrix);
+        image.setParentMatrix(parentMatrix);
+        backImage.setParentMatrix(backParentMatrix);
     }
 
-    Func(load)(file:string, toBack:bool=false) {
+    Func(load)(file:string, toBack:bool = false) {
         checkArgs
         if (toBack) {
             backFileLoaded = true;
@@ -78,9 +78,9 @@ Class(DrawableCommandHandler)
         }
     }
 
-    Func(setParentMatrix)(matrix:Image) {
+    Func(setParentMatrix)(matrix:HierarchicalMatrix) {
         checkArgs
-        parentMatrix.setParent(matrix);
-        backParentMatrix.setParent(matrix);
+        parentMatrix.setParentMatrix(matrix);
+        backParentMatrix.setParentMatrix(matrix);
     }
 }
