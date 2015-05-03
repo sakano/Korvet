@@ -27,15 +27,20 @@ ClassExtends(Image, HierarchicalMatrix)
         getter { return this._redraw; }
     }
 
+    property filename {
+        getter { return this._filename; }
+    }
+
     Func(load)(filename:string) {
         checkArgs
-        this.filename = "";
+        this._filename = filename;
         if (this._bitmap === null) {
             this._bitmap = new Bitmap(filename);
         } else {
             this._bitmap.load(filename);
         }
         this._redraw = true;
+        this.reset();
     }
 
     Func(clearBitmap)() {
@@ -43,6 +48,7 @@ ClassExtends(Image, HierarchicalMatrix)
         invalidate this._bitmap;
         this._bitmap = null;
         this._filename = "";
+        this.reset();
     }
 
     Func(draw)(dest, force:bool = false) {

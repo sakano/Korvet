@@ -7,7 +7,7 @@ Class(HierarchicalMatrix)
         var _$1 = $2;
         property $1 {
             setter(value) {
-                value = (int)value;
+                typeNumber(value)
                 if (this._$1 === value) return; 
                 this._$1 = value;
                 this._updateMatrix = true;
@@ -53,6 +53,18 @@ Class(HierarchicalMatrix)
             this.setParentMatrix(._parentMatrix);
         }
         this._updateMatrix = true;
+    }
+
+    Func(reset) {
+        this.x = 0;
+        this.y = 0;
+        this.originX = 0;
+        this.originY = 0;
+        this.scaleX = 1;
+        this.scaleY = 1;
+        this.shearX = 0;
+        this.shearY = 0;
+        this.angle = 0;
     }
 
 

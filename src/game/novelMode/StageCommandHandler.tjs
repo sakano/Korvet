@@ -1,0 +1,83 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(StageCommandHandler, DrawableCommandHandler)
+{
+    Func(onCommand)(commandInfo:Dictionary) {
+        checkArgs
+        if (commandInfo.name !== "stage") return void;
+
+        var info = %[];
+        commandInfo.keys.foreach(LMD(index, key, values, info) {
+            info[key] = values[index];
+        }, commandInfo.values, info);
+
+        this._loadFile(@"bg${info.place}_${info.stime}_${info.size}");
+
+        return %[
+            trans: %[
+                priority : 3,
+                type : TransitionType_Crossfade,
+                option: %[
+                    time:2000,
+                ]
+            ]
+        ];
+    }
+
+
+    Func(swapForeBack)() {
+        spriteFore <-> spriteBack;
+    }
+
+
+    Func(draw)(drawBack:bool = false, force:bool = false) {
+        checkArgs
+        if (spriteFore.redraw || force) {
+            if (spriteFore.filename !== "") {
+                spriteFore.draw(true);
+            }
+        }
+        if (drawBack && (spriteBack.redraw || force)) {
+            if (spriteBack.filename !== "") {
+                spriteBack.draw(true);
+            }
+        }
+    }
+
+    Func(setParentMatrix)(matrix:HierarchicalMatrix) {
+        checkArgs
+        spriteFore.setParentMatrix(...);
+        spriteBack.setParentMatrix(...);
+    }
+
+
+
+    var spriteFore;
+    var spriteBack;
+
+    Constructor(parentLayerFore:Layer, parentLayerBack:Layer) {
+        checkArgs
+        this.spriteFore = this._createSprite(parentLayerFore);
+        this.spriteBack = this._createSprite(parentLayerBack);
+    }
+
+    Finalize() {
+        invalidate spriteFore;
+        invalidate spriteBack;
+    }
+
+    Func(_createSprite)(parentLayer:Layer) {
+        checkArgs
+        var layer = new global.Layer(parentLayer.window, parentLayer);
+        layer.setSize(parentLayer.width, parentLayer.height);
+        layer.visible = true;
+        return new Sprite(layer, true);
+    }
+
+    Func(_loadFile)(filename:string) {
+        checkArgs
+        spriteBack.load(filename);
+    }
+
+}

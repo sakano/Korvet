@@ -1,0 +1,131 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(Sprite)
+{
+    m4_define(&--IMAGE_PROPERTY--&,
+        property $1 {
+            setter(value) {
+                typeNumber(value)
+                this._image.$1 = value;
+            }
+            getter { return this._image.$1; }
+        })
+    IMAGE_PROPERTY(x)
+    IMAGE_PROPERTY(y)
+    IMAGE_PROPERTY(originX)
+    IMAGE_PROPERTY(originY)
+    IMAGE_PROPERTY(scaleX)
+    IMAGE_PROPERTY(scaleY)
+    IMAGE_PROPERTY(shearX)
+    IMAGE_PROPERTY(shearY)
+    IMAGE_PROPERTY(angle)
+
+    property width  { getter { return this._image.width; } }
+    property height { getter { return this._image.height; } }
+    property redraw { getter { return this._image.redraw; } }
+    property filename { getter { return this._image.filename; } }
+
+    property offsetX {
+        setter(value:number) {
+            typeNumber(value)
+            this._offsetMatrix.x = value;
+        }
+        getter() {
+            return this._offsetMatrix.x;
+        }
+    }
+
+    property offsetY {
+        setter(value:number) {
+            typeNumber(value)
+            this._offsetMatrix.y = value;
+        }
+        getter() {
+            return this._offsetMatrix.y;
+        }
+    }
+
+    Func(setParentMatrix)(matrix:HierarchicalMatrix) {
+        checkArgs
+        this._offsetMatrix.setParentMatrix(...);
+    }
+
+    Func(load)(filename:string) {
+        checkArgs
+        this._image.load(filename);
+        this._resetOffset();
+    }
+
+    Func(draw)(force:bool = false) {
+        checkArgs
+        this._targetLayer.clear(0);
+        this._image.draw(this._targetLayer, force);
+    }
+
+
+
+    var _targetLayer;
+    var _invalidateTargetLayer;
+
+    var _image;
+    var _offsetMatrix;
+    var _alignment = SpriteAlignment_MiddleCenter;
+
+    Constructor(targetLayer:Layer, invalidateTargetLayer:bool = false) {
+        checkArgs
+        this._targetLayer = targetLayer;
+        this._invalidateTargetLayer = invalidateTargetLayer;
+
+        this._offsetMatrix = new HierarchicalMatrix();
+        this._image = new Image();
+        this._image.setParentMatrix(this._offsetMatrix);
+    }
+
+    Finalize() {
+        invalidate this._image;
+        invalidate this._targetLayer if this._invalidateTargetLayer;
+        invalidate this._offsetMatrix;
+    }
+
+    Func(_resetOffset)() {
+        switch (this._alignment) {
+        case SpriteAlignment_BottomLeft:
+            this._offsetMatrix.x = 0;
+            this._offsetMatrix.y = this._targetLayer.height - this._image.height;
+            break;
+        case SpriteAlignment_BottomCenter:
+            this._offsetMatrix.x = (this._targetLayer.width - this._image.width) / 2;
+            this._offsetMatrix.y = this._targetLayer.height - this._image.height;
+            break;
+        case SpriteAlignment_BottomRight:
+            this._offsetMatrix.x = this._targetLayer.width - this._image.width;
+            this._offsetMatrix.y = this._targetLayer.height - this._image.height;
+            break;
+        case SpriteAlignment_MiddleLeft:
+            this._offsetMatrix.x = 0;
+            this._offsetMatrix.y = (this._targetLayer.height - this._image.height) / 2;
+            break;
+        case SpriteAlignment_MiddleCenter:
+            this._offsetMatrix.x = (this._targetLayer.width - this._image.width) / 2;
+            this._offsetMatrix.y = (this._targetLayer.height - this._image.height) / 2;
+            break;
+        case SpriteAlignment_MiddleRight:
+            this._offsetMatrix.x = this._targetLayer.width - this._image.width;
+            this._offsetMatrix.y = (this._targetLayer.height - this._image.height) / 2;
+            break;
+        case SpriteAlignment_TopLeft:
+            this._offsetMatrix.x = 0;
+            this._offsetMatrix.y = 0;
+            break;
+        case SpriteAlignment_TopCenter:
+            this._offsetMatrix.x = (this._targetLayer.width - this._image.width) / 2;
+            this._offsetMatrix.y = 0;
+            break;
+        case SpriteAlignment_TopRight:
+            this._offsetMatrix.x = this._targetLayer.width - this._image.width;
+            this._offsetMatrix.y = 0;
+            break;
+        }
+    }
+}

@@ -83,6 +83,7 @@ execStorage("KorvetParser.tjs");
 execStorage("Drawing2DMatrix.tjs");
 execStorage("HierarchicalMatrix.tjs");
 execStorage("Image.tjs");
+execStorage("Sprite.tjs");
 execStorage("ScaleLevelImage.tjs");
 
 execStorage("TextDrawer.tjs");
@@ -96,6 +97,7 @@ execStorage("Config.tjs");
 execStorage("Game.tjs");
 execStorage("GameMode.tjs");
 execStorage("DrawableCommandHandler.tjs");
+execStorage("StageCommandHandler.tjs");
 execStorage("MessageCommandHandler.tjs");
 execStorage("NovelMode.tjs");
 

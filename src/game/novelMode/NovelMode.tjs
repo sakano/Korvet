@@ -8,12 +8,12 @@ ClassExtends(NovelMode,GameMode)
         if (this._inTransition) {
             for (var i = 0; i < this._drawables.count; ++i) {
                 var drawable = this._drawables[i];
-                drawable.handler.draw(drawable.foreLayer, drawable.backLayer);
+                drawable.draw(true);
             }
         } else {
             for (var i = 0; i < this._drawables.count; ++i) {
                 var drawable = this._drawables[i];
-                drawable.handler.draw(drawable.foreLayer);
+                drawable.draw();
             }
         }
     }
@@ -33,8 +33,6 @@ ClassExtends(NovelMode,GameMode)
     var _screenLayer;
     var _foreLayer;
     var _backLayer;
-
-    var _worldMatrix;
 
     var _transInfo;
     var _inTransition = false;
@@ -58,10 +56,7 @@ ClassExtends(NovelMode,GameMode)
         this._backLayer = this._createParentLayer(this._screenLayer);
         this._foreLayer.visible = true;
 
-        this._worldMatrix = new global.Image();
-        this._worldMatrix.x = this. _foreLayer.width/2;
-        this._worldMatrix.y = this._foreLayer.height/2;
-
+        
         this._initParser();
         this._initCommandHandlers();
 
@@ -89,13 +84,8 @@ ClassExtends(NovelMode,GameMode)
     }
 
     Func(_initCommandHandlers)() {
-        var drawableHandler = new global.DrawableCommandHandler();
-        drawableHandler.setParentMatrix(this._worldMatrix);
-        this._drawables.add(%[
-            foreLayer : this._createTargetLayer(this._foreLayer),
-            backLayer : null,
-            handler : drawableHandler
-        ]);
+        var drawableHandler = new global.StageCommandHandler(this._foreLayer, this._backLayer);
+        this._drawables.add(drawableHandler);
         this._commandHandlers.add(drawableHandler);
 
         this._commandHandlers.add(new global.MessageCommandHandler(this));
@@ -179,11 +169,6 @@ ClassExtends(NovelMode,GameMode)
         this._stopTransition();
 
         this._inTransition = true;
-        for (var i = 0; i < this._drawables.count; ++i) {
-            assert(this._drawables[i].backLayer === null)
-            this._drawables[i].backLayer = this._createTargetLayer(this._backLayer);
-        }
-
         this._foreLayer.beginTransition(
             transInfo.type, true, this._backLayer, transInfo.option
         ).done(this._onTransitionCompleted);
@@ -199,11 +184,8 @@ ClassExtends(NovelMode,GameMode)
         this._foreLayer <-> this._backLayer;
         for (var i = 0; i < this._drawables.count; ++i) {
             var drawable = this._drawables[i];
-            drawable.foreLayer.parent = this._foreLayer;
-            invalidate drawable.backLayer;
-            drawable.backLayer = null;
-            drawable.handler.swapForeBack();
-            drawable.handler.draw(drawable.foreLayer,, true);
+            drawable.swapForeBack();
+            drawable.draw(false, true);
         }
         this._trigger("endtrans");
     }

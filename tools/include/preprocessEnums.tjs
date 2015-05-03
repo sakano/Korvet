@@ -32,6 +32,17 @@ m4_define(&--PriorityQueue_BelowNormal--&, &--1--&)m4_dnl
 m4_define(&--PriorityQueue_Low--&,         &--2--&)m4_dnl
 m4_define(&--PriorityQueue_Lowest--&,      &--3--&)m4_dnl
 m4_dnl
+m4_dnl // SpriteAlignment
+m4_define(&--SpriteAlignment_BottomLeft--&,  &--1--&)m4_dnl
+m4_define(&--SpriteAlignment_BottomCenter--&,&--2--&)m4_dnl
+m4_define(&--SpriteAlignment_BottomRight--&, &--3--&)m4_dnl
+m4_define(&--SpriteAlignment_MiddleLeft--&,  &--4--&)m4_dnl
+m4_define(&--SpriteAlignment_MiddleCenter--&,&--5--&)m4_dnl
+m4_define(&--SpriteAlignment_MiddleRight--&, &--6--&)m4_dnl
+m4_define(&--SpriteAlignment_TopLeft--&,     &--7--&)m4_dnl
+m4_define(&--SpriteAlignment_TopCenter--&,   &--8--&)m4_dnl
+m4_define(&--SpriteAlignment_TopRight--&,    &--9--&)m4_dnl
+m4_dnl
 m4_dnl // KorvetParserCommandPriority
 m4_define(&--KorvetParserCommandPriority_Highest--&,     PriorityQueue_Highest)m4_dnl
 m4_define(&--KorvetParserCommandPriority_High--&,        PriorityQueue_High)m4_dnl
