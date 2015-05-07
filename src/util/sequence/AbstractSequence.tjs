@@ -32,6 +32,7 @@ Class(AbstractSequence)
     Func(getConsumedTick){ return 0; }
 
     Func(call)            { return this._appendNewSequence(new global.CallbackSequence(...)); }
+    Func(setValue)        { return this._appendNewSequence(new global.SetValueSequence(...)); }
     Func(wait)            { return this._appendNewSequence(new global.WaitSequence(...)); }
     Func(beginSkip)       { return this._appendNewSequence(new global.BeginSkipSequence(...)); }
     Func(endSkip)         { return this._appendNewSequence(new global.EndSkipSequence(...)); }

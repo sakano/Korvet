@@ -375,6 +375,14 @@ FILE_INCLUDE_GUARD
     }
     {
         init();
+        assertAlways(props.targetProperty === 0)
+        runner.run(sequence().setValue(&props.targetProperty, 123));
+        assertAlways(props.targetProperty === 123)
+        runner.run(sequence().setValue(&props.targetProperty, -10));
+        assertAlways(props.targetProperty === -10)
+    }
+    {
+        init();
         runner.run(
             sequence()
             .beginSkip("click")
@@ -1004,6 +1012,27 @@ FILE_INCLUDE_GUARD
         assertAlways(called.join(":") === "func:func2")
         runner.onTick(210);
         assertAlways(called.join(":") === "func:func2:func3")
+    }
+    {
+        init();
+        assertAlways(props.targetProperty === 0)
+        runner.run(sequence()
+            .beginSkip("click")
+                .setValue(&props.targetProperty, -10)
+            .endSkip());
+        assertAlways(props.targetProperty === -10)
+    }
+    {
+        init();
+        assertAlways(props.targetProperty === 0)
+        runner.run(sequence()
+            .beginSkip("click")
+                .wait(1000)
+                .setValue(&props.targetProperty, -10)
+            .endSkip());
+        assertAlways(props.targetProperty === 0)
+        runner.trigger("click");
+        assertAlways(props.targetProperty === -10)
     }
     {
         init();
@@ -1664,6 +1693,36 @@ FILE_INCLUDE_GUARD
         assertAlways(called.join(":") === "func")
         runner.onTick(1621);
         assertAlways(called.join(":") === "func:func:func:func2")
+    }
+    {
+        init();
+        assertAlways(props.targetProperty === 0)
+        runner.run(sequence()
+            .beginLoop(3)
+                .setValue(&props.targetProperty, -10)
+            .endLoop());
+        assertAlways(props.targetProperty === -10)
+    }
+    {
+        init();
+        assertAlways(props.targetProperty === 0)
+        assertAlways(props.targetProperty2 === 0)
+        assertAlways(props.targetProperty3 === 0)
+        runner.run(sequence()
+            .beginLoop(2)
+                .beginLoop(3)
+                    .setValue(&props.targetProperty, -10)
+                .endLoop()
+                .setValue(&props.targetProperty2, 345)
+            .endLoop()
+            .wait(100)
+            .setValue(&props.targetProperty3, 22)
+        );
+        assertAlways(props.targetProperty === -10)
+        assertAlways(props.targetProperty2 === 345)
+        assertAlways(props.targetProperty3 === 0)
+        runner.onTick(100);
+        assertAlways(props.targetProperty3 === 22)
     }
     {
         init();

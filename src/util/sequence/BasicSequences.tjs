@@ -34,6 +34,25 @@ ClassExtends(CallbackSequence, AbstractSequence)
     OverrideFunc(_cloneSelf) { return new global.CallbackSequence(this._callback, this._args*); }
 }
 
+ClassExtends(SetValueSequence, AbstractSequence)
+{
+    OverrideFunc(run)  { this._property = this._value; }
+    OverrideFunc(skip) { this._property = this._value; }
+
+    var _property;
+    var _value;
+
+    Constructor(prop:Property, value:any+) {
+        checkArgs
+        this._property = prop;
+        this._value = value;
+    }
+
+    Finalize() { super.finalize(); }
+
+    OverrideFunc(_cloneSelf) { return new global.SetValueSequence(&this._property, this._value); }
+}
+
 ClassExtends(FactorySequence, AbstractSequence)
 {
     OverrideFunc(run) {
