@@ -56,12 +56,18 @@ Class(SequenceRunner)
     }
 
     Func(_foreachHolders)(callback:function, *) {
+        this._invalidateCompletedHolders();
+
         // callbackを実行
         for (var i = 0; i < this._holders.count; ++i) {
             callback(this._holders[i], *);
         }
 
-        // callback中に完了したホルダを削除
+        this._invalidateCompletedHolders();
+    }
+
+    Func(_invalidateCompletedHolders)() {
+        // 完了したホルダを削除
         if (this._completedHolders.count === 0) return;
         for (var i = 0; i < this._completedHolders.count; ++i) {
             this._holders.remove(this._completedHolders[i]);
