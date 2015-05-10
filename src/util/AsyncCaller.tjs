@@ -61,11 +61,16 @@ Class(AsyncCaller)
 
     Func(_findEqualCallback)(callback:Function, args*) {
         for (var index = 0; index < this._callbacks.count; ++index) {
-            if (this._callbacks[index] !== callback) return index;
-            if (this._args[index].count !== args.count) return index;
-            for(var argIndex = 0; argIndex < this._args.count; ++argIndex) {
-                if (!global.equals(this._args[argIndex], args[argIndex])) return index;
+            if (this._callbacks[index] !== callback) continue;
+            if (this._args[index].count !== args.count) continue;
+            var argsEqual = true;
+            for(var argIndex = 0; argIndex < args.count; ++argIndex) {
+                if (!global.equalsShallow(this._args[index][argIndex], args[argIndex])) {
+                    argsEqual = false;
+                    break;
+                }
             }
+            if (argsEqual) return index;
         }
         return -1;
     }

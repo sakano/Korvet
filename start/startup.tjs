@@ -44,6 +44,7 @@ execStorage("data/debug/test/RegExpTest.tjs");
 execStorage("data/debug/test/ScriptsExTest.tjs");
 execStorage("data/debug/test/UtilsTest.tjs");
 execStorage("data/debug/test/SequenceTest.tjs");
+execStorage("data/debug/test/AsyncCallerTest.tjs");
 
 System.exitOnWindowClose = true;
 

@@ -1,0 +1,280 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+{
+    var called = [];
+    var func = LMD() { push("func"); } incontextof called;
+    var func2 = LMD() { push("func2"); } incontextof called;
+    var func3 = LMD() { push("func3"); } incontextof called;
+    var funcArg = LMD(arg1, arg2) { push(arg1, arg2); } incontextof called;
+
+    var caller = new global.AsyncCaller();
+
+    var init = LMD() {
+        called.clear();
+        assertAlways(caller._callbacks.count === 0)
+        assertAlways(caller._args.count === 0)
+        caller._trigger.cancel();
+    } incontextof %[ called:called, caller:caller ];
+
+    {
+        init();
+        caller.call(func);
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func")
+        caller._do();
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        caller.call(func);
+        caller.call(func2);
+        caller.call(func3);
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func:func2:func3")
+
+        caller.call(funcArg, "arg", "arg2");
+        assertAlways(called.join(":") === "func:func2:func3")
+        caller._do();
+        assertAlways(called.join(":") === "func:func2:func3:arg:arg2")
+    }
+    {
+        init();
+        caller.callOnce(func);
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func")
+        caller._do();
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        caller.callOnce(func);
+        caller.callOnce(func);
+        caller.callOnce(func);
+        caller._do();
+        assertAlways(called.join(":") === "func")
+        caller._do();
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        caller.callOnce(func);
+        caller.callOnce(func2);
+        caller.callOnce(func);
+        caller.callOnce(func2);
+        caller.callOnce(func3);
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func:func2:func3")
+        caller._do();
+        assertAlways(called.join(":") === "func:func2:func3")
+
+        caller.callOnce(func);
+        assertAlways(called.join(":") === "func:func2:func3")
+        caller._do();
+        assertAlways(called.join(":") === "func:func2:func3:func")
+    }
+    {
+        init();
+        caller.callOnce(funcArg, "arg", "arg2");
+        caller.callOnce(funcArg, "arg", "arg2");
+        caller.callOnce(funcArg, "arg", "arg2");
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "arg:arg2")
+        caller._do();
+        assertAlways(called.join(":") === "arg:arg2")
+
+        caller.callOnce(funcArg, "arg", "arg2");
+        assertAlways(called.join(":") === "arg:arg2")
+        caller._do();
+        assertAlways(called.join(":") === "arg:arg2:arg:arg2")
+    }
+    {
+        init();
+        caller.callOnce(funcArg, "arg", "arg2");
+        caller.callOnce(funcArg, "arg2", "arg");
+        caller.callOnce(funcArg, "arg3", "arg4");
+        caller.callOnce(funcArg, "arg3", "arg4");
+        caller.callOnce(funcArg, "arg2", "arg");
+        caller.callOnce(funcArg, "arg", "arg2");
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "arg:arg2:arg2:arg:arg3:arg4")
+
+        caller.callOnce(funcArg, "arg", "arg2");
+        assertAlways(called.join(":") === "arg:arg2:arg2:arg:arg3:arg4")
+        caller._do();
+        assertAlways(called.join(":") === "arg:arg2:arg2:arg:arg3:arg4:arg:arg2")
+    }
+    {
+        init();
+        caller.callOnce(func);
+        caller.callOnce(func, "");
+        caller.callOnce(func, "");
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func:func")
+    }
+    {
+        init();
+        caller.callOnce(func);
+        caller.callOnce(func, 0,1,2,3,4,5,6);
+        caller.callOnce(func, 0,1,2,3,4,5,6);
+        caller.callOnce(func, 0,1,2,3,4,5,6,7);
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func:func:func")
+    }
+    {
+        init();
+        caller.callOnce(func);
+        caller.callOnce(func, "");
+        caller.callOnce(func, 0);
+        caller.callOnce(func, 0, 1);
+        caller.callOnce(func, 0, 2);
+        caller.callOnce(func, 1);
+        caller.callOnce(func);
+        caller.callOnce(func, "");
+        caller.callOnce(func, 0);
+        caller.callOnce(func, 0, 1);
+        caller.callOnce(func, 0, 2);
+        caller.callOnce(func, 1);
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func:func:func:func:func:func")
+    }
+    {
+        init();
+        caller.callOnce(func);
+        caller.callOnce(func, []);
+        caller.callOnce(func, []);
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func:func:func")
+    }
+    {
+        init();
+        caller.callOnce(func);
+        var array = [];
+        caller.callOnce(func, array);
+        caller.callOnce(func, array);
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func:func")
+    }
+    {
+        init();
+        caller.call(func);
+        caller.callOnce(func2);
+        caller.call(func3);
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func:func2:func3")
+        
+        caller.callOnce(func);
+        caller.call(func2);
+        caller.call(func3);
+        assertAlways(called.join(":") === "func:func2:func3")
+        caller._do();
+        assertAlways(called.join(":") === "func:func2:func3:func:func2:func3")
+    }
+    {
+        init();
+        caller.call(func);
+        caller.callOnce(func);
+        caller.callOnce(func);
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func")
+    }
+    {
+        init();
+        caller.callOnce(func);
+        caller.call(func);
+        caller.call(func);
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func:func:func")
+    }
+    {
+        init();
+        caller.callOnce(func);
+        caller.call(func);
+        caller.callOnce(func);
+        caller.call(func);
+        caller.callOnce(func);
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "func:func:func")
+    }
+    {
+        init();
+        caller.call(LMD() {
+            called.push("registerd");
+            caller.call(func);
+            caller.call(func2);
+        } incontextof %[ func:func, func2:func2, func3:func3, funcArg:funcArg, caller:caller, called:called ]);
+        assertAlways(called.join(":") === "")
+
+        caller._do();
+        assertAlways(called.join(":") === "registerd")
+        caller._do();
+        assertAlways(called.join(":") === "registerd:func:func2")
+        caller._do();
+        assertAlways(called.join(":") === "registerd:func:func2")
+    }
+    {
+        init();
+        caller.call(LMD() {
+            called.push("registerd");
+            caller.call(func);
+            caller.call(func2);
+            caller.callOnce(func3);
+            caller.callOnce(func);
+            caller.callOnce(func2);
+        } incontextof %[ func:func, func2:func2, func3:func3, funcArg:funcArg, caller:caller, called:called ]);
+        assertAlways(called.join(":") === "")
+
+        caller._do();
+        assertAlways(called.join(":") === "registerd")
+        caller._do();
+        assertAlways(called.join(":") === "registerd:func:func2:func3")
+    }
+    {
+        init();
+        caller.call(LMD() {
+            called.push("registerd");
+            caller.call(func);
+            caller.call(LMD() {
+                called.push("registerd2");
+                caller.call(func2);
+            } incontextof this);
+        } incontextof %[ func:func, func2:func2, func3:func3, funcArg:funcArg, caller:caller, called:called ]);
+        assertAlways(called.join(":") === "")
+
+        caller._do();
+        assertAlways(called.join(":") === "registerd")
+        caller._do();
+        assertAlways(called.join(":") === "registerd:func:registerd2")
+        caller._do();
+        assertAlways(called.join(":") === "registerd:func:registerd2:func2")
+    }
+    {
+        init();
+        var context = %[];
+        caller.call(func incontextof context);
+        invalidate context;
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "")
+        caller._do();
+        assertAlways(called.join(":") === "")
+    }
+
+    init();
+    invalidate caller;
+}
