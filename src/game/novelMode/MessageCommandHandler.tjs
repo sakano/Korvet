@@ -4,18 +4,17 @@ FILE_INCLUDE_GUARD
 ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
 {
     OverrideFunc(onCommand)(commandInfo:Dictionary) {
-        var handler = this._commandHandlers[commandInfo.name];
-        if (handler === void) return void;
-
-        return handler(commandInfo);
+        var method = this._commandMethods[commandInfo.name];
+        if (method === void) return void;
+        return method(commandInfo);
     }
 
 
 
-    var _commandHandlers = %[
-        "__ch" => _onCh,
-        "__beginpage" => _onPageBegin,
-        "__endpage" => _onPageEnd
+    var _commandMethods = %[
+        __beginpage : _beginPageCommandImpl,
+        __endpage   : _endPageCommandImpl,
+        __ch        : _chCommandImpl,
     ];
 
     var _currentText = "";
@@ -26,12 +25,17 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
         super.AbstractDrawableCommandHandler(mode);
     }
 
-    Func(_onPageBegin)(commandInfo:Dictionary) {
+    Finalize() {
+        super.finalize();
+        invalidate this._commandMethods;
+    }
+    
+    Func(_beginPageCommandImpl)(commandInfo:Dictionary) {
         this._currentText = "";
         this._drawnTextIndex = 0;
     }
 
-    Func(_onPageEnd)(commandInfo:Dictionary) {
+    Func(_endPageCommandImpl)(commandInfo:Dictionary) {
         assert(this._currentText.length > 0)
         return %[
             interrupt : true,
@@ -48,7 +52,7 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
         ];
     }
 
-    Func(_onCh)(commandInfo:Dictionary) {
+    Func(_chCommandImpl)(commandInfo:Dictionary) {
         var text;
         for (var i = 0; i < commandInfo.keys.count; ++i) {
             if (commandInfo.keys[i] === "text") {

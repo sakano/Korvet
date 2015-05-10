@@ -1,0 +1,98 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(SystemCommandHandler, AbstractCommandHandler)
+{
+    property inTransition { getter { return this._inTransition; } }
+
+    Func(registerTransInfo)(transInfo:Dictionary) {
+        checkArgs
+        if (this._transInfo === void || this._transInfo.priority <= transInfo.priority) {
+            this._transInfo = transInfo;
+        }
+    }
+
+    OverrideFunc(onCommand)(commandInfo:Dictionary) {
+        var method = this._commandMethods[commandInfo.name];
+        if (method === void) return void;
+        return method(commandInfo);
+    }
+
+
+
+    var _commandMethods = %[
+        __beginpage : _beginPageCommandImpl,
+        __endpage   : _endPageCommandImpl,
+        update      : _updateCommandImpl,
+        waittrans   : _waitTransCommandImpl,
+    ];
+
+    var _transInfo;
+    var _inTransition = false;
+
+    property _foreLayer { getter { return this._mode._foreLayer; } }
+    property _backLayer { getter { return this._mode._backLayer; } }
+
+    Constructor(mode:NovelMode) {
+        checkArgs
+        super.AbstractCommandHandler(mode);
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate this._commandMethods;
+    }
+
+    Func(_trigger)() { this._mode._trigger(...); }
+
+    Func(_updateCommandImpl)() {
+        this._trigger("update");
+        return this._beginTransition();
+    }
+
+    Func(_beginPageCommandImpl)() {
+        this._trigger("update");
+        return this._beginTransition();
+    }
+
+    Func(_endPageCommandImpl)() {
+    }
+
+    Func(_waitTransCommandImpl)() {
+        if (!this._inTransition) return;
+        return %[
+            interrupt : true,
+            sequences : [
+                global.SequenceRunner.sequence()
+                    .wait("transCompleted", "click")
+                    .call(this._trigger, "skipTrans")
+                    .call(this._mode.resumeCommandLoopAsync)
+            ]
+        ];
+    }
+
+    Func(_beginTransition)() {
+        assert(!this._inTransition)
+        if (this._transInfo === void) return;
+
+        this._mode.onTransitionBegin();
+
+        this._inTransition = true;
+        var info = this._transInfo;
+        this._transInfo = void;
+        return %[ sequences : [
+            global.SequenceRunner.sequence()
+                .beginSkip("skipTrans")
+                    .transition(this._foreLayer, this._backLayer, info.type, info.option)
+                    .call(global.gAsyncCaller.call, this._onTransitionCompleted)
+                .endSkip()
+        ]];
+    }
+
+    Func(_onTransitionCompleted)() {
+        assert(this._inTransition)
+        this._inTransition = false;
+        this._trigger("transCompleted");
+        this._mode.onTransitionCompleted();
+    }
+}

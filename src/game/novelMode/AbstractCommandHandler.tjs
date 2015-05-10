@@ -14,9 +14,23 @@ Class(AbstractCommandHandler)
         this._mode = mode;
     }
 
+    Finalize() {}
+
     Func(_notifyScriptError)(message:string) {
         checkArgs
         this._mode.onScriptError(message);
+    }
+
+    Func(_notifyUnknownValueError)(argValue:any+, argName:string) {
+        checkArgs
+        this._notifyScriptError(expandMessage(ASSERT_SCRIPT_UNKNOWN_VALUE, "ARG_NAME", argName, "ARG_VALUE", argValue));
+    }
+
+    Func(_validateArgumentRequired)(value:any+, argName:string, defaultValue:any, message:string = ASSERT_SCRIPT_ARGUMENT_REQUIRED) {
+        checkArgs
+        if (value !== void && value !== null) return value;
+        this._notifyScriptError(expandMessage(message, "ARG_NAME", argName));
+        return defaultValue;
     }
 
     Func(_validateArgumentNull)(value:any+, argName:string, message:string = ASSERT_SCRIPT_ARGUMENT_NULL) {
@@ -27,9 +41,12 @@ Class(AbstractCommandHandler)
         return null;
     }
 
-    Func(_validateArgumentIntRange)(value:any+, argName:string, min:int+, max:int+, message:string = ASSERT_SCRIPT_ARGUMENT_INT_RANGE) {
+    Func(_validateArgumentIntRange)(value:any+, argName:string, min:int+, max:int+, defaultValue:int, message:string = ASSERT_SCRIPT_ARGUMENT_INT_RANGE) {
         checkArgs
         assert(min < max || min === void || max === void)
+        assert(min === void || min <= defaultValue)
+        assert(max === void || max >= defaultValue)
+        if (value === void) return defaultValue;
         var intValue = (int)value;
         if (min !== void && intValue < min) {
             this._notifyScriptError(expandMessage(message, "ARG_NAME", argName, "ARG_VALUE", value));

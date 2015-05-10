@@ -3,52 +3,6 @@ FILE_INCLUDE_GUARD
 
 ClassExtends(StageCommandHandler, SpriteCommandHandler)
 {
-    var _stageCommandHandlers = %[
-        place : this._changeFileCommandImpl incontextof %[ self:this, targetName:"_place" ],
-        stime : this._changeFileCommandImpl incontextof %[ self:this, targetName:"_time" ],
-        size  : this._changeFileCommandImpl incontextof %[ self:this, targetName:"_size" ],
-    ];
-
-    OverrideFunc(onCommand)(commandInfo:Dictionary) {
-        checkArgs
-        if (commandInfo.name !== "stage") return void;
-
-        var sequences = [];
-        var keys = commandInfo.keys;
-        var values = commandInfo.values;
-        var map = commandInfo.map;
-        for (var i = 0; i < keys.count; ++i) {
-            var key = keys[i];
-            var value = values[i];
-            var handler = this._spriteCommandHandlers[key];
-            if (handler === void) {
-                handler = this._stageCommandHandlers[key];
-            }
-            if (handler === void) continue;
-            var result = handler(value, map, key);
-            if (result === void) continue;
-            if (result.sequences !== void) {
-                sequences.push(result.sequences*);
-            }
-        }
-
-        var result = %[];
-        if (this._fileChanged) {
-            result.trans = %[
-                priority : 3,
-                type : TransitionType_Crossfade,
-                option: %[
-                    time:2000,
-                ]
-            ];
-        }
-        if (sequences.count > 0) {
-            result.sequences = sequences;
-        }
-
-        return result;
-    }
-
     OverrideFunc(beforeTransition)() {
         super.beforeTransition();
         if (this._fileChanged) {
@@ -61,10 +15,17 @@ ClassExtends(StageCommandHandler, SpriteCommandHandler)
 
 
 
-    var _place;
-    var _time;
-    var _size;
+    var _place = "";
+    var _time = "";
+    var _size = "";
     var _fileChanged = false;
+    var _stageAutoTransition = %[
+        priority : NovelModeTransPriority_AutoAll,
+        type : TransitionType_Crossfade,
+        option: %[
+            time:1000,
+        ]
+    ];
 
     Constructor(mode:NovelMode, parentLayerFore:Layer, parentLayerBack:Layer) {
         checkArgs
@@ -73,6 +34,20 @@ ClassExtends(StageCommandHandler, SpriteCommandHandler)
 
     Finalize() {
         super.finalize();
+        invalidate this._stageAutoTransition;
+    }
+
+    OverrideFunc(_createArgumentMethods)() {
+        var methods = super._createArgumentMethods();
+        methods.place = this._changeFileCommandImpl incontextof %[ self:this, targetName:"_place" ];
+        methods.stime = this._changeFileCommandImpl incontextof %[ self:this, targetName:"_time" ];
+        methods.size  = this._changeFileCommandImpl incontextof %[ self:this, targetName:"_size" ];
+        return methods;
+    }
+
+    OverrideFunc(_isIgnoreCommand)(commandInfo:Dictionary) {
+        checkArgs
+        return commandInfo.name !== "stage";
     }
 
     Func(_getFilename)() {
@@ -83,9 +58,10 @@ ClassExtends(StageCommandHandler, SpriteCommandHandler)
     }
 
     Func(_changeFileCommandImpl)(value, map, key) {
-        var validatedValue = self._validateArgumentStringLength(value, key);
+        var validatedValue = self._validateArgumentRequired(value, key, self[targetName]);
         if (validatedValue === self[targetName]) return;
         self[targetName] = validatedValue;
         self._fileChanged = true;
+        return %[ trans : self._stageAutoTransition ];
     }
 }

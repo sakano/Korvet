@@ -1,35 +1,31 @@
 
-テキスト表示テスト
-
-@stage place=道 stime=昼 size=0
+@stage place=道 stime=昼 size=1 fade=500
 背景を表示しました
 
-@stage x=100
-背景を移動しました
+@stage stime=夜 trans=scroll dir=right scroll=slide time=2000
+スクロールトランジション
 
-;@stage x=-100 time=1000
-;背景を移動しています
+@stage stime=昼 trans=scroll dir=up scroll=in time=1000
+スクロールトランジション２
 
-;@stage x=0 y=100 time=1000
-;背景を移動しています
+@stage stime=夜 trans=universal rule=rl左から右へ vague=0 time=2000
+ユニバーサルトランジション
 
-@stage angle=90 time=1000
-回転のテスト
+@stage stime=昼 trans=universal rule=rl左から右へ time=4000
+ユニバーサルトランジション２
 
-@stage scaleX=200 scaleY=200 time=1000
-拡大のテスト
+@stage stime=夜 trans=fade time=2000
+@update
+@waittrans
+同期フェードトランジション
 
-@stage shearX=200 time=1000
-剪断のテスト
+@stage stime=昼 trans=scroll dir=down scroll=out time=1000
+@update
+@waittrans
+同期スクロールトランジション
 
-@stage x=0 y=0 angle=0 scaleX=100 scaleY=100 shearX=0 shearY=0
-リセット
-
-@stage originX=0 originY=0
-@stage angle=-90 time=1000
-原点を変更して回転
-
-@stage place=道 stime=夜 size=0
-@stage x=300 time=1000
-トランジションしながら移動
+@stage stime=夜 trans=universal rule=rl左から右へ time=1000
+@update
+@waittrans
+同期ユニバーサルトランジション
 

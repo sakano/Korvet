@@ -103,6 +103,7 @@ execStorage("AbstractDrawableCommandHandler.tjs");
 execStorage("SpriteCommandHandler.tjs");
 execStorage("StageCommandHandler.tjs");
 execStorage("MessageCommandHandler.tjs");
+execStorage("SystemCommandHandler.tjs");
 
 execStorage("NovelMode.tjs");
 

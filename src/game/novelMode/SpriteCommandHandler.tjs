@@ -53,7 +53,6 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
     OverrideFunc(afterTransition)() {
         this._spriteFore <-> this._spriteBack;
         this.draw(true);
-        
     }
 
     OverrideFunc(draw)(force:bool = false) {
@@ -84,27 +83,56 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         this._spriteBack.setParentMatrix(...);
     }
 
+    OverrideFunc(onCommand)(commandInfo:Dictionary) {
+        checkArgs
+        if (this._isIgnoreCommand(commandInfo)) return;
+
+        var result = %[];
+        var sequences = [];
+        var keys = commandInfo.keys;
+        var values = commandInfo.values;
+        for (var i = 0; i < keys.count; ++i) {
+            var key = keys[i];
+            var value = values[i];
+            var method = this._argumentMethods[key];
+            if (method === void) continue;
+
+            var methodResult = method(value, commandInfo.map, key);
+            if (methodResult === void) continue;
+            if (methodResult.trans !== void) {
+                if (result.trans === void || result.trans.priority <= methodResult.trans.priority) {
+                    result.trans = methodResult.trans;
+                }
+            }
+            if (methodResult.sequences !== void) {
+                assert(methodResult.sequences.count > 0)
+                sequences.push(methodResult.sequences*);
+            }
+        }
+
+        if (sequences.count > 0) {
+            result.sequences = sequences;
+        }
+
+        return result;
+    }
 
 
-    var _spriteCommandHandlers = %[
-        x       : this._spriteCommandImpl incontextof %[ self:this, propertyName:"x" ],
-        y       : this._spriteCommandImpl incontextof %[ self:this, propertyName:"y" ],
-        originx : this._spriteCommandImpl incontextof %[ self:this, propertyName:"originX" ],
-        originy : this._spriteCommandImpl incontextof %[ self:this, propertyName:"originY" ],
-        scalex  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"scaleX" ],
-        scaley  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"scaleY" ],
-        shearx  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"shearX" ],
-        sheary  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"shearY" ],
-        angle   : this._spriteCommandImpl incontextof %[ self:this, propertyName:"angle" ],
-        both : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Both ],
-        fore : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Fore ],
-        back : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Back ],
-    ];
-
+    
     var _spriteFore;
     var _spriteBack;
 
     var _drawType = SpriteCommandHandlerDrawType_Back;
+
+    var _defualtTransTime = 500;
+    var _transMethods = %[
+        fade : TransitionType_Crossfade,
+        crossfade : TransitionType_Crossfade,
+        universal : TransitionType_Universal,
+        scroll : TransitionType_Scroll,
+    ];
+
+    var _argumentMethods;
 
     Constructor(mode:NovelMode, parentLayerFore:Layer, parentLayerBack:Layer) {
         checkArgs
@@ -112,11 +140,15 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
 
         this._spriteFore = this._createSprite(parentLayerFore);
         this._spriteBack = this._createSprite(parentLayerBack);
+
+        this._argumentMethods = this._createArgumentMethods();
     }
 
     Finalize() {
         invalidate _spriteFore;
         invalidate _spriteBack;
+        invalidate this._transMethods;
+        invalidate this._argumentMethods;
     }
 
     Func(_createSprite)(parentLayer:Layer) {
@@ -127,11 +159,27 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         return new global.Sprite(layer, true);
     }
 
-    Func(_setDrawType)(type) {
-        assert(type === SpriteCommandHandlerDrawType_Both
-            || type === SpriteCommandHandlerDrawType_Fore
-            || type === SpriteCommandHandlerDrawType_Back)
-        this._drawType = type;
+    Func(_createArgumentMethods)() {
+        return %[
+            x       : this._spriteCommandImpl incontextof %[ self:this, propertyName:"x" ],
+            y       : this._spriteCommandImpl incontextof %[ self:this, propertyName:"y" ],
+            originx : this._spriteCommandImpl incontextof %[ self:this, propertyName:"originX" ],
+            originy : this._spriteCommandImpl incontextof %[ self:this, propertyName:"originY" ],
+            scalex  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"scaleX" ],
+            scaley  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"scaleY" ],
+            shearx  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"shearX" ],
+            sheary  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"shearY" ],
+            angle   : this._spriteCommandImpl incontextof %[ self:this, propertyName:"angle" ],
+            both    : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Both ],
+            fore    : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Fore ],
+            back    : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Back ],
+            fade    : this._fadeCommandImpl,
+            trans   : this._transCommandImpl,
+        ];
+    }
+
+    Func(_isIgnoreCommand)(commandInfo:Dictionary) {
+        return true;
     }
 
     Func(_updateSpriteBack)() {
@@ -169,5 +217,88 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
     Func(_drawTypeCommandImpl)(value, map, key) {
         self._validateArgumentNull(value, key);
         self._setDrawType(drawType);
+    }
+
+    Func(_fadeCommandImpl)(value, map, key) {
+        value = this._validateArgumentIntRange(value, "fade", 1, void, this._defualtTransTime);
+        return %[
+            trans : %[
+                priority : NovelModeTransPriority_Specified,
+                type : TransitionType_Crossfade,
+                option: %[
+                    time : value,
+                ]
+            ]
+        ];
+    }
+    Func(_transCommandImpl)(value, map, key) {
+        var type = this._transMethods[value];
+        if (type === void) {
+            this._notifyUnknownValueError(value, "trans");
+            type = TransitionType_Crossfade;
+        }
+
+        // トランジション用の属性をoptionに入れていく
+        var option = %[];
+
+        // time属性
+        option.time = this._validateArgumentRequired(map.time, "time", this._defualtTransTime);
+        option.time = this._validateArgumentIntRange(option.time, "time", 1, void, this._defualtTransTime);
+
+        switch(type) {
+        case TransitionType_Crossfade:
+            doNothing();
+            break;
+        case TransitionType_Universal:
+            // rule属性
+            var rule = this._validateArgumentRequired(map.rule, "rule", null);
+            if (rule === null) {
+                type = TransitionType_Crossfade;
+                break;
+            }
+            option.rule = rule;
+            // vague属性
+            option.vague = this._validateArgumentIntRange(map.vague, "vague", 0, void, 128);
+            break;
+        case TransitionType_Scroll:
+            // dir属性
+            switch(map.dir) {
+            case "left": option.from = sttRight; break;
+            case "up": option.from = sttBottom; break;
+            case "right": option.from = sttLeft; break;
+            case "down": option.from = sttTop; break;
+            case void: option.from = sttLeft; break;
+            default:
+                this._notifyUnknownValueError(map.dir, "dir");
+                option.from = sttLeft;
+                break;
+            }
+            // scroll属性
+            switch(map.scroll) {
+            case "slide": option.stay = ststNoStay; break;
+            case "in": option.stay = ststStayDest; break;
+            case "out": option.stay = ststStaySrc; break;
+            case void: option.stay = ststNoStay; break;
+            default:
+                this._notifyUnknownValueError(map.scroll, "scroll");
+                option.stay = ststNoStay;
+                break;
+            }
+            break;
+        }
+        return %[
+            trans : %[
+                priority : NovelModeTransPriority_Specified,
+                type : type,
+                option: option
+            ]
+        ];
+    }
+
+    Func(_setDrawType)(type) {
+        assert(type === SpriteCommandHandlerDrawType_Both
+            || type === SpriteCommandHandlerDrawType_Fore
+            || type === SpriteCommandHandlerDrawType_Back)
+        this._drawType = type;
     }
 }

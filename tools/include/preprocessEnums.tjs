@@ -8,6 +8,11 @@ m4_define(&--TransTickMethod_Linear--&, &--"l"--&)m4_dnl
 m4_define(&--TransTickMethod_QuadraticIn--&, &--"qui"--&)m4_dnl
 m4_define(&--TransTickMethod_QuadraticOut--&, &--"quo"--&)m4_dnl
 m4_dnl
+m4_dnl // NovelModeTransPriority
+m4_define(&--NovelModeTransPriority_Specified--&, &--2--&)m4_dnl
+m4_define(&--NovelModeTransPriority_AutoAll--&, &--1--&)m4_dnl
+m4_define(&--NovelModeTransPriority_Auto--&, &--0--&)m4_dnl
+m4_dnl
 m4_dnl // ActionType
 m4_define(&--ActionHandler_Easing--&, &--"ez"--&)m4_dnl
 m4_define(&--ActionHandler_SquareWave--&, &--"sq"--&)m4_dnl

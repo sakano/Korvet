@@ -3,10 +3,11 @@ FILE_INCLUDE_GUARD
 
 ClassExtends(NovelMode, GameMode)
 {
-    property inTransition { getter { return this._inTransition; } }
+    property inTransition { getter { return this._systemCommandHandler._inTransition; } }
+
     Func(onTick)() {
         this._runner.onTick(...);
-        if (this._inTransition) {
+        if (this.inTransition) {
             for (var i = 0; i < this._drawables.count; ++i) {
                 this._drawables[i].drawInTransition();
             }
@@ -15,6 +16,10 @@ ClassExtends(NovelMode, GameMode)
                 this._drawables[i].draw();
             }
         }
+    }
+
+    Func(resumeCommandLoopAsync)() {
+        global.gAsyncCaller.callOnce(this._resumeCommandLoop);
     }
 
     Func(onDrawMessageCompleted)() {
@@ -31,6 +36,19 @@ ClassExtends(NovelMode, GameMode)
         global.gLog.warn(header + message);
     }
 
+    Func(onTransitionBegin)() {
+        for (var i = 0; i < this._drawables.count; ++i) {
+            this._drawables[i].beforeTransition();
+        }
+    }
+
+    Func(onTransitionCompleted)() {
+        this._foreLayer <-> this._backLayer;
+        for (var i = 0; i < this._drawables.count; ++i) {
+            this._drawables[i].afterTransition();
+        }
+    }
+
 
 
     var _parser;
@@ -42,9 +60,6 @@ ClassExtends(NovelMode, GameMode)
     var _screenLayer;
     var _foreLayer;
     var _backLayer;
-
-    var _transInfo;
-    var _inTransition = false;
 
     Constructor(game, currentTick) {
         super.GameMode(game);
@@ -67,7 +82,7 @@ ClassExtends(NovelMode, GameMode)
 
         this._initParser();
         this._initCommandHandlers();
-        this._resumeCommandLoopAsync();
+        this.resumeCommandLoopAsync();
     }
 
     Finalize() {
@@ -91,11 +106,14 @@ ClassExtends(NovelMode, GameMode)
     }
 
     Func(_initCommandHandlers)() {
-        var drawableHandler = new global.StageCommandHandler(this, this._foreLayer, this._backLayer);
-        this._drawables.add(drawableHandler);
-        this._commandHandlers.add(drawableHandler);
+        var stageCommandHandler = new global.StageCommandHandler(this, this._foreLayer, this._backLayer);
+        this._drawables.add(stageCommandHandler);
+        this._commandHandlers.add(stageCommandHandler);
 
         this._commandHandlers.add(new global.MessageCommandHandler(this));
+
+        this._systemCommandHandler = new global.SystemCommandHandler(this);
+        this._commandHandlers.add(this._systemCommandHandler);
     }
 
     Func(_createTargetLayer)(parentLayer:Layer) {
@@ -135,8 +153,8 @@ ClassExtends(NovelMode, GameMode)
             var commandInfo = %[];
             var error = _parser.getNextCommand(commandInfo);
             if (commandInfo.isEmpty()) break;
-            var ret = this._doCommand(commandInfo);
-            if (ret) return;
+            var interrupt = this._doCommand(commandInfo);
+            if (interrupt) return;
         }
     }
 
@@ -145,8 +163,8 @@ ClassExtends(NovelMode, GameMode)
         for (var i = 0; i < this._commandHandlers.count; ++i) {
             var result = this._commandHandlers[i].onCommand(commandInfo);
             if (result === void) continue;
-            if (result.trans !== void && (this._transInfo === void || this._transInfo.priority > result.trans.priority)) {
-                this._transInfo = result.trans;
+            if (result.trans !== void) {
+                this._systemCommandHandler.registerTransInfo(result.trans);
             }
             // if (result.delays !== void) notImplemented();
             if (result.sequences !== void) for (var i = 0; i < result.sequences.count; ++i) {
@@ -155,75 +173,12 @@ ClassExtends(NovelMode, GameMode)
             if (result.interrupt) interrupt = true;
         }
 
-        switch (commandInfo.name) {
-        case "update":
-            this._onUpdateCommand();
-            break;
-        case "__beginpage":
-            this._onBeginPageCommand();
-            break;
-        case "__endpage":
-            this._onEndPageCommand();
-            break;
-        }
-
         return interrupt;
-    }
-
-    Func(_onUpdateCommand)() {
-        this._trigger("update");
-    }
-
-    Func(_onBeginPageCommand)() {
-        if (this._transInfo !== void) {
-            this._beginTransition(this._transInfo);
-            this._transInfo = void;
-
-            this._waitTrigger("click", this._stopTransition);
-        }
-        this._trigger("beginPage");
-        this._trigger("update");
-    }
-
-    Func(_onEndPageCommand)() {
-        this._trigger("endPage");
-    }
-
-    Func(_beginTransition)(transInfo:Dictionary) {
-        this._stopTransition();
-
-        for (var i = 0; i < this._drawables.count; ++i) {
-            this._drawables[i].beforeTransition();
-        }
-
-        this._inTransition = true;
-        this._runner.run(global.SequenceRunner.sequence()
-            .transition(this._foreLayer, this._backLayer, transInfo.type, transInfo.option)
-            .call(this._onTransitionCompleted)
-        );
-    }
-
-    Func(_stopTransition)() {
-        //this._foreLayer.stopTransition();
-    }
-
-    Func(_onTransitionCompleted)(dest:Layer, src:Layer) {
-        assert(this._inTransition)
-        this._inTransition = false;
-        this._foreLayer <-> this._backLayer;
-        for (var i = 0; i < this._drawables.count; ++i) {
-            var drawable = this._drawables[i];
-            drawable.afterTransition();
-        }
     }
 
     Func(_resumeFromDrawMessage)() {
         this._runner.skipAllSequences();
-        this._resumeCommandLoopAsync();
-    }
-
-    Func(_resumeCommandLoopAsync)() {
-        global.gAsyncCaller.callOnce(this._resumeCommandLoop);
+        this.resumeCommandLoopAsync();
     }
 
     Func(_onLeftClick)(x:int, y:int, shift:int) {
