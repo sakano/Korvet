@@ -161,15 +161,15 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
 
     Func(_createArgumentMethods)() {
         return %[
-            x       : this._spriteCommandImpl incontextof %[ self:this, propertyName:"x" ],
-            y       : this._spriteCommandImpl incontextof %[ self:this, propertyName:"y" ],
-            originx : this._spriteCommandImpl incontextof %[ self:this, propertyName:"originX" ],
-            originy : this._spriteCommandImpl incontextof %[ self:this, propertyName:"originY" ],
-            scalex  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"scaleX" ],
-            scaley  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"scaleY" ],
-            shearx  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"shearX" ],
-            sheary  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"shearY" ],
-            angle   : this._spriteCommandImpl incontextof %[ self:this, propertyName:"angle" ],
+            x       : this._transformCommandImpl incontextof %[ self:this, propertyName:"x" ],
+            y       : this._transformCommandImpl incontextof %[ self:this, propertyName:"y" ],
+            originx : this._transformCommandImpl incontextof %[ self:this, propertyName:"originX" ],
+            originy : this._transformCommandImpl incontextof %[ self:this, propertyName:"originY" ],
+            scalex  : this._transformCommandImpl incontextof %[ self:this, propertyName:"scaleX" ],
+            scaley  : this._transformCommandImpl incontextof %[ self:this, propertyName:"scaleY" ],
+            shearx  : this._transformCommandImpl incontextof %[ self:this, propertyName:"shearX" ],
+            sheary  : this._transformCommandImpl incontextof %[ self:this, propertyName:"shearY" ],
+            angle   : this._transformCommandImpl incontextof %[ self:this, propertyName:"angle" ],
             both    : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Both ],
             fore    : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Fore ],
             back    : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Back ],
@@ -200,17 +200,22 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         }
     }
 
-    Func(_spriteCommandImpl)(value, map) {
+    Func(_transformCommandImpl)(value, map) {
         assert(self._drawType === SpriteCommandHandlerDrawType_Back, "not Implemented for the specified drawType");
         if (map.time === void) {
             return %[ sequences : [
                     global.SequenceRunner.sequence().wait("update").setValue(&self[propertyName + "Back"], +value)
             ] ];
         } else {
-            var time = self._validateArgumentIntRange(map.time, "time", 1, void);
+            var time = self._validateArgumentIntRange(map.time, "time", 1, void, 1);
             return %[ sequences : [
-                    global.SequenceRunner.sequence().wait("update").action(&self[propertyName + "Back"]).to(+value, time)
-            ] ];
+                    global.SequenceRunner.sequence().wait("update")
+                        .call(self._mode.onActionBegin)
+                        .beginSkip("skipAction")
+                            .action(&self[propertyName + "Back"]).to(+value, time)
+                        .endSkip()
+                        .call(self._mode.onActionEnd)
+            ]];
         }
     }
 

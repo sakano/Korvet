@@ -141,7 +141,7 @@ Class(Sprite)
             this._offsetMatrix.y = 0;
             break;
         }
-        this._image.originX = this._offsetMatrix.x;
-        this._image.originY = this._offsetMatrix.y;
+        this._image.originX = this._image.width / 2 + this._offsetMatrix.x;
+        this._image.originY = this._image.height / 2 + this._offsetMatrix.y;
     }
 }

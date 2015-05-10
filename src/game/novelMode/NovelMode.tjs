@@ -4,6 +4,7 @@ FILE_INCLUDE_GUARD
 ClassExtends(NovelMode, GameMode)
 {
     property inTransition { getter { return this._systemCommandHandler._inTransition; } }
+    property inAction { getter { return this._actionCount > 0; } }
 
     Func(onTick)() {
         this._runner.onTick(...);
@@ -49,6 +50,24 @@ ClassExtends(NovelMode, GameMode)
         }
     }
 
+    Func(onActionBegin)() {
+        ++this._actionCount;
+    }
+
+    Func(onActionEnd)() {
+        --this._actionCount;
+        assert(this._actionCount >= 0)
+        if (this._actionCount <= 0) {
+            onAllActionEnd();
+        }
+    }
+
+    Func(onAllActionEnd)() {
+        assert(this._actionCount >= 0)
+        this._actionCount = 0;
+        this._trigger("allActionCompleted");
+    }
+
 
 
     var _parser;
@@ -60,6 +79,7 @@ ClassExtends(NovelMode, GameMode)
     var _screenLayer;
     var _foreLayer;
     var _backLayer;
+    var _actionCount = 0;
 
     Constructor(game, currentTick) {
         super.GameMode(game);

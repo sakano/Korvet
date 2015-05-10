@@ -1,31 +1,26 @@
 
-@stage place=道 stime=昼 size=1 fade=500
+@stage place=道 stime=昼 size=0 fade=500
 背景を表示しました
 
-@stage stime=夜 trans=scroll dir=right scroll=slide time=2000
-スクロールトランジション
-
-@stage stime=昼 trans=scroll dir=up scroll=in time=1000
-スクロールトランジション２
-
-@stage stime=夜 trans=universal rule=rl左から右へ vague=0 time=2000
-ユニバーサルトランジション
-
-@stage stime=昼 trans=universal rule=rl左から右へ time=4000
-ユニバーサルトランジション２
-
-@stage stime=夜 trans=fade time=2000
+@stage angle=180 time=1000
 @update
-@waittrans
-同期フェードトランジション
+@waitaction
+回転しました
 
-@stage stime=昼 trans=scroll dir=down scroll=out time=1000
+@stage scalex=200 time=1000
 @update
-@waittrans
-同期スクロールトランジション
+@waitaction
+拡大しました
 
-@stage stime=夜 trans=universal rule=rl左から右へ time=1000
+@stage shearx=100 time=1000
 @update
-@waittrans
-同期ユニバーサルトランジション
+@waitaction
+剪断しました
+
+@stage angle=0 time=1000
+@stage scalex=100 time=2000
+@stage shearx=0 time=3000
+@update
+@waitaction
+リセット
 

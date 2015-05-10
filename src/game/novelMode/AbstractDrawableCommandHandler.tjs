@@ -12,8 +12,9 @@ ClassExtends(AbstractDrawableCommandHandler, AbstractCommandHandler)
 
     property _inTransition { getter { return this._mode.inTransition; } }
 
-    Constructor() {
-        super.AbstractCommandHandler(...);
+    Constructor(mode:NovelMode) {
+        checkArgs
+        super.AbstractCommandHandler(mode);
     }
 
     Finalize() {

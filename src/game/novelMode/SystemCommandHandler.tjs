@@ -25,6 +25,7 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
         __endpage   : _endPageCommandImpl,
         update      : _updateCommandImpl,
         waittrans   : _waitTransCommandImpl,
+        waitaction   : _waitActionCommandImpl,
     ];
 
     var _transInfo;
@@ -94,5 +95,18 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
         this._inTransition = false;
         this._trigger("transCompleted");
         this._mode.onTransitionCompleted();
+    }
+
+    Func(_waitActionCommandImpl)() {
+        if (!this._mode.inAction) return;
+        return %[
+            interrupt : true,
+            sequences : [
+                global.SequenceRunner.sequence()
+                    .wait("allActionCompleted", "click")
+                    .call(this._trigger, "skipAction")
+                    .call(this._mode.resumeCommandLoopAsync)
+            ]
+        ];
     }
 }
