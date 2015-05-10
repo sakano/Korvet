@@ -35,7 +35,7 @@ Class(Sound)
             _buffer.volume2 = v * 1000;
             _triggerEvent(SoundEventType_SetVolume, v);
         }
-        getter() {
+        getter {
             return _volume !== void ? _volume : (int)(_buffer.volume2 / 1000);
         }
     }
@@ -51,7 +51,7 @@ Class(Sound)
             _buffer.pan = v * 1000;
             _triggerEvent(SoundEventType_SetPan, v);
         }
-        getter() {
+        getter {
             return (int)(_buffer.pan / 1000);
         }
     }

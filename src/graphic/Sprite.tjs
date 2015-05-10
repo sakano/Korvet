@@ -31,9 +31,7 @@ Class(Sprite)
             typeNumber(value)
             this._offsetMatrix.x = value;
         }
-        getter() {
-            return this._offsetMatrix.x;
-        }
+        getter { return this._offsetMatrix.x; }
     }
 
     property offsetY {
@@ -41,9 +39,7 @@ Class(Sprite)
             typeNumber(value)
             this._offsetMatrix.y = value;
         }
-        getter() {
-            return this._offsetMatrix.y;
-        }
+        getter { return this._offsetMatrix.y; }
     }
 
     Func(setParentMatrix)(matrix:HierarchicalMatrix) {
