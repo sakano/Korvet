@@ -57,7 +57,7 @@ ClassExtends(FactorySequence, AbstractSequence)
 {
     OverrideFunc(run) {
         var sequence = this._callback(this._args*);
-        typeCheck(sequence, "AbstractSequence")
+        typeCheck(sequence, "AbstractSequence", ASSERT_FACTORYSEQUENCE_SEQUENCE_NEEDED)
         this._insertAfter(sequence);
     }
     OverrideFunc(skip) { this.run(); }
@@ -174,7 +174,8 @@ ClassExtends(WaitSequence, SuspendableSequence)
             if (typeof wait === "String") {
                 this._labels.add(wait);
             } else {
-                typeInt(wait)
+                typeInt(wait, ASSERT_WAITSEQUENCE_WRONG_ARGUMENTS)
+                typeVoid(this._tick, ASSERT_WAITSEQUENCE_WRONG_ARGUMENTS)
                 this._tick = wait;
             }
         } incontextof this);

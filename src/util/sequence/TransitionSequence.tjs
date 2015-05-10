@@ -58,13 +58,11 @@ ClassExtends(TransitionSequence, SuspendableSequence)
         this._duration = this._option.time;
         if (this._duration <= 0) this._duration = 1;
 
-        this._consumedTick = this._duration;
-
         typeStringVoid(this._option.callback)
         var methodType = this._option.callback !== void ? this._option.callback : TransTickMethod_Linear;
         var callback = global.TransitionSequence.methods[methodType];
         typeFunction(callback, ASSERT_TRANSITIONSEQUENCE_INVALID_CALLBACK)
-        this._option.callback = (global.TransitionSequence.methods[type] incontextof this);
+        this._option.callback = (callback incontextof this);
     }
 
     Finalize() {
@@ -80,6 +78,7 @@ ClassExtends(TransitionSequence, SuspendableSequence)
     Func(_onTransitionCompleted)(dest:Layer, src:Layer) {
         if (!this._inTransition) return;
         this._inTransition = false;
+        this._consumedTick = this._elapsedTick;
         this._resume();
     }
 }

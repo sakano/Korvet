@@ -39,4 +39,7 @@ m4_define(&--ASSERT_BEGINLOOPSEQUENCE_INVALID_LOOP_COUNT--&, &--"ループ回数
 m4_define(&--ASSERT_BEGINSKIPSEQUENCE_EMPTY--&, &--"スキップ対象のシーケンスが空です"--&)m4_dnl
 m4_define(&--ASSERT_BEGINCONCURRENTSEQUENCE_EMPTY--&, &--"並列実行対象のシーケンスが空です"--&)m4_dnl
 m4_define(&--ASSERT_BEGINACTIONSEQUENCE_EMPTY--&, &--"アクションシーケンスが空です"--&)m4_dnl
+m4_define(&--ASSERT_BEGINACTIONSEQUENCE_EMPTY--&, &--"アクションシーケンスが空です"--&)m4_dnl
+m4_define(&--ASSERT_FACTORYSEQUENCE_SEQUENCE_NEEDED--&, &--"factoryに指定するメソッドはAbstractSequenceのインスタンスを返してください"--&)m4_dnl
+m4_define(&--ASSERT_WAITSEQUENCE_WRONG_ARGUMENTS--&, &--"waitの指定が不正です"--&)m4_dnl
 m4_define(&--ASSERT_TRANSITIONSEQUENCE_INVALID_CALLBACK--&, &--"callbackには登録済みのTransTickメソッドを指定してください。"--&)m4_dnl
