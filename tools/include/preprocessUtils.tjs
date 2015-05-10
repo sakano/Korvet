@@ -39,7 +39,7 @@ m4_define(&--typeCheck--&,         &--assert($1 instanceof $2 && $1 isvalid,    
 m4_define(&--typeCheckNullable--&, &--assert($1 === null || ($1 instanceof $2 && $1 isvalid), &--m4_ifelse($3,,&--"'__escape_string($1)' must be null or %s.(%s)".sprintf($2,$1)--&, $3)--&)--&)m4_dnl
 m4_dnl
 m4_define(&--typeVoid--&,     &--assert($1 === void,                &--m4_ifelse($2,,&--"'__escape_string($1)' must be void.(%s)".sprintf($1)--&,    $2)--&)--&)m4_dnl
-m4_define(&--typeNull--&,     &--assert($1 === null,                &--m4_ifelse($2,,&--"'__escape_string($1)' must not be null.(%s)".sprintf($1)--&,$2)--&)--&)m4_dnl
+m4_define(&--typeNull--&,     &--assert($1 === null,                &--m4_ifelse($2,,&--"'__escape_string($1)' must be null.(%s)".sprintf($1)--&,$2)--&)--&)m4_dnl
 m4_define(&--typeObject--&,   &--assert(typeof $1 === "Object",     &--m4_ifelse($2,,&--"'__escape_string($1)' must be object.(%s)".sprintf($1)--&,  $2)--&)--&)m4_dnl
 m4_define(&--typeString--&,   &--assert(typeof $1 === "String",     &--m4_ifelse($2,,&--"'__escape_string($1)' must be string.(%s)".sprintf($1)--&,  $2)--&)--&)m4_dnl
 m4_define(&--typeInt--&,      &--assert(typeof $1 === "Integer",    &--m4_ifelse($2,,&--"'__escape_string($1)' must be int.(%s)".sprintf($1)--&,     $2)--&)--&)m4_dnl
@@ -51,6 +51,7 @@ m4_define(&--typeClass--&,    &--assert($1 instanceof "Class",      &--m4_ifelse
 m4_define(&--typeNumber--&,   &--assert($1 instanceof "Number",     &--m4_ifelse($2,,&--"'__escape_string($1)' must be number.(%s)".sprintf($1)--&,  $2)--&)--&)m4_dnl
 m4_define(&--typeBool--&,     &--assert($1 === true || $1 === false,&--m4_ifelse($2,,&--"'__escape_string($1)' must be bool.(%s)".sprintf($1)--&,    $2)--&)--&)m4_dnl
 m4_dnl
+m4_define(&--typeNullVoid--&,     &--assert($1 === null || $1 === void,                 &--m4_ifelse($2,,&--"'__escape_string($1)' must be null or void.(%s)".sprintf($1)--&  ,$2)--&)--&)m4_dnl
 m4_define(&--typeObjectVoid--&,   &--assert($1 === void || typeof $1 === "Object",      &--m4_ifelse($2,,&--"'__escape_string($1)' must be object.(%s)".sprintf($1)--&  ,$2)--&)--&)m4_dnl
 m4_define(&--typeStringVoid--&,   &--assert($1 === void || typeof $1 === "String",      &--m4_ifelse($2,,&--"'__escape_string($1)' must be string.(%s)".sprintf($1)--&  ,$2)--&)--&)m4_dnl
 m4_define(&--typeIntVoid--&,      &--assert($1 === void || typeof $1 === "Integer",     &--m4_ifelse($2,,&--"'__escape_string($1)' must be int.(%s)".sprintf($1)--&     ,$2)--&)--&)m4_dnl

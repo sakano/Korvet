@@ -33,6 +33,8 @@ m4_dnl
 m4_define(&--__FUNC_ARG_CHECK--&,m4_dnl
     &--m4_define(&--__FUNC_ARG_CHECK_COND--&,0)--&m4_dnl
     &--m4_ifelse($2,void,     &--typeVoid($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,null,     &--typeNull($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,null+,    &--typeNullVoid($1)--&    &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
     &--m4_ifelse($2,object,   &--typeObject($1)--&      &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
     &--m4_ifelse($2,object+,  &--typeObjectVoid($1)--&  &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
     &--m4_ifelse($2,string,   &--typeString($1)--&      &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
