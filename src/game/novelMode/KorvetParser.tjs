@@ -3,6 +3,9 @@ FILE_INCLUDE_GUARD
 
 Class(KorvetParser)
 {
+    property currentStorage { getter { return this._currentStorage; } }
+    property currentLineNumber { getter { return this._currentLineNumber; } }
+
     Func(initStorage)(path:string, utf8:bool = false) {
         checkArgs
         assert(path.length > 0)
@@ -226,7 +229,7 @@ Class(KorvetParser)
         command.map = %[];
         var keyValueRegExp = /[ \t]+(([^ \t\[\]=]+)([ \t]*=[ \t]*("(.+?)"|'(.+?)'|([^ \t\[\]=]+)))?)?/g;
         while (keyValueRegExp.test(commandString)) {
-            var key = keyValueRegExp.matches[2];
+            var key = keyValueRegExp.matches[2].toLowerCase();
             var value = null;
             if (keyValueRegExp.matches[5] != "") value = keyValueRegExp.matches[5];
             else if (keyValueRegExp.matches[6] != "") value = keyValueRegExp.matches[6];

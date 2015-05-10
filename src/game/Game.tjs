@@ -32,7 +32,7 @@ Class(Game)
 
     Constructor() {
         this._currentTick = global.System.getTickCount();
-        global.System.addContinuousHandler(this._onTick);
+        global.gAsyncCaller.callOnce(global.System.addContinuousHandler, this._onTick);
 
         this._window = new ResizableWindow(null, 1280, 720);
 

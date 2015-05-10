@@ -86,7 +86,7 @@ Class(Sound)
         assert(time >= 0)
         file = Storages.getExistSoundFileName(file);
         if (file === void) {
-            return new global.FileNotFoundError(file, expandMessageStrings(ERROR_SOUND_FILE_NOT_FOUND, "FILE", file));
+            return new global.FileNotFoundError(file, expandMessage(ERROR_SOUND_FILE_NOT_FOUND, "FILE", file));
         }
         _buffer.stopFade();
         _buffer.stop();
@@ -94,7 +94,7 @@ Class(Sound)
         loop = _loop;
         if (startLabel !== void) {
             if (_buffer.labels[startLabel] === void) {
-                return new global.Error(expandMessageStrings(ERROR_SOUND_LABEL_NOT_FOUND, "LABEL", startLabel));
+                return new global.Error(expandMessage(ERROR_SOUND_LABEL_NOT_FOUND, "LABEL", startLabel));
             }
             _buffer.samplePosition = _buffer.labels[startLabel].samplePosition;
         }

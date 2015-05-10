@@ -42,4 +42,9 @@ m4_define(&--ASSERT_BEGINACTIONSEQUENCE_EMPTY--&, &--"アクションシーケ�
 m4_define(&--ASSERT_BEGINACTIONSEQUENCE_EMPTY--&, &--"アクションシーケンスが空です"--&)m4_dnl
 m4_define(&--ASSERT_FACTORYSEQUENCE_SEQUENCE_NEEDED--&, &--"factoryに指定するメソッドはAbstractSequenceのインスタンスを返してください"--&)m4_dnl
 m4_define(&--ASSERT_WAITSEQUENCE_WRONG_ARGUMENTS--&, &--"waitの指定が不正です"--&)m4_dnl
-m4_define(&--ASSERT_TRANSITIONSEQUENCE_INVALID_CALLBACK--&, &--"callbackには登録済みのTransTickメソッドを指定してください。"--&)m4_dnl
+m4_define(&--ASSERT_TRANSITIONSEQUENCE_INVALID_CALLBACK--&, &--"callbackには登録済みのTransTickメソッドを指定してください"--&)m4_dnl
+m4_dnl
+m4_define(&--ASSERT_SCRIPT_HEADER--&, &--"[{FILE}({LINE})]"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ARGUMENT_NULL--&, &--"この属性({ARG_NAME})には属性値を指定しないでください"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ARGUMENT_INT_RANGE--&, &--"指定された数値は範囲外です({ARG_NAME}={ARG_VALUE})"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ARGUMENT_STRING_LENGTH--&, &--"指定された文字列の長さが不正です({ARG_NAME}={ARG_VALUE})"--&)m4_dnl

@@ -140,7 +140,7 @@ Func(dv)(value:any, out:Function = global.Debug.message) {
  * @param strign lists* The old strings and new strings in turn.
  * @return string The message expanded.
  */
-Func(expandMessageStrings)(message:string, lists*) {
+Func(expandMessage)(message:string, lists*) {
     checkArgs
     assert(lists.count % 2 === 0)
     for (var i = lists.count-2; i >= 0; i -= 2) {

@@ -43,6 +43,11 @@ m4_define(&--SpriteAlignment_TopLeft--&,     &--7--&)m4_dnl
 m4_define(&--SpriteAlignment_TopCenter--&,   &--8--&)m4_dnl
 m4_define(&--SpriteAlignment_TopRight--&,    &--9--&)m4_dnl
 m4_dnl
+m4_dnl // SpriteCommandHandlerDrawType
+m4_define(&--SpriteCommandHandlerDrawType_Fore--&, &---1--&)m4_dnl
+m4_define(&--SpriteCommandHandlerDrawType_Both--&, &--0--&)m4_dnl
+m4_define(&--SpriteCommandHandlerDrawType_Back--&, &--1--&)m4_dnl
+m4_dnl
 m4_dnl // KorvetParserCommandPriority
 m4_define(&--KorvetParserCommandPriority_Highest--&,     PriorityQueue_Highest)m4_dnl
 m4_define(&--KorvetParserCommandPriority_High--&,        PriorityQueue_High)m4_dnl

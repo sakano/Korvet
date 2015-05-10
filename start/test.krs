@@ -4,11 +4,32 @@
 @stage place=道 stime=昼 size=0
 背景を表示しました
 
+@stage x=100
+背景を移動しました
+
+;@stage x=-100 time=1000
+;背景を移動しています
+
+;@stage x=0 y=100 time=1000
+;背景を移動しています
+
+@stage angle=90 time=1000
+回転のテスト
+
+@stage scaleX=200 scaleY=200 time=1000
+拡大のテスト
+
+@stage shearX=200 time=1000
+剪断のテスト
+
+@stage x=0 y=0 angle=0 scaleX=100 scaleY=100 shearX=0 shearY=0
+リセット
+
+@stage originX=0 originY=0
+@stage angle=-90 time=1000
+原点を変更して回転
+
 @stage place=道 stime=夜 size=0
-背景を変更しました
-
-@stage place=道 stime=夜 size=1
-背景のサイズを変更しました
-
-おわり
+@stage x=300 time=1000
+トランジションしながら移動
 

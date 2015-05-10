@@ -1,0 +1,177 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
+{
+    m4_define(&--SPRITE_PROPERTY--&,
+        property $1Both {
+            setter(value) {
+                typeNumber(value)
+                if (this._inTransition) {
+                    this._spriteFore.$1 = value;
+                    this._spriteBack.$1 = value;
+                } else {
+                    this._spriteFore.$1 = value;
+                }
+            }
+        }
+        property $1Fore {
+            setter(value) {
+                typeNumber(value)
+                if (this._inTransition) {
+                    this._spriteFore.$1 = value;
+                }
+            }
+        }
+        property $1Back {
+            setter(value) {
+                typeNumber(value)
+                if (this._inTransition) {
+                    this._spriteBack.$1 = value;
+                } else {
+                    this._spriteFore.$1 = value;
+                }
+            }
+            getter {
+                return this._inTransition ? this._spriteBack.$1 : this._spriteFore.$1;
+            }
+        })
+    SPRITE_PROPERTY(x)
+    SPRITE_PROPERTY(y)
+    SPRITE_PROPERTY(originX)
+    SPRITE_PROPERTY(originY)
+    SPRITE_PROPERTY(scaleX)
+    SPRITE_PROPERTY(scaleY)
+    SPRITE_PROPERTY(shearX)
+    SPRITE_PROPERTY(shearY)
+    SPRITE_PROPERTY(angle)
+
+    OverrideFunc(beforeTransition)() {
+        this._updateSpriteBack();
+    }
+
+    OverrideFunc(afterTransition)() {
+        this._spriteFore <-> this._spriteBack;
+        this.draw(true);
+        
+    }
+
+    OverrideFunc(draw)(force:bool = false) {
+        checkArgs
+        if (this._spriteFore.redraw || force) {
+            if (this._spriteFore.filename !== "") {
+                this._spriteFore.draw(true);
+            }
+        }
+    }
+
+    OverrideFunc(drawInTransition)() {
+        if (this._spriteFore.redraw) {
+            if (this._spriteFore.filename !== "") {
+                this._spriteFore.draw(true);
+            }
+        }
+        if (this._spriteBack.redraw) {
+            if (this._spriteBack.filename !== "") {
+                this._spriteBack.draw(true);
+            }
+        }
+    }
+
+    Func(setParentMatrix)(matrix:HierarchicalMatrix) {
+        checkArgs
+        this._spriteFore.setParentMatrix(...);
+        this._spriteBack.setParentMatrix(...);
+    }
+
+
+
+    var _spriteCommandHandlers = %[
+        x       : this._spriteCommandImpl incontextof %[ self:this, propertyName:"x" ],
+        y       : this._spriteCommandImpl incontextof %[ self:this, propertyName:"y" ],
+        originx : this._spriteCommandImpl incontextof %[ self:this, propertyName:"originX" ],
+        originy : this._spriteCommandImpl incontextof %[ self:this, propertyName:"originY" ],
+        scalex  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"scaleX" ],
+        scaley  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"scaleY" ],
+        shearx  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"shearX" ],
+        sheary  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"shearY" ],
+        angle   : this._spriteCommandImpl incontextof %[ self:this, propertyName:"angle" ],
+        both : LMD(value, map, key) {
+            value = this._validateArgumentNull(value, key);
+            this._setDrawType(SpriteCommandHandlerDrawType_Both);
+        } incontextof this,
+        fore : LMD(value, map, key) {
+            value = this._validateArgumentNull(value, key);
+            this._setDrawType(SpriteCommandHandlerDrawType_Fore);
+        } incontextof this,
+        back : LMD(value, map, key) {
+            value = this._validateArgumentNull(value, key);
+            this._setDrawType(SpriteCommandHandlerDrawType_Back);
+        } incontextof this,
+    ];
+
+    var _spriteFore;
+    var _spriteBack;
+
+    var _drawType = SpriteCommandHandlerDrawType_Back;
+
+    Constructor(mode:NovelMode, parentLayerFore:Layer, parentLayerBack:Layer) {
+        checkArgs
+        super.AbstractDrawableCommandHandler(mode);
+
+        this._spriteFore = this._createSprite(parentLayerFore);
+        this._spriteBack = this._createSprite(parentLayerBack);
+    }
+
+    Finalize() {
+        invalidate _spriteFore;
+        invalidate _spriteBack;
+    }
+
+    Func(_createSprite)(parentLayer:Layer) {
+        checkArgs
+        var layer = new global.Layer(parentLayer.window, parentLayer);
+        layer.setSize(parentLayer.width, parentLayer.height);
+        layer.visible = true;
+        return new global.Sprite(layer, true);
+    }
+
+    Func(_setDrawType)(type) {
+        assert(type === SpriteCommandHandlerDrawType_Both
+            || type === SpriteCommandHandlerDrawType_Fore
+            || type === SpriteCommandHandlerDrawType_Back)
+        this._drawType = type;
+    }
+
+    Func(_updateSpriteBack)() {
+        checkArgs
+        // spriteForeをspriteBackにコピー
+        with (this._spriteBack) {
+            var src = this._spriteFore;
+            .x = src.x;
+            .y = src.y;
+            .originX = src.originX;
+            .originY = src.originY;
+            .scaleX = src.scaleX;
+            .scaleY = src.scaleY;
+            .shearX = src.shearX;
+            .shearY = src.shearY;
+            .angle = src.angle;
+            .alignment = src.alignment;
+        }
+    }
+
+    Func(_spriteCommandImpl)(value, map) {
+        assert(self._drawType === SpriteCommandHandlerDrawType_Back, "not Implemented for the specified drawType");
+        if (map.time === void) {
+            return %[ sequences : [
+                    global.SequenceRunner.sequence().wait("update").setValue(&self[propertyName + "Back"], +value)
+            ] ];
+        } else {
+            var time = self._validateArgumentIntRange(map.time, "time", 1, void);
+            return %[ sequences : [
+                    global.SequenceRunner.sequence().wait("update").action(&self[propertyName + "Back"]).to(+value, time)
+            ] ];
+        }
+    }
+}

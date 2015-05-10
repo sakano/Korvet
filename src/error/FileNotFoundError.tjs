@@ -6,7 +6,7 @@ ClassExtends(FileNotFoundError, IOError)
     Constructor(filename:string, message:string+, internalError:Error? = null) {
         checkArgs
         if (message === void) {
-            message = expandMessageStrings(ERROR_FILE_NOT_FOUND, "FILE", filename);
+            message = expandMessage(ERROR_FILE_NOT_FOUND, "FILE", filename);
         }
         super.IOError(filename, message, internalError);
     }

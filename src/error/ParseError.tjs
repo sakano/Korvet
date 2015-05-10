@@ -13,7 +13,7 @@ ClassExtends(ParseError, IOError)
     Constructor(filename:string, lineNumber:int, line:string, message:string+, internalError:Error? = null) {
         checkArgs
         if (message === void) {
-            message = expandMessageStrings(ERROR_PARSE, "FILE", filename, "LNUM", lineNumber, "LINE", line);
+            message = expandMessage(ERROR_PARSE, "FILE", filename, "LNUM", lineNumber, "LINE", line);
         }
         super.Error(message, internalError);
         _filename = filename;
@@ -33,7 +33,7 @@ ClassExtends(KorvetParserError, ParseError)
     Constructor(filename:string, lineNumber:int, line:string, index:int, message:string+, internalError:Error? = null) {
         checkArgs
         if (message === void) {
-            message = expandMessageStrings(ERROR_KORVET_PARSE,
+            message = expandMessage(ERROR_KORVET_PARSE,
                 "MES", internalError !== null ? internalError.message : "",
                 "FILE", filename, "LNUM", lineNumber, "LINE", line, "INDEX", index);
         }

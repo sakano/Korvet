@@ -1,28 +1,30 @@
 ﻿// Copyright (C) 2015 Biscrat
 FILE_INCLUDE_GUARD
 
-Class(MessageCommandHandler)
+ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
 {
-    Func(onCommand)(commandInfo:Dictionary) {
+    OverrideFunc(onCommand)(commandInfo:Dictionary) {
         var handler = this._commandHandlers[commandInfo.name];
         if (handler === void) return void;
 
         return handler(commandInfo);
     }
 
-    Constructor(mode) {
-        this._mode = mode;
-    }
 
-    var _mode;
-    var _currentText = "";
-    var _drawnTextIndex = 0;
 
     var _commandHandlers = %[
         "__ch" => _onCh,
         "__beginpage" => _onPageBegin,
         "__endpage" => _onPageEnd
     ];
+
+    var _currentText = "";
+    var _drawnTextIndex = 0;
+
+    Constructor(mode:NovelMode) {
+        checkArgs
+        super.AbstractDrawableCommandHandler(mode);
+    }
 
     Func(_onPageBegin)(commandInfo:Dictionary) {
         this._currentText = "";
@@ -33,14 +35,16 @@ Class(MessageCommandHandler)
         assert(this._currentText.length > 0)
         return %[
             interrupt : true,
-            sequence : global.SequenceRunner.sequence()
-                .beginSkip("click")
-                    .beginLoop(this._currentText.length)
-                        .factory(this._sequenceFactory)
-                    .endLoop()
-                .endSkip()
-                .wait("click")
-                .call(this._resume)
+            sequences : [
+                global.SequenceRunner.sequence()
+                    .beginSkip("click")
+                        .beginLoop(this._currentText.length)
+                            .factory(this._sequenceFactory)
+                        .endLoop()
+                    .endSkip()
+                    .wait("click")
+                    .call(this._mode.onDrawMessageCompleted)
+            ]
         ];
     }
 
@@ -63,9 +67,5 @@ Class(MessageCommandHandler)
 
     Func(_drawCharacter)(index:int) {
         global.Debug.message(this._currentText.substr(0, index));
-    }
-
-    Func(_resume)() {
-        this._mode.resumeCommandLoopAsync();
     }
 }

@@ -35,7 +35,7 @@ Class(AbstractEnumerable)
         while (this.moveNext()) {
             var key = keySelector(this.current, *);
             if (result[key] !== void) {
-                throw new global.Exception(expandMessageStrings(EXCEPTION_LINQ_ARRAY_DUPLICATE_KEYS, "KEY", key));
+                throw new global.Exception(expandMessage(EXCEPTION_LINQ_ARRAY_DUPLICATE_KEYS, "KEY", key));
             }
             result[key] = elementSelector(this.current, *);
         }

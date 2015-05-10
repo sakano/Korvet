@@ -1,0 +1,22 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(AbstractDrawableCommandHandler, AbstractCommandHandler)
+{
+    AbstractFunc(beforeTransition)()
+    AbstractFunc(afterTransition)()
+    AbstractFunc(draw)(force:bool = false)
+    AbstractFunc(drawInTransition)()
+
+
+
+    property _inTransition { getter { return this._mode.inTransition; } }
+
+    Constructor() {
+        super.AbstractCommandHandler(...);
+    }
+
+    Finalize() {
+        super.finalize();
+    }
+}

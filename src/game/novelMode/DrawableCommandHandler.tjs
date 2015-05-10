@@ -1,6 +1,0 @@
-﻿// Copyright (C) 2015 Biscrat
-FILE_INCLUDE_GUARD
-
-Class(DrawableCommandHandler)
-{
-}

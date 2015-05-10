@@ -1,17 +1,17 @@
 ﻿// Copyright (C) 2015 Biscrat
 FILE_INCLUDE_GUARD
 
-// expandMessageString()
-assertAlways( expandMessageStrings("") === "" )
-assertAlways( expandMessageStrings("{}") === "{}" )
-assertAlways( expandMessageStrings("hoge") === "hoge" )
-assertAlways( expandMessageStrings("{fuga}") === "{fuga}" )
-assertAlways( expandMessageStrings("{piyo}", "piyo", "") === "" )
-assertAlways( expandMessageStrings("{piyo}", "piyo", "str") === "str" )
-assertAlways( expandMessageStrings("{foo} foo {bar} {bar}{bar}", "foo", "f", "bar", "b") === "f foo b bb" )
-assertAlways( expandMessageStrings("{foo} foo {bar} {1}{@@}", "foo", "f", "bar", "b", "1", 123, "@@" , "++") === "f foo b 123++" )
-assertAlways( expandMessageStrings("{}{TES}{{TEST}}{{TES}}{", "TES", "hoge") === "{}hoge{{TEST}}{hoge}{" )
-assertAlways( expandMessageStrings("{HOGE}{hoge}{fuga}{piyo}}", "foo", "", "bar", "bar") === "{HOGE}{hoge}{fuga}{piyo}}" )
+// expandMessage()
+assertAlways( expandMessage("") === "" )
+assertAlways( expandMessage("{}") === "{}" )
+assertAlways( expandMessage("hoge") === "hoge" )
+assertAlways( expandMessage("{fuga}") === "{fuga}" )
+assertAlways( expandMessage("{piyo}", "piyo", "") === "" )
+assertAlways( expandMessage("{piyo}", "piyo", "str") === "str" )
+assertAlways( expandMessage("{foo} foo {bar} {bar}{bar}", "foo", "f", "bar", "b") === "f foo b bb" )
+assertAlways( expandMessage("{foo} foo {bar} {1}{@@}", "foo", "f", "bar", "b", "1", 123, "@@" , "++") === "f foo b 123++" )
+assertAlways( expandMessage("{}{TES}{{TEST}}{{TES}}{", "TES", "hoge") === "{}hoge{{TEST}}{hoge}{" )
+assertAlways( expandMessage("{HOGE}{hoge}{fuga}{piyo}}", "foo", "", "bar", "bar") === "{HOGE}{hoge}{fuga}{piyo}}" )
 
 // createStringWithRegExp()
 assertAlways( createStringWithRegExp(/[a-z]/, "", "") === "" )

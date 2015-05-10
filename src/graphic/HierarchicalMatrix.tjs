@@ -8,7 +8,7 @@ Class(HierarchicalMatrix)
         property $1 {
             setter(value) {
                 typeNumber(value)
-                if (this._$1 === value) return; 
+                if (this._$1 === value) return;
                 this._$1 = value;
                 this._updateMatrix = true;
                 this._redraw = true;
@@ -20,8 +20,8 @@ Class(HierarchicalMatrix)
     MATRIX_PROPERTY(y, 0)
     MATRIX_PROPERTY(originX, 0)
     MATRIX_PROPERTY(originY, 0)
-    MATRIX_PROPERTY(scaleX, 1)
-    MATRIX_PROPERTY(scaleY, 1)
+    MATRIX_PROPERTY(scaleX, 100)
+    MATRIX_PROPERTY(scaleY, 100)
     MATRIX_PROPERTY(shearX, 0)
     MATRIX_PROPERTY(shearY, 0)
     MATRIX_PROPERTY(angle, 0)
@@ -60,8 +60,8 @@ Class(HierarchicalMatrix)
         this.y = 0;
         this.originX = 0;
         this.originY = 0;
-        this.scaleX = 1;
-        this.scaleY = 1;
+        this.scaleX = 100;
+        this.scaleY = 100;
         this.shearX = 0;
         this.shearY = 0;
         this.angle = 0;
@@ -99,8 +99,8 @@ Class(HierarchicalMatrix)
                 }
                 .translate(this._x + this._originX, this._y + this._originY);
                 .rotate(this._angle);
-                .shear(this._shearX, this._shearY);
-                .scale(this._scaleX, this._scaleY);
+                .shear(this._shearX / 100, this._shearY / 100);
+                .scale(this._scaleX / 100, this._scaleY / 100);
                 .translate(-this._originX, -this._originY);
             }
         }

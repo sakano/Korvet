@@ -39,6 +39,7 @@ execStorage("ISerializable.tjs");
 
 execStorage("Object.tjs");
 execStorage("Utils.tjs");
+execStorage("String.tjs");
 
 execStorage("ArrayEx.tjs");
 execStorage("DictionaryEx.tjs");
@@ -96,9 +97,13 @@ execStorage("ResizableWindow.tjs");
 execStorage("Config.tjs");
 execStorage("Game.tjs");
 execStorage("GameMode.tjs");
-execStorage("DrawableCommandHandler.tjs");
+
+execStorage("AbstractCommandHandler.tjs");
+execStorage("AbstractDrawableCommandHandler.tjs");
+execStorage("SpriteCommandHandler.tjs");
 execStorage("StageCommandHandler.tjs");
 execStorage("MessageCommandHandler.tjs");
+
 execStorage("NovelMode.tjs");
 
 m4_ifelse(DEBUG, 1, {
@@ -123,7 +128,7 @@ m4_ifelse(DEBUG, 1, {
             while (object !== void) {
                 if (object isvalid) {
                     global.gLog.fatal(
-                            global.expandMessageStrings(FATAL_UNINVALIDATED_OBJECT_DETECTED, "TYPE", tags[i], "MES", toString(object))
+                            global.expandMessage(FATAL_UNINVALIDATED_OBJECT_DETECTED, "TYPE", tags[i], "MES", toString(object))
                     );
                 }
                 object = array.pop();

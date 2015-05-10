@@ -1,83 +1,99 @@
 ﻿// Copyright (C) 2015 Biscrat
 FILE_INCLUDE_GUARD
 
-ClassExtends(StageCommandHandler, DrawableCommandHandler)
+ClassExtends(StageCommandHandler, SpriteCommandHandler)
 {
-    Func(onCommand)(commandInfo:Dictionary) {
+    var _stageCommandHandlers = %[
+        place : LMD(value, map, key) {
+            var validatedValue = this._validateArgumentStringLength(value, key);
+            if (validatedValue === this._place) return;
+            this._place = validatedValue;
+            this._fileChanged = true;
+        } incontextof this,
+        stime : LMD(value, map, key) {
+            var validatedValue = this._validateArgumentStringLength(value, key);
+            if (validatedValue === this._time) return;
+            this._time = validatedValue;
+            this._fileChanged = true;
+        } incontextof this,
+        size : LMD(value, map, key) {
+            var validatedValue = this._validateArgumentStringLength(value, key);
+            if (validatedValue === this._size) return;
+            this._size = validatedValue;
+            this._fileChanged = true;
+        } incontextof this,
+    ];
+
+    OverrideFunc(onCommand)(commandInfo:Dictionary) {
         checkArgs
         if (commandInfo.name !== "stage") return void;
 
-        var info = %[];
-        commandInfo.keys.foreach(LMD(index, key, values, info) {
-            info[key] = values[index];
-        }, commandInfo.values, info);
+        var sequences = [];
+        var keys = commandInfo.keys;
+        var values = commandInfo.values;
+        var map = commandInfo.map;
+        for (var i = 0; i < keys.count; ++i) {
+            var key = keys[i];
+            var value = values[i];
+            var handler = this._spriteCommandHandlers[key];
+            if (handler === void) {
+                handler = this._stageCommandHandlers[key];
+            }
+            if (handler === void) continue;
+            var result = handler(value, map, key);
+            if (result === void) continue;
+            if (result.sequences !== void) {
+                sequences.push(result.sequences*);
+            }
+        }
 
-        this._loadFile(@"bg${info.place}_${info.stime}_${info.size}");
-
-        return %[
-            trans: %[
+        var result = %[];
+        if (this._fileChanged) {
+            result.trans = %[
                 priority : 3,
                 type : TransitionType_Crossfade,
                 option: %[
                     time:2000,
                 ]
-            ]
-        ];
-    }
-
-
-    Func(swapForeBack)() {
-        spriteFore <-> spriteBack;
-    }
-
-
-    Func(draw)(drawBack:bool = false, force:bool = false) {
-        checkArgs
-        if (spriteFore.redraw || force) {
-            if (spriteFore.filename !== "") {
-                spriteFore.draw(true);
-            }
+            ];
         }
-        if (drawBack && (spriteBack.redraw || force)) {
-            if (spriteBack.filename !== "") {
-                spriteBack.draw(true);
-            }
+        if (sequences.count > 0) {
+            result.sequences = sequences;
+        }
+
+        return result;
+    }
+
+    OverrideFunc(beforeTransition)() {
+        super.beforeTransition();
+        if (this._fileChanged) {
+            this._fileChanged = false;
+            this._spriteBack.load(this._getFilename());
+        } else if (this._spriteFore.filename != this._spriteBack.filename) {
+            this._spriteBack.load(this._spriteFore.filename);
         }
     }
 
-    Func(setParentMatrix)(matrix:HierarchicalMatrix) {
+
+
+    var _place;
+    var _time;
+    var _size;
+    var _fileChanged = false;
+
+    Constructor(mode:NovelMode, parentLayerFore:Layer, parentLayerBack:Layer) {
         checkArgs
-        spriteFore.setParentMatrix(...);
-        spriteBack.setParentMatrix(...);
-    }
-
-
-
-    var spriteFore;
-    var spriteBack;
-
-    Constructor(parentLayerFore:Layer, parentLayerBack:Layer) {
-        checkArgs
-        this.spriteFore = this._createSprite(parentLayerFore);
-        this.spriteBack = this._createSprite(parentLayerBack);
+        super.SpriteCommandHandler(...);
     }
 
     Finalize() {
-        invalidate spriteFore;
-        invalidate spriteBack;
+        super.finalize();
     }
 
-    Func(_createSprite)(parentLayer:Layer) {
-        checkArgs
-        var layer = new global.Layer(parentLayer.window, parentLayer);
-        layer.setSize(parentLayer.width, parentLayer.height);
-        layer.visible = true;
-        return new Sprite(layer, true);
+    Func(_getFilename)() {
+        typeNotVoid(this._place)
+        typeNotVoid(this._time)
+        typeNotVoid(this._size)
+        return @"bg${this._place}_${this._time}_${this._size}";
     }
-
-    Func(_loadFile)(filename:string) {
-        checkArgs
-        spriteBack.load(filename);
-    }
-
 }

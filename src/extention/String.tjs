@@ -1,0 +1,15 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(String)
+{
+}
+
+setStaticMember(String, "repeat", LMD(src:string, count:int) {
+    checkArgs
+    var result = "";
+    for (var index = 0; index < count; ++index) {
+        result += src;
+    }
+    return result;
+});

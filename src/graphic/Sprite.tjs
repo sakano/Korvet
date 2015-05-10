@@ -21,6 +21,23 @@ Class(Sprite)
     IMAGE_PROPERTY(shearY)
     IMAGE_PROPERTY(angle)
 
+    property alignment {
+        setter(value) {
+            assert(value === SpriteAlignment_BottomLeft
+                || value === SpriteAlignment_BottomCenter
+                || value === SpriteAlignment_BottomRight
+                || value === SpriteAlignment_MiddleLeft
+                || value === SpriteAlignment_MiddleCenter
+                || value === SpriteAlignment_MiddleRight
+                || value === SpriteAlignment_TopLeft
+                || value === SpriteAlignment_TopCenter
+                || value === SpriteAlignment_TopRight)
+            this._alignment = value;
+            this._resetOffset();
+        }
+        getter { return this._alignment; }
+    }
+
     property width  { getter { return this._image.width; } }
     property height { getter { return this._image.height; } }
     property redraw { getter { return this._image.redraw; } }
@@ -73,8 +90,8 @@ Class(Sprite)
         this._targetLayer = targetLayer;
         this._invalidateTargetLayer = invalidateTargetLayer;
 
-        this._offsetMatrix = new HierarchicalMatrix();
-        this._image = new Image();
+        this._offsetMatrix = new global.HierarchicalMatrix();
+        this._image = new global.Image();
         this._image.setParentMatrix(this._offsetMatrix);
     }
 
@@ -85,6 +102,7 @@ Class(Sprite)
     }
 
     Func(_resetOffset)() {
+        if (this.filename === "") return;
         switch (this._alignment) {
         case SpriteAlignment_BottomLeft:
             this._offsetMatrix.x = 0;
@@ -123,5 +141,7 @@ Class(Sprite)
             this._offsetMatrix.y = 0;
             break;
         }
+        this._image.originX = this._offsetMatrix.x;
+        this._image.originY = this._offsetMatrix.y;
     }
 }
