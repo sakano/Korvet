@@ -96,18 +96,9 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         shearx  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"shearX" ],
         sheary  : this._spriteCommandImpl incontextof %[ self:this, propertyName:"shearY" ],
         angle   : this._spriteCommandImpl incontextof %[ self:this, propertyName:"angle" ],
-        both : LMD(value, map, key) {
-            value = this._validateArgumentNull(value, key);
-            this._setDrawType(SpriteCommandHandlerDrawType_Both);
-        } incontextof this,
-        fore : LMD(value, map, key) {
-            value = this._validateArgumentNull(value, key);
-            this._setDrawType(SpriteCommandHandlerDrawType_Fore);
-        } incontextof this,
-        back : LMD(value, map, key) {
-            value = this._validateArgumentNull(value, key);
-            this._setDrawType(SpriteCommandHandlerDrawType_Back);
-        } incontextof this,
+        both : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Both ],
+        fore : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Fore ],
+        back : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Back ],
     ];
 
     var _spriteFore;
@@ -173,5 +164,10 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
                     global.SequenceRunner.sequence().wait("update").action(&self[propertyName + "Back"]).to(+value, time)
             ] ];
         }
+    }
+
+    Func(_drawTypeCommandImpl)(value, map, key) {
+        self._validateArgumentNull(value, key);
+        self._setDrawType(drawType);
     }
 }

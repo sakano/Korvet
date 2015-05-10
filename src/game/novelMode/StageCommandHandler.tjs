@@ -4,24 +4,9 @@ FILE_INCLUDE_GUARD
 ClassExtends(StageCommandHandler, SpriteCommandHandler)
 {
     var _stageCommandHandlers = %[
-        place : LMD(value, map, key) {
-            var validatedValue = this._validateArgumentStringLength(value, key);
-            if (validatedValue === this._place) return;
-            this._place = validatedValue;
-            this._fileChanged = true;
-        } incontextof this,
-        stime : LMD(value, map, key) {
-            var validatedValue = this._validateArgumentStringLength(value, key);
-            if (validatedValue === this._time) return;
-            this._time = validatedValue;
-            this._fileChanged = true;
-        } incontextof this,
-        size : LMD(value, map, key) {
-            var validatedValue = this._validateArgumentStringLength(value, key);
-            if (validatedValue === this._size) return;
-            this._size = validatedValue;
-            this._fileChanged = true;
-        } incontextof this,
+        place : this._changeFileCommandImpl incontextof %[ self:this, targetName:"_place" ],
+        stime : this._changeFileCommandImpl incontextof %[ self:this, targetName:"_time" ],
+        size  : this._changeFileCommandImpl incontextof %[ self:this, targetName:"_size" ],
     ];
 
     OverrideFunc(onCommand)(commandInfo:Dictionary) {
@@ -95,5 +80,12 @@ ClassExtends(StageCommandHandler, SpriteCommandHandler)
         typeNotVoid(this._time)
         typeNotVoid(this._size)
         return @"bg${this._place}_${this._time}_${this._size}";
+    }
+
+    Func(_changeFileCommandImpl)(value, map, key) {
+        var validatedValue = self._validateArgumentStringLength(value, key);
+        if (validatedValue === self[targetName]) return;
+        self[targetName] = validatedValue;
+        self._fileChanged = true;
     }
 }
