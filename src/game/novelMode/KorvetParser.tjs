@@ -223,23 +223,27 @@ Class(KorvetParser)
         // 属性と属性値を取得
         command.keys = [];
         command.values = [];
+        command.map = %[];
         var keyValueRegExp = /[ \t]+(([^ \t\[\]=]+)([ \t]*=[ \t]*("(.+?)"|'(.+?)'|([^ \t\[\]=]+)))?)?/g;
         while (keyValueRegExp.test(commandString)) {
-            command.keys.add(keyValueRegExp.matches[2]);
-            var value = "";
+            var key = keyValueRegExp.matches[2];
+            var value = null;
             if (keyValueRegExp.matches[5] != "") value = keyValueRegExp.matches[5];
             else if (keyValueRegExp.matches[6] != "") value = keyValueRegExp.matches[6];
             else if (keyValueRegExp.matches[7] != "") value = keyValueRegExp.matches[7];
+            command.keys.add(key);
             command.values.add(value);
+            command.map[key] = value;
         }
-        assert(command instanceof "Dictionary")
-        assert(command.getKeys().count === 3)
-        assert(command.name instanceof "String")
+        typeCheck(command, "Dictionary")
+        assert(command.getKeys().count === 4)
+        typeString(command.name)
         assert(command.name.length > 0)
-        assert(command.keys instanceof "Array")
+        typeCheck(command.keys, "Array")
         assert(command.keys.linq().count(LMD(key){ return key.length === 0; }) === 0 )
-        assert(command.values instanceof "Array")
+        typeCheck(command.values, "Array")
         assert(command.keys.count === command.values.count)
+        typeCheck(command.map, "Dictionary")
     }
 
     Func(_makeEmptyLineCommand)(command:Dictionary) {
