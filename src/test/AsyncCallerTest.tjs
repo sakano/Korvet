@@ -174,7 +174,7 @@ FILE_INCLUDE_GUARD
         assertAlways(called.join(":") === "")
         caller._do();
         assertAlways(called.join(":") === "func:func2:func3")
-        
+
         caller.callOnce(func);
         caller.call(func2);
         caller.call(func3);

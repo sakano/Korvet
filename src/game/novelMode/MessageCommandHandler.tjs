@@ -29,7 +29,7 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
         super.finalize();
         invalidate this._commandMethods;
     }
-    
+
     Func(_beginPageCommandImpl)(commandInfo:Dictionary) {
         this._currentText = "";
         this._drawnTextIndex = 0;

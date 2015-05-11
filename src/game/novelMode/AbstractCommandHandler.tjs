@@ -26,6 +26,11 @@ Class(AbstractCommandHandler)
         this._notifyScriptError(expandMessage(ASSERT_SCRIPT_UNKNOWN_VALUE, "ARG_NAME", argName, "ARG_VALUE", argValue));
     }
 
+    Func(_notifyUnusedArgument)(argValue:any+, argName:string) {
+        checkArgs
+        this._notifyScriptError(expandMessage(ASSERT_SCRIPT_UNUSED_ARGUMENT, "ARG_NAME", argName, "ARG_VALUE", argValue));
+    }
+
     Func(_validateArgumentRequired)(value:any+, argName:string, defaultValue:any, message:string = ASSERT_SCRIPT_ARGUMENT_REQUIRED) {
         checkArgs
         if (value !== void && value !== null) return value;

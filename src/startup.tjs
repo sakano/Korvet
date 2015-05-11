@@ -79,6 +79,8 @@ execStorage("TriangleActionHandler.tjs");
 
 execStorage("Sound.tjs");
 execStorage("KorvetParserModule.tjs");
+execStorage("PageBeginEndParserModule.tjs");
+execStorage("MacroParserModule.tjs");
 execStorage("KorvetParser.tjs");
 
 execStorage("Drawing2DMatrix.tjs");

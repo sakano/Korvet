@@ -121,6 +121,7 @@ ClassExtends(NovelMode, GameMode)
 
     Func(_initParser)() {
         this._parser = new global.KorvetParser();
+        this._parser.setModule(new global.MacroParserModule(), PriorityQueue_Highest);
         this._parser.setModule(new global.PageBeginEndParserModule(), PriorityQueue_Normal);
         this._parser.initStorage("test.krs");
     }
@@ -172,6 +173,10 @@ ClassExtends(NovelMode, GameMode)
         while (true) {
             var commandInfo = %[];
             var error = _parser.getNextCommand(commandInfo);
+            if (!success(error)) {
+                this.onScriptError(expandMessage(ASSERT_SCRIPT_PARSER_ERROR, "MES", error.message));
+                break;
+            }
             if (commandInfo.isEmpty()) break;
             var interrupt = this._doCommand(commandInfo);
             if (interrupt) return;

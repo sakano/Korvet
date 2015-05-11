@@ -45,8 +45,12 @@ m4_define(&--ASSERT_WAITSEQUENCE_WRONG_ARGUMENTS--&, &--"waitの指定が不正�
 m4_define(&--ASSERT_TRANSITIONSEQUENCE_INVALID_CALLBACK--&, &--"callbackには登録済みのTransTickメソッドを指定してください"--&)m4_dnl
 m4_dnl
 m4_define(&--ASSERT_SCRIPT_HEADER--&, &--"[{FILE}({LINE})]"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_PARSER_ERROR--&, &--"パースエラーが発生しました : {MES}"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_NESTED_MACRO--&, &--"macroの前にendmacroが必要です"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_SINGLE_ENDMACRO--&, &--"endmacroの前にmacroが必要です"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_ARGUMENT_REQUIRED--&, &--"必須属性({ARG_NAME})が指定されていません"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_ARGUMENT_NULL--&, &--"この属性({ARG_NAME})には属性値を指定しないでください"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_ARGUMENT_INT_RANGE--&, &--"指定された数値は範囲外です({ARG_NAME}={ARG_VALUE})"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_ARGUMENT_STRING_LENGTH--&, &--"指定された文字列の長さが不正です({ARG_NAME}={ARG_VALUE})"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_UNUSED_ARGUMENT--&, &--"未使用の属性です({ARG_NAME}={ARG_VALUE})"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_UNKNOWN_VALUE--&, &--"不正な値が指定されています({ARG_NAME}={ARG_VALUE})"--&)m4_dnl

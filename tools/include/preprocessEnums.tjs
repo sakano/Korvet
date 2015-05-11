@@ -53,22 +53,10 @@ m4_define(&--SpriteCommandHandlerDrawType_Fore--&, &---1--&)m4_dnl
 m4_define(&--SpriteCommandHandlerDrawType_Both--&, &--0--&)m4_dnl
 m4_define(&--SpriteCommandHandlerDrawType_Back--&, &--1--&)m4_dnl
 m4_dnl
-m4_dnl // KorvetParserCommandPriority
-m4_define(&--KorvetParserCommandPriority_Highest--&,     PriorityQueue_Highest)m4_dnl
-m4_define(&--KorvetParserCommandPriority_High--&,        PriorityQueue_High)m4_dnl
-m4_define(&--KorvetParserCommandPriority_AboveNormal--&, PriorityQueue_AboveNormal)m4_dnl
-m4_define(&--KorvetParserCommandPriority_Normal--&,      PriorityQueue_Normal)m4_dnl
-m4_define(&--KorvetParserCommandPriority_BelowNormal--&, PriorityQueue_BelowNormal)m4_dnl
-m4_define(&--KorvetParserCommandPriority_Low--&,         PriorityQueue_Low)m4_dnl
-m4_define(&--KorvetParserCommandPriority_Lowest--&,      PriorityQueue_Lowest)m4_dnl
-m4_dnl // KorvetParserModulePriority
-m4_define(&--KorvetParserModulePriority_Highest--&,     PriorityQueue_Highest)m4_dnl
-m4_define(&--KorvetParserModulePriority_High--&,        PriorityQueue_High)m4_dnl
-m4_define(&--KorvetParserModulePriority_AboveNormal--&, PriorityQueue_AboveNormal)m4_dnl
-m4_define(&--KorvetParserModulePriority_Normal--&,      PriorityQueue_Normal)m4_dnl
-m4_define(&--KorvetParserModulePriority_BelowNormal--&, PriorityQueue_BelowNormal)m4_dnl
-m4_define(&--KorvetParserModulePriority_Low--&,         PriorityQueue_Low)m4_dnl
-m4_define(&--KorvetParserModulePriority_Lowest--&,      PriorityQueue_Lowest)m4_dnl
+m4_dnl // KorvetParserModuleMode
+m4_define(&--KorvetParserModuleMode_End--&, &--0--&)m4_dnl
+m4_define(&--KorvetParserModuleMode_Loop--&, &--1--&)m4_dnl
+m4_define(&--KorvetParserModuleMode_Cancel--&, &--2--&)m4_dnl
 m4_dnl
 m4_dnl // MouseGestureType
 m4_define(&--MouseGestureType_FourDirection--&, &--0--&)m4_dnl

@@ -3,43 +3,8 @@ FILE_INCLUDE_GUARD
 
 Class(KorvetParserModule)
 {
-
     Func(onCommand)(parser:KorvetParser, command:Dictionary) {}
 
     Constructor() {}
     Finalize() {}
-}
-
-
-ClassExtends(PageBeginEndParserModule, KorvetParserModule)
-{
-    OverrideFunc(onCommand)(parser:KorvetParser, command:Dictionary) {
-        if (this._inPage) {
-            if (command.name !== "__emptyline") return;
-            this._inPage = false;
-            var command = _createEndPageCommand();
-            parser.addCommand(command, KorvetParserCommandPriority_AboveNormal);
-            return %[
-                resume : true,
-            ];
-        }
-
-        if (command.name !== "__ch") return;
-        this._inPage = true;
-        var command = _createBeginPageCommand();
-        parser.addCommand(command, KorvetParserCommandPriority_AboveNormal);
-        return %[
-            resume : true,
-        ];
-    }
-
-    var _inPage = false;
-
-    Func(_createBeginPageCommand)(command:Dictionary) {
-        return %[ name:"__beginpage" ];
-    }
-
-    Func(_createEndPageCommand)(command:Dictionary) {
-        return %[ name:"__endpage" ];
-    }
 }

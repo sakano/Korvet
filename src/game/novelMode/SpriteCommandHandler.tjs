@@ -118,7 +118,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
     }
 
 
-    
+
     var _spriteFore;
     var _spriteBack;
 

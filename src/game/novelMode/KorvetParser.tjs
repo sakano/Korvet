@@ -25,7 +25,7 @@ Class(KorvetParser)
 
         var command = %[];
         this._makeBeginFileCommand(command, this._currentStorage);
-        addCommand(command, KorvetParserCommandPriority_Highest);
+        this.addHeadCommand(command);
 
         return SUCCESS;
     }
@@ -41,9 +41,17 @@ Class(KorvetParser)
         this._modulesPriority.insert(indexToInsert, priority);
     }
 
-    Func(addCommand)(command:Dictionary, priority:int) {
+    Func(addHeadCommand)(command:Dictionary) {
         checkArgs
-        this._commandQueue.enqueue(command, priority);
+        this._commandList.push(command);
+    }
+
+    Func(addTailCommand)() {
+        this._commandList.unshift(command);
+    }
+
+    Func(cancelHeadCommand)() {
+        this._commandList.pop();
     }
 
     Func(getNextCommand)(command:Dictionary) {
@@ -51,34 +59,50 @@ Class(KorvetParser)
         assert(command.isEmpty())
         assert(this._currentStorage !== "")
 
-        var resume = true;
-        while (resume) {
-            resume = false;
+        for (var loop = true; loop;) {
+            var mode = KorvetParserModuleMode_End;
 
-            // コマンドキューが空なら次のタグを得てキューに入れる
+            // コマンドリストが空なら次のタグを得てリストに入れる
             // 次のタグが得られなければ終わり
-            if (this._commandQueue.count === 0) {
+            if (this._commandList.count === 0) {
                 var nextCommand = %[];
                 var error = this._getNextCommand(nextCommand);
                 if (!success(error)) return error;
                 if (nextCommand.isEmpty()) return SUCCESS;
-                this._commandQueue.enqueue(nextCommand, PriorityQueue_Normal);
+                this.addHeadCommand(nextCommand);
             }
 
-            // コマンドキューから次のコマンドを得る
-            var queuedCommand = this._commandQueue.peek();
+            // コマンドリストから次のコマンドを得る
+            var nextCommand = this._commandList[-1];
 
             // モジュールに通知
             for (var i = this._modules.count - 1; i >= 0; --i) {
-                var result = this._modules[i].onCommand(this, queuedCommand);
-                if (result !== void && result.resume) {
-                    resume = true;
-                    break;
+                var result = this._modules[i].onCommand(this, nextCommand);
+                if (result !== void) {
+                    if (result.error !== void) {
+                        return new KorvetParserError(this._currentStorage, this._currentLineNumber,
+                            this._currentLogicalLine, this._currentLogicalLineIndex, void, result.error);
+                    }
+                    if (result.mode !== void) {
+                        mode = result.mode;
+                    }
                 }
             }
-            if (!resume) {
-                this._commandQueue.dequeue();
-                command.assign(queuedCommand);
+            switch (mode) {
+            case KorvetParserModuleMode_End:
+                loop = false;
+                this._commandList.pop();
+                command.assign(nextCommand);
+                break;
+            case KorvetParserModuleMode_Loop:
+                loop = true;
+                break;
+            case KorvetParserModuleMode_Cancel:
+                loop = true;
+                this._commandList.pop();
+                break;
+            default:
+                assert(false);
             }
         }
 
@@ -92,7 +116,7 @@ Class(KorvetParser)
     var _modules = [];
     var _modulesPriority = [];
 
-    var _commandQueue = new global.PriorityQueue();
+    var _commandList = [];
 
     var _currentStorage = "";
     var _currentStorageEnded = true;
@@ -116,7 +140,7 @@ Class(KorvetParser)
         invalidate this._lineParser;
         this._modules.dispose();
         invalidate this._modules;
-        invalidate this._commandQueue;
+        invalidate this._commandList;
     }
 
     Func(_getNextCommand)(command:Dictionary) {
@@ -159,8 +183,8 @@ Class(KorvetParser)
                 }
 
                 // コマンド行なら全体をコマンドとして処理
-                if (this._currentLine[0] === "@") {
-                    this._makeCommand(command, this._currentLine.substr(1));
+                if (this._currentLogicalLine[0] === "@") {
+                    this._makeCommand(command, this._currentLogicalLine.substr(1));
                     return SUCCESS;
                 }
             }
@@ -187,12 +211,12 @@ Class(KorvetParser)
 
                 // []で囲まれた部分をコマンドとして処理
                 var beginIndex = this._currentLogicalLineIndex + 1;
-                var endIndex = _this.currentLogicalLine.indexOf(']', beginIndex);
+                var endIndex = this._currentLogicalLine.indexOf(']', beginIndex);
                 if (endIndex < 0) {
                     throw new ERROR(ERROR_KORVER_PARSE_COMMAND_END_NOT_FOUND);
                 }
-                this._makeCommand(command, this._currentLogicalLine.substr(beginIndex, endIndex - beginIndex - 1));
-                this._currentLogicalLineIndex += endIndex - beginIndex + 1;
+                this._makeCommand(command, this._currentLogicalLine.substr(beginIndex, endIndex - beginIndex));
+                this._currentLogicalLineIndex += endIndex - beginIndex + 2;
                 return SUCCESS;
             }
 
@@ -202,7 +226,8 @@ Class(KorvetParser)
             return SUCCESS;
         } catch (e) {
             if (e instanceof "Error") {
-                return new KorvetParserError(_currentStorage, _currentLineNumber, _currentLogicalLine, _currentLogicalLineIndex, void, e);
+                return new KorvetParserError(this._currentStorage, this._currentLineNumber,
+                    this._currentLogicalLine, this._currentLogicalLineIndex, void, e);
             } else {
                 throw e;
             }
