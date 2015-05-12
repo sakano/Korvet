@@ -3,7 +3,7 @@ FILE_INCLUDE_GUARD
 
 Class(AbstractCommandHandler)
 {
-    AbstractFunc(onCommand)(commandInfo:Dictionary)
+    AbstractFunc(onCommand)(command:Dictionary)
 
 
 
@@ -16,69 +16,68 @@ Class(AbstractCommandHandler)
 
     Finalize() {}
 
-    Func(_notifyScriptError)(message:string) {
+    Func(_notifyScriptError)(message:string, args*) {
         checkArgs
-        this._mode.onScriptError(message);
+        this._mode.onScriptError(expandMessage(...));
     }
 
-    Func(_notifyUnknownValueError)(argValue:any+, argName:string) {
+    Func(_notifyIllegalAttributeValueError)(argValue:any+, argName:string) {
         checkArgs
-        this._notifyScriptError(expandMessage(ASSERT_SCRIPT_UNKNOWN_VALUE, "ARG_NAME", argName, "ARG_VALUE", argValue));
+        this._notifyScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_ILLEGAL, "ARG_NAME", argName, "ARG_VALUE", argValue);
     }
 
-    Func(_notifyUnusedArgument)(argValue:any+, argName:string) {
+    Func(_notifyUnusedAttributeError)(argValue:any+, argName:string) {
         checkArgs
-        this._notifyScriptError(expandMessage(ASSERT_SCRIPT_UNUSED_ARGUMENT, "ARG_NAME", argName, "ARG_VALUE", argValue));
+        this._notifyScriptError(ASSERT_SCRIPT_ATTRIBUTE_UNUSED, "ARG_NAME", argName, "ARG_VALUE", argValue);
     }
 
-    Func(_validateArgumentRequired)(value:any+, argName:string, defaultValue:any, message:string = ASSERT_SCRIPT_ARGUMENT_REQUIRED) {
+    Func(_notifyAttributeValueNotSpecifiedError)(argName:string) {
+        checkArgs
+        this._notifyScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_REQUIRED, "ARG_NAME", argName);
+    }
+
+    Func(_validateAttributeSpecified)(value:any+, argName:string, defaultValue:any) {
         checkArgs
         if (value !== void && value !== null) return value;
-        this._notifyScriptError(expandMessage(message, "ARG_NAME", argName));
+        this._notifyScriptError(ASSERT_SCRIPT_ATTRIBUTE_REQUIRED, "ARG_NAME", argName);
         return defaultValue;
     }
 
-    Func(_validateArgumentNull)(value:any+, argName:string, message:string = ASSERT_SCRIPT_ARGUMENT_NULL) {
+    Func(_validateAttributeValueSpecified)(value:any+, argName:string, defaultValue:string) {
+        checkArgs
+        if (value === null) {
+            this._notifyAttributeValueNotSpecifiedError("ARG_NAME", argName);
+            return defaultValue;
+        }
+        return value;
+    }
+
+    Func(_validateAttributeValueNotSpecified)(value:any+, argName:string) {
         checkArgs
         if (value !== null) {
-            this._notifyScriptError(expandMessage(message, "ARG_NAME", argName));
+            this._notifyScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_UNUSED, "ARG_NAME", argName);
         }
         return null;
     }
 
-    Func(_validateArgumentIntRange)(value:any+, argName:string, min:int+, max:int+, defaultValue:int, message:string = ASSERT_SCRIPT_ARGUMENT_INT_RANGE) {
+    Func(_validateAttributeValueInteger)(value:any+, argName:string, min:int+, max:int+, defaultValue:int+) {
         checkArgs
         assert(min < max || min === void || max === void)
-        assert(min === void || min <= defaultValue)
-        assert(max === void || max >= defaultValue)
-        if (value === void) return defaultValue;
+        assert(min === void || defaultValue === void || min <= defaultValue)
+        assert(max === void || defaultValue === void || max >= defaultValue)
+        if (value === void) {
+            assert(defaultValue !== void)
+            return defaultValue;
+        }
         var intValue = (int)value;
         if (min !== void && intValue < min) {
-            this._notifyScriptError(expandMessage(message, "ARG_NAME", argName, "ARG_VALUE", value));
+            this._notifyScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_OUT_OF_RANGE, "ARG_NAME", argName, "ARG_VALUE", value);
             return min;
         }
         if (max !== void && max < intValue) {
-            this._notifyScriptError(expandMessage(message, "ARG_NAME", argName, "ARG_VALUE", value));
+            this._notifyScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_OUT_OF_RANGE, "ARG_NAME", argName, "ARG_VALUE", value);
             return max;
         }
         return intValue;
-    }
-
-    Func(_validateArgumentStringLength)(value:any+, argName:string, min:int+, max:int+, message:string = ASSERT_SCRIPT_ARGUMENT_STRING_LENGTH) {
-        checkArgs
-        assert(min < max || min === void || max === void)
-        if (typeof value !== "String") {
-            this._notifyScriptError(expandMessage(message, "ARG_NAME", argName, "ARG_VALUE", value));
-            return min === void ? "" : global.String.repeat(" ", min);
-        }
-        if (min !== void && value.length < min) {
-            this._notifyScriptError(expandMessage(message, "ARG_NAME", argName, "ARG_VALUE", value));
-            return global.String.repeat(" ", min);
-        }
-        if (max !== void && value.length > max) {
-            this._notifyScriptError(expandMessage(message, "ARG_NAME", argName, "ARG_VALUE", value));
-            return value.substr(0, max);
-        }
-        return value;
     }
 }

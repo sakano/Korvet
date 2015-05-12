@@ -44,13 +44,17 @@ m4_define(&--ASSERT_FACTORYSEQUENCE_SEQUENCE_NEEDED--&, &--"factoryに指定す�
 m4_define(&--ASSERT_WAITSEQUENCE_WRONG_ARGUMENTS--&, &--"waitの指定が不正です"--&)m4_dnl
 m4_define(&--ASSERT_TRANSITIONSEQUENCE_INVALID_CALLBACK--&, &--"callbackには登録済みのTransTickメソッドを指定してください"--&)m4_dnl
 m4_dnl
+m4_dnl // korvetスクリプトの記述ミスを通知する警告メッセージ
 m4_define(&--ASSERT_SCRIPT_HEADER--&, &--"[{FILE}({LINE})]"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_PARSER_ERROR--&, &--"パースエラーが発生しました : {MES}"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_NESTED_MACRO--&, &--"macroの前にendmacroが必要です"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_SINGLE_ENDMACRO--&, &--"endmacroの前にmacroが必要です"--&)m4_dnl
-m4_define(&--ASSERT_SCRIPT_ARGUMENT_REQUIRED--&, &--"必須属性({ARG_NAME})が指定されていません"--&)m4_dnl
-m4_define(&--ASSERT_SCRIPT_ARGUMENT_NULL--&, &--"この属性({ARG_NAME})には属性値を指定しないでください"--&)m4_dnl
-m4_define(&--ASSERT_SCRIPT_ARGUMENT_INT_RANGE--&, &--"指定された数値は範囲外です({ARG_NAME}={ARG_VALUE})"--&)m4_dnl
-m4_define(&--ASSERT_SCRIPT_ARGUMENT_STRING_LENGTH--&, &--"指定された文字列の長さが不正です({ARG_NAME}={ARG_VALUE})"--&)m4_dnl
-m4_define(&--ASSERT_SCRIPT_UNUSED_ARGUMENT--&, &--"未使用の属性です({ARG_NAME}={ARG_VALUE})"--&)m4_dnl
-m4_define(&--ASSERT_SCRIPT_UNKNOWN_VALUE--&, &--"不正な値が指定されています({ARG_NAME}={ARG_VALUE})"--&)m4_dnl
+m4_dnl // 不正な属性
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_DUPLICATED--&, &--"同じ属性({ARG_NAME})が２回以上指定されています"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_REQUIRED--&, &--"必須属性({ARG_NAME})が指定されていません"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_UNUSED--&, &--"未使用の属性です({ARG_NAME}={ARG_VALUE})"--&)m4_dnl
+m4_dnl // 不正な属性値
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_REQUIRED--&, &--"この属性({ARG_NAME})の値は省略できません"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_UNUSED--&, &--"この属性({ARG_NAME})には値を指定しないでください"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_ILLEGAL--&, &--"不正な値が指定されています({ARG_NAME}={ARG_VALUE})"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_OUT_OF_RANGE--&, &--"指定された数値は範囲外です({ARG_NAME}={ARG_VALUE})"--&)m4_dnl

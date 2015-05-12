@@ -83,35 +83,44 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         this._spriteBack.setParentMatrix(...);
     }
 
-    OverrideFunc(onCommand)(commandInfo:Dictionary) {
+    OverrideFunc(onCommand)(command:Dictionary) {
         checkArgs
-        if (this._isIgnoreCommand(commandInfo)) return;
+        if (this._isIgnoreCommand(command)) return;
 
-        var result = %[];
-        var sequences = [];
-        var keys = commandInfo.keys;
-        var values = commandInfo.values;
-        for (var i = 0; i < keys.count; ++i) {
-            var key = keys[i];
-            var value = values[i];
-            var method = this._argumentMethods[key];
+        var result = %[
+            sequences : []
+        ];
+        var attrNames = command.attributeNames;
+        var attrValues = command.attributeValues;
+
+        for (var i = 0; i < attrNames.count; ++i) {
+            var attrName = attrNames[i];
+            var attrValue = attrValues[attrName];
+
+            // メソッドが存在しない属性は何もしない
+            var method = this._attributeMethods[attrName];
             if (method === void) continue;
 
-            var methodResult = method(value, commandInfo.map, key);
+            // 属性に対応するメソッドを呼出し
+            var methodResult = method(attrValue, attrName, attrValues);
+
             if (methodResult === void) continue;
+            // 優先度の高いトランジション情報が返されたらresult.transに記録
             if (methodResult.trans !== void) {
                 if (result.trans === void || result.trans.priority <= methodResult.trans.priority) {
                     result.trans = methodResult.trans;
                 }
             }
+            // シーケンスが返されたらresult.sequencesに記録
             if (methodResult.sequences !== void) {
                 assert(methodResult.sequences.count > 0)
-                sequences.push(methodResult.sequences*);
+                result.sequences.push(methodResult.sequences*);
             }
         }
 
-        if (sequences.count > 0) {
-            result.sequences = sequences;
+        // シーケンスが1つも存在しなければresult.sequencesを削除
+        if (result.sequences.count === 0) {
+            delete result.sequences;
         }
 
         return result;
@@ -122,17 +131,15 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
     var _spriteFore;
     var _spriteBack;
 
-    var _drawType = SpriteCommandHandlerDrawType_Back;
-
-    var _defualtTransTime = 500;
-    var _transMethods = %[
+    var _defaultTransTime = 500;
+    var _transitionTypes = %[
         fade : TransitionType_Crossfade,
         crossfade : TransitionType_Crossfade,
         universal : TransitionType_Universal,
         scroll : TransitionType_Scroll,
     ];
 
-    var _argumentMethods;
+    var _attributeMethods;
 
     Constructor(mode:NovelMode, parentLayerFore:Layer, parentLayerBack:Layer) {
         checkArgs
@@ -141,14 +148,14 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         this._spriteFore = this._createSprite(parentLayerFore);
         this._spriteBack = this._createSprite(parentLayerBack);
 
-        this._argumentMethods = this._createArgumentMethods();
+        this._attributeMethods = this._createAttributeMethods();
     }
 
     Finalize() {
         invalidate _spriteFore;
         invalidate _spriteBack;
-        invalidate this._transMethods;
-        invalidate this._argumentMethods;
+        invalidate this._transitionTypes;
+        invalidate this._attributeMethods;
     }
 
     Func(_createSprite)(parentLayer:Layer) {
@@ -159,7 +166,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         return new global.Sprite(layer, true);
     }
 
-    Func(_createArgumentMethods)() {
+    Func(_createAttributeMethods)() {
         return %[
             x       : this._transformCommandImpl incontextof %[ self:this, propertyName:"x" ],
             y       : this._transformCommandImpl incontextof %[ self:this, propertyName:"y" ],
@@ -170,17 +177,12 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
             shearx  : this._transformCommandImpl incontextof %[ self:this, propertyName:"shearX" ],
             sheary  : this._transformCommandImpl incontextof %[ self:this, propertyName:"shearY" ],
             angle   : this._transformCommandImpl incontextof %[ self:this, propertyName:"angle" ],
-            both    : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Both ],
-            fore    : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Fore ],
-            back    : this._drawTypeCommandImpl incontextof %[ self:this, drawType:SpriteCommandHandlerDrawType_Back ],
             fade    : this._fadeCommandImpl,
             trans   : this._transCommandImpl,
         ];
     }
 
-    Func(_isIgnoreCommand)(commandInfo:Dictionary) {
-        return true;
-    }
+    AbstractFunc(_isIgnoreCommand)(command:Dictionary)
 
     Func(_updateSpriteBack)() {
         checkArgs
@@ -200,46 +202,48 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         }
     }
 
-    Func(_transformCommandImpl)(value, map) {
-        assert(self._drawType === SpriteCommandHandlerDrawType_Back, "not Implemented for the specified drawType");
-        if (map.time === void) {
+    Func(_transformCommandImpl)(attrValue:any, attrName:string, attrValues:Dictionary) {
+        checkArgs
+        if (attrValues.time === void) {
             return %[ sequences : [
-                    global.SequenceRunner.sequence().wait("update").setValue(&self[propertyName + "Back"], +value)
+                    global.SequenceRunner.sequence().wait("update").setValue(&self[propertyName + "Back"], (int)attrValue)
             ] ];
         } else {
-            var time = self._validateArgumentIntRange(map.time, "time", 1, void, 1);
+            var time = self._validateAttributeValueSpecified(attrValues.time, "time", "1");
+            time = self._validateAttributeValueInteger(time, "time", 1, void);
             return %[ sequences : [
                     global.SequenceRunner.sequence().wait("update")
                         .call(self._mode.onActionBegin)
                         .beginSkip("skipAction")
-                            .action(&self[propertyName + "Back"]).to(+value, time)
+                            .action(&self[propertyName + "Back"]).to((int)attrValue, time)
                         .endSkip()
                         .call(self._mode.onActionEnd)
             ]];
         }
     }
 
-    Func(_drawTypeCommandImpl)(value, map, key) {
-        self._validateArgumentNull(value, key);
-        self._setDrawType(drawType);
-    }
-
-    Func(_fadeCommandImpl)(value, map, key) {
-        value = this._validateArgumentIntRange(value, "fade", 1, void, this._defualtTransTime);
+    Func(_fadeCommandImpl)(attrValue:any) {
+        checkArgs
+        attrValue = this._validateAttributeValueSpecified(attrValue, "fade", (string)this._defaultTransTime);
+        attrValue = this._validateAttributeValueInteger(attrValue, "fade", 1, void);
         return %[
             trans : %[
                 priority : NovelModeTransPriority_Specified,
                 type : TransitionType_Crossfade,
                 option: %[
-                    time : value,
+                    time : attrValue
                 ]
             ]
         ];
     }
-    Func(_transCommandImpl)(value, map, key) {
-        var type = this._transMethods[value];
+
+    Func(_transCommandImpl)(attrValue:any, attrName:string, attrValues:Dictionary) {
+        checkArgs
+        var type = this._transitionTypes[attrValue];
+
+        // 存在しないトランジションの種類ならエラー
         if (type === void) {
-            this._notifyUnknownValueError(value, "trans");
+            this._notifyIllegalAttributeValueError(attrValue, "trans");
             type = TransitionType_Crossfade;
         }
 
@@ -247,8 +251,8 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         var option = %[];
 
         // time属性
-        option.time = this._validateArgumentRequired(map.time, "time", this._defualtTransTime);
-        option.time = this._validateArgumentIntRange(option.time, "time", 1, void, this._defualtTransTime);
+        option.time = this._validateAttributeSpecified(attrValues.time, "time", (string)this._defaultTransTime);
+        option.time = this._validateAttributeValueInteger(option.time, "time",  1, void);
 
         switch(type) {
         case TransitionType_Crossfade:
@@ -256,40 +260,51 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
             break;
         case TransitionType_Universal:
             // rule属性
-            var rule = this._validateArgumentRequired(map.rule, "rule", null);
+            var rule = this._validateAttributeSpecified(attrValues.rule, "rule", null);
             if (rule === null) {
                 type = TransitionType_Crossfade;
                 break;
             }
             option.rule = rule;
             // vague属性
-            option.vague = this._validateArgumentIntRange(map.vague, "vague", 0, void, 128);
+            option.vague = this._validateAttributeValueSpecified(attrValues.vague, "vague", "128");
+            option.vague = this._validateAttributeValueInteger(option.vague, "vague", 0, void);
             break;
         case TransitionType_Scroll:
             // dir属性
-            switch(map.dir) {
-            case "left": option.from = sttRight; break;
-            case "up": option.from = sttBottom; break;
-            case "right": option.from = sttLeft; break;
-            case "down": option.from = sttTop; break;
-            case void: option.from = sttLeft; break;
+            switch(attrValues.dir) {
+            case "left":  option.from = sttRight;  break;
+            case "up":    option.from = sttBottom; break;
+            case "right": option.from = sttLeft;   break;
+            case "down":  option.from = sttTop;    break;
+            case void:    option.from = sttLeft;   break;
+            case null:
+                this._notifyAttributeValueNotSpecifiedError("dir");
+                option.from = sttLeft;
+                break;
             default:
-                this._notifyUnknownValueError(map.dir, "dir");
+                this._notifyIllegalAttributeValueError(attrValues.dir, "dir");
                 option.from = sttLeft;
                 break;
             }
             // scroll属性
-            switch(map.scroll) {
-            case "slide": option.stay = ststNoStay; break;
-            case "in": option.stay = ststStayDest; break;
-            case "out": option.stay = ststStaySrc; break;
-            case void: option.stay = ststNoStay; break;
+            switch(attrValues.scroll) {
+            case "slide": option.stay = ststNoStay;  break;
+            case "in":    option.stay = ststStayDest; break;
+            case "out":   option.stay = ststStaySrc;  break;
+            case void:    option.stay = ststNoStay;   break;
+            case null:
+                this._notifyAttributeValueNotSpecifiedError("scroll");
+                option.stay = ststNoStay;
+                break;
             default:
-                this._notifyUnknownValueError(map.scroll, "scroll");
+                this._notifyIllegalAttributeValueError(attrValues.scroll, "scroll");
                 option.stay = ststNoStay;
                 break;
             }
             break;
+        default:
+            assert(false)
         }
         return %[
             trans : %[
@@ -298,12 +313,5 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
                 option: option
             ]
         ];
-    }
-
-    Func(_setDrawType)(type) {
-        assert(type === SpriteCommandHandlerDrawType_Both
-            || type === SpriteCommandHandlerDrawType_Fore
-            || type === SpriteCommandHandlerDrawType_Back)
-        this._drawType = type;
     }
 }

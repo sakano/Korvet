@@ -3,10 +3,10 @@ FILE_INCLUDE_GUARD
 
 ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
 {
-    OverrideFunc(onCommand)(commandInfo:Dictionary) {
-        var method = this._commandMethods[commandInfo.name];
+    OverrideFunc(onCommand)(command:Dictionary) {
+        var method = this._commandMethods[command.name];
         if (method === void) return void;
-        return method(commandInfo);
+        return method(command);
     }
 
 
@@ -30,12 +30,12 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
         invalidate this._commandMethods;
     }
 
-    Func(_beginPageCommandImpl)(commandInfo:Dictionary) {
+    Func(_beginPageCommandImpl)(command:Dictionary) {
         this._currentText = "";
         this._drawnTextIndex = 0;
     }
 
-    Func(_endPageCommandImpl)(commandInfo:Dictionary) {
+    Func(_endPageCommandImpl)(command:Dictionary) {
         assert(this._currentText.length > 0)
         return %[
             interrupt : true,
@@ -52,15 +52,8 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
         ];
     }
 
-    Func(_chCommandImpl)(commandInfo:Dictionary) {
-        var text;
-        for (var i = 0; i < commandInfo.keys.count; ++i) {
-            if (commandInfo.keys[i] === "text") {
-                text = commandInfo.values[i];
-                break;
-            }
-        }
-        this._currentText += text;
+    Func(_chCommandImpl)(command:Dictionary) {
+        this._currentText += this._validateAttributeSpecified(command.attributeValues.text, "text", "X");
     }
 
     Func(_sequenceFactory) {

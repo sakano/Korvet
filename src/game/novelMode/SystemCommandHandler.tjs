@@ -12,10 +12,10 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
         }
     }
 
-    OverrideFunc(onCommand)(commandInfo:Dictionary) {
-        var method = this._commandMethods[commandInfo.name];
+    OverrideFunc(onCommand)(command:Dictionary) {
+        var method = this._commandMethods[command.name];
         if (method === void) return void;
-        return method(commandInfo);
+        return method(command);
     }
 
 
@@ -25,7 +25,7 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
         __endpage   : _endPageCommandImpl,
         update      : _updateCommandImpl,
         waittrans   : _waitTransCommandImpl,
-        waitaction   : _waitActionCommandImpl,
+        waitaction  : _waitActionCommandImpl,
     ];
 
     var _transInfo;

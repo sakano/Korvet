@@ -37,17 +37,17 @@ ClassExtends(StageCommandHandler, SpriteCommandHandler)
         invalidate this._stageAutoTransition;
     }
 
-    OverrideFunc(_createArgumentMethods)() {
-        var methods = super._createArgumentMethods();
+    OverrideFunc(_createAttributeMethods)() {
+        var methods = super._createAttributeMethods();
         methods.place = this._changeFileCommandImpl incontextof %[ self:this, targetName:"_place" ];
         methods.stime = this._changeFileCommandImpl incontextof %[ self:this, targetName:"_time" ];
         methods.size  = this._changeFileCommandImpl incontextof %[ self:this, targetName:"_size" ];
         return methods;
     }
 
-    OverrideFunc(_isIgnoreCommand)(commandInfo:Dictionary) {
+    OverrideFunc(_isIgnoreCommand)(command:Dictionary) {
         checkArgs
-        return commandInfo.name !== "stage";
+        return command.name !== "stage";
     }
 
     Func(_getFilename)() {
@@ -57,9 +57,13 @@ ClassExtends(StageCommandHandler, SpriteCommandHandler)
         return @"bg${this._place}_${this._time}_${this._size}";
     }
 
-    Func(_changeFileCommandImpl)(value, map, key) {
-        var validatedValue = self._validateArgumentRequired(value, key, self[targetName]);
+    Func(_changeFileCommandImpl)(attrValue:any, attrName:string, attrValues:Dictionary) {
+        checkArgs
+        var validatedValue = self._validateAttributeSpecified(attrValue, attrName, self[targetName]);
+
+        // 同じままなら何もしない
         if (validatedValue === self[targetName]) return;
+
         self[targetName] = validatedValue;
         self._fileChanged = true;
         return %[ trans : self._stageAutoTransition ];

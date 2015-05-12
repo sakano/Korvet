@@ -21,7 +21,6 @@ Class(KorvetParser)
         this._currentLogicalLine = "";
         this._currentLogicalLineIndex = 0;
         this._lineParser.initStorage(path, utf8);
-        this._commandAdded = true;
 
         var command = %[];
         this._makeBeginFileCommand(command, this._currentStorage);
@@ -52,6 +51,14 @@ Class(KorvetParser)
 
     Func(cancelHeadCommand)() {
         this._commandList.pop();
+    }
+
+    Func(makeCommandTemplate)(command:Dictionary, commandName:string) {
+        checkArgs
+        assert(command.isEmpty())
+        command.name = commandName;
+        command.attributeNames = [];
+        command.attributeValues = %[];
     }
 
     Func(getNextCommand)(command:Dictionary) {
@@ -213,7 +220,7 @@ Class(KorvetParser)
                 var beginIndex = this._currentLogicalLineIndex + 1;
                 var endIndex = this._currentLogicalLine.indexOf(']', beginIndex);
                 if (endIndex < 0) {
-                    throw new ERROR(ERROR_KORVER_PARSE_COMMAND_END_NOT_FOUND);
+                    throw new Error(ERROR_KORVER_PARSE_COMMAND_END_NOT_FOUND);
                 }
                 this._makeCommand(command, this._currentLogicalLine.substr(beginIndex, endIndex - beginIndex));
                 this._currentLogicalLineIndex += endIndex - beginIndex + 2;
@@ -246,68 +253,58 @@ Class(KorvetParser)
         }
 
         // コマンド名を取得
-        command.name = commandLineRegExp.matches[1];
+        this.makeCommandTemplate(command, commandLineRegExp.matches[1]);
 
         // 属性と属性値を取得
-        command.keys = [];
-        command.values = [];
-        command.map = %[];
         var keyValueRegExp = /[ \t]+(([^ \t\[\]=]+)([ \t]*=[ \t]*("(.+?)"|'(.+?)'|([^ \t\[\]=]+)))?)?/g;
         while (keyValueRegExp.test(commandString)) {
-            var key = keyValueRegExp.matches[2].toLowerCase();
+            var attrName = keyValueRegExp.matches[2].toLowerCase();
             var value = null;
             if (keyValueRegExp.matches[5] != "") value = keyValueRegExp.matches[5];
             else if (keyValueRegExp.matches[6] != "") value = keyValueRegExp.matches[6];
             else if (keyValueRegExp.matches[7] != "") value = keyValueRegExp.matches[7];
-            command.keys.add(key);
-            command.values.add(value);
-            command.map[key] = value;
+            if (command.attributeValues[attrName] !== void) throw new Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_DUPLICATED, "ARG_NAME", attrName));
+            command.attributeNames.add(attrName);
+            command.attributeValues[attrName] = value;
         }
         typeCheck(command, "Dictionary")
-        assert(command.getKeys().count === 4)
+        assert(command.getKeys().count === 3)
         typeString(command.name)
         assert(command.name.length > 0)
-        typeCheck(command.keys, "Array")
-        assert(command.keys.linq().count(LMD(key){ return key.length === 0; }) === 0 )
-        typeCheck(command.values, "Array")
-        assert(command.keys.count === command.values.count)
-        typeCheck(command.map, "Dictionary")
+        typeCheck(command.attributeNames, "Array")
+        typeCheck(command.attributeValues, "Dictionary")
+        assert(command.attributeNames.count === command.attributeValues.getKeys().count)
     }
 
     Func(_makeEmptyLineCommand)(command:Dictionary) {
         checkArgs
-        assert(command.isEmpty())
-        command.name = "__emptyline";
+        this.makeCommandTemplate(command, "__emptyline");
     }
 
-    Func(_makeCharacterCommand)(command:Dictionary, ch:string) {
+    Func(_makeCharacterCommand)(command:Dictionary, character:string) {
         checkArgs
-        assert(command.isEmpty())
-        command.name = "__ch";
-        command.keys = [ "text" ];
-        command.values = [ ch ];
+        this.makeCommandTemplate(command, "__ch");
+        command.attributeNames.push("text");
+        command.attributeValues.text = character;
     }
 
     Func(_makeRelineCommand)(command:Dictionary) {
         checkArgs
-        assert(command.isEmpty())
-        command.name = "__reline";
+        this.makeCommandTemplate(command, "__reline");
     }
 
     Func(_makeBeginFileCommand)(command:Dictionary, filename:string) {
         checkArgs
-        assert(command.isEmpty())
-        command.name = "__beginfile";
-        command.keys = [ "file" ];
-        command.values = [ filename ];
+        this.makeCommandTemplate(command, "__beginfile");
+        command.attributeNames.push("file");
+        command.attributeValues.file = filename;
     }
 
     Func(_makeEndFileCommand)(command:Dictionary, filename:string) {
         checkArgs
-        assert(command.isEmpty())
-        command.name = "__endfile";
-        command.keys = [ "file" ];
-        command.values = [ filename ];
+        this.makeCommandTemplate(command, "__endfile");
+        command.attributeNames.push("file");
+        command.attributeValues.file = filename;
     }
 
     Func(_goNextLine)() {

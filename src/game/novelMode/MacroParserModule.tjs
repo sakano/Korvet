@@ -16,7 +16,8 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         }
 
         // マクロを展開
-        this._extractParameterMacro(command);
+        var error = this._extractAttributeMacro(command);
+        if (error !== void) return %[ error : error ];
         if (this._extractMacro(command, parser)) {
             return %[ mode : KorvetParserModuleMode_Loop ];
         }
@@ -26,22 +27,24 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         case "macro":       return this._beginRecordMacro(command, parser);
         case "endmacro":    return this._endRecordMacro(command);
         case "__popmacro":  return this._popMacro();
-        case "pmacro":      return this._registerParameterMacro(command);
+        case "amacro":      return this._registerAttributeMacro(command);
         default:            return;
         }
     }
 
 
 
-    var _registerdMacros = %[];
-    var _registerdParameterMacro = %[];
+    var _registeredMacros = %[];
+    var _registeredAttributeMacros = %[];
 
     var _isMacroRecording = false;
     var _recordingMacroName;
     var _recordingMacroCommands = [];
-    var _recordingMacroDefaultParameter = %[];
+    var _recordingMacroDefaultAttributeValues = %[];
+    var _recordingMacroDefaultAttributeNames = [];
 
     var _macroParameters = [];
+    var _macroAttributeMacros = [];
 
     Constructor() {
         super.KorvetParserModule();
@@ -49,27 +52,33 @@ ClassExtends(MacroParserModule, KorvetParserModule)
 
     Finalize() {
         super.finalize();
-        this._registerdMacros.dispose();
-        invalidate this._registerdMacros;
-        this._registerdParameterMacro.dispose();
-        invalidate this._registerdParameterMacro;
+        this._registeredMacros.dispose();
+        invalidate this._registeredMacros;
+        this._registeredAttributeMacros.dispose();
+        invalidate this._registeredAttributeMacros;
+
         this._recordingMacroCommands.dispose();
         invalidate this._recordingMacroCommands;
+        this._recordingMacroDefaultAttributeValues.dispose();
+        invalidate this._recordingMacroDefaultAttributeValues;
+        this._recordingMacroDefaultAttributeNames.dispose();
+        invalidate this._recordingMacroDefaultAttributeNames;
+
         this._macroParameters.dispose();
         invalidate this._macroParameters;
     }
 
     Func(_extractMacro)(command:Dictionary, parser:KorvetParser) {
         checkArgs
-        var macro = this._registerdMacros[command.name];
-        // マクロとして登録されていなければfalse
+        var macro = this._registeredMacros[command.name];
+        // マクロとして登録されていなければfalseを返す
         if (macro === void) return false;
 
         // コマンドを追加する前に現在のコマンドをキャンセル
         parser.cancelHeadCommand();
 
         // マクロ終了箇所に__popmacroコマンドを追加
-        parser.addHeadCommand(this._createPopMacroCommand());
+        parser.addHeadCommand(this._createPopMacroCommand(parser));
 
         // 記録されているコマンドを全て次のコマンドとして追加
         var commands = macro.commands;
@@ -77,82 +86,86 @@ ClassExtends(MacroParserModule, KorvetParserModule)
             parser.addHeadCommand(commands[cmdIndex]);
         }
 
-        // "*"属性はマクロに渡された引数に展開されるようにパラメータマクロを登録しておく
-        var parameters = [];
-        var keys = command.keys;
-        var values = command.values;
-        for (var i = 0; i < keys.count; ++i) {
-            parameters.add(%[
-                key   : keys[i],
-                value : values[i]
-            ]);
+        // マクロ内パラメータを生成
+        var macroParam = command.attributeValues.cloneShallow();
+        var macroParamNames = command.attributeNames.cloneShallow();
+        var attrNames = command.attributeNames;
+        var defAttrNames = macro.defaultAttributeNames;
+        var defAttrValues = macro.defaultAttributeValues;
+        for (var i = 0; i < defAttrNames.count; ++i) {
+            var defAttrName = defAttrNames[i];
+            if (attrNames[defAttrName] !== void) continue;
+            macroParam[defAttrName] = defAttrValues[defAttrName];
+            macroParamNames.add(defAttrName);
         }
-        this._registerdParameterMacro["*"] = parameters;
+        this._macroParameters.push(macroParam);
 
-        // _macroParameterを生成
-        var param = command.map.cloneShallow();
-        var defaultParam = macro.defaultParameter;
-        var defaultParamKeys = defaultParam.getKeys();
-        for (var i = 0; i < defaultParamKeys.count; ++i) {
-            var key = defaultParamKeys[i];
-            if (param[key] !== void) continue;
-            param[key] = defaultParam[key];
-        }
-        this._macroParameters.push(param);
+        // マクロ内の"*"属性はマクロ内パラメータに展開されるように属性マクロを登録しておく
+        var attrMacro = this._createAttributeMacro(macroParamNames, macroParam);
+        this._macroAttributeMacros.push(attrMacro);
+        this._registeredAttributeMacros["*"] = attrMacro;
 
+        // マクロとして処理したらtrueを返す
         return true;
     }
 
-    Func(_createPopMacroCommand)(command:Dictionary) {
-        return %[ name : "__popmacro" ];
+    Func(_createPopMacroCommand)(parser:KorvetParser) {
+        checkArgs
+        var command = %[];
+        parser.makeCommandTemplate(command, "__popmacro");
+        return command;
     }
 
     Func(_popMacro)() {
-        invalidate this._registerdParameterMacro["*"];
-        delete this._registerdParameterMacro["*"];
-        this._macroParameters.pop();
+        invalidate this._macroParameters.pop();
+        invalidate this._macroAttributeMacros.pop();
+        assert(this._macroParameters.count === this._macroAttributeMacros.count);
+        if (this._macroAttributeMacros.count > 0) {
+            this._registeredAttributeMacros["*"] = this._macroAttributeMacros[-1];
+        } else {
+            delete this._registeredAttributeMacros["*"];
+        }
     }
 
-    Func(_extractParameterMacro)(command:Dictionary) {
+    Func(_extractAttributeMacro)(command:Dictionary) {
         checkArgs
         // 属性が無ければ何もしない
-        if (command.keys === void) return;
-
-        var extracted = false;
+        if (command.attributeNames.count === 0) return;
 
         // 属性を１つずつ展開できるかチェックしていく
-        var keys = command.keys;
-        var values = command.values;
-        for (var keyIndex = 0; keyIndex < keys.count; ++keyIndex) {
+        var attrNames = command.attributeNames;
+        var attrValues = command.attributeValues;
+        for (var nameIndex = 0; nameIndex < attrNames.count; ++nameIndex) {
+            var attrName = attrNames[nameIndex];
             // 登録されていない属性名なら何もしない
-            var params = this._registerdParameterMacro[keys[keyIndex]];
-            if (params === void) continue;
+            var attrMacro = this._registeredAttributeMacros[attrName];
+            if (attrMacro === void) continue;
 
             // 属性値を保持し、対象の属性を消去
-            var value = values[keyIndex];
-            keys.erase(keyIndex);
-            values.erase(keyIndex);
+            var attrValue = attrValues[attrName];
+            attrNames.erase(nameIndex);
+            delete attrValues[attrName];
 
             // 登録されている内容を挿入
-            for(var paramIndex = params.count-1; paramIndex >= 0; --paramIndex) {
-                keys.insert(keyIndex, params[paramIndex].key);
-                // 属性値が "*" のときは元の属性値に置き換える
-                values.insert(keyIndex, params[paramIndex].value === "*" ? value : params[paramIndex].value);
+            for(var macroIndex = attrMacro.count-1; macroIndex >= 0; --macroIndex) {
+                var insertAttrName = attrMacro[macroIndex].name;
+                var insertAttrValue = attrMacro[macroIndex].value;
+                var index = attrNames.find(insertAttrName);
+                if (index < 0) {
+                    attrNames.insert(nameIndex, insertAttrName);
+                    // 属性値が "*" のときは元の属性値に置き換える
+                    attrValues[insertAttrName] = insertAttrValue !== "*" ? insertAttrValue : attrValue;
+                } else if (index < nameIndex) {
+                    // 属性マクロより前に、属性マクロに含まれる属性名と同じ属性が指定されている
+                    return new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_DUPLICATED, "ARG_NAME", insertAttrName));
+                } else {
+                    // 属性マクロより後に、属性マクロに含まれる属性名と同じ属性が指定されている
+                    doNothing();
+                }
             }
 
             // 展開した内容も再度チェックされるように１つ戻る
-            --keyIndex;
-
-            extracted = true;
-        }
-
-        // 展開された場合はmapを再構築
-        if (extracted) {
-            var map = command.map;
-            map.clear();
-            for (var i = 0; i < keys.count; ++i) {
-                map[keys[i]] = values[i];
-            }
+            --nameIndex;
         }
     }
 
@@ -163,31 +176,29 @@ ClassExtends(MacroParserModule, KorvetParserModule)
             return %[ error : new global.Error(ASSERT_SCRIPT_NESTED_MACRO) ];
         }
 
-        // name属性の値を取得
-        var name;
-        var keys = command.keys;
-        var values = command.values;
-        for (var i = 0; i < keys.count; ++i) {
-            if (name === void && keys[i] === "name") {
-                // name属性の値が指定されていなければエラー
-                if (values[i] === null) {
-                    return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_UNKNOWN_VALUE, "ARG_NAME", "name", "ARG_VALUE", null)) ];
-                }
-                name = values[i];
-                continue;
-            }
-            // 最初のname属性以外は記録
-            this._recordingMacroDefaultParameter[keys[i]] = values[i];
-        }
-
-        // name属性が指定されていなければエラー
-        if (name === void) {
-            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ARGUMENT_REQUIRED, "ARG_NAME", "name")) ];
-        }
-
         // マクロの記録を開始
         this._isMacroRecording = true;
-        this._recordingMacroName = name;
+
+        // マクロ名を記録
+        this._recordingMacroName = command.attributeValues._name;
+
+        // マクロ名が正しいかチェック
+        switch (this._recordingMacroName) {
+        case void: // _name属性が指定されていないのでエラー
+            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_REQUIRED, "ARG_NAME", "_name")) ];
+        case null: // 属性値が指定されていないのでエラー
+            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_VALUE_REQUIRED, "ARG_NAME", "_name")) ];
+        case "": case "*": // 使えない名前なのでエラー
+            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_VALUE_ILLEGAL, "ARG_NAME", "_name", "ARG_VALUE", this._recordingMacroName)) ];
+        }
+
+        // デフォルト属性を記録
+        this._recordingMacroDefaultAttributeValues.assign(command.attributeValues);
+        this._recordingMacroDefaultAttributeNames.assign(command.attributeNames);
+
+        // _name属性を消去
+        delete this._recordingMacroDefaultAttributeValues._name;
+        this._recordingMacroDefaultAttributeNames.remove("_name");
 
         // 処理済みなのでコマンドをキャンセル
         return %[ mode : KorvetParserModuleMode_Cancel ];
@@ -196,7 +207,7 @@ ClassExtends(MacroParserModule, KorvetParserModule)
     Func(_recordMacro)(command:Dictionary) {
         checkArgs
         assert(this._isMacroRecording)
-        // マクロの内容を記録
+        // コマンドを記録
         var clonedCommand = command.cloneShallow();
         this._recordingMacroCommands.add(clonedCommand);
     }
@@ -209,50 +220,49 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         }
         typeString(this._recordingMacroName)
 
-        // 記録した内容を_registerdMacrosに登録
-        this._registerdMacros[this._recordingMacroName] = %[
+        // 記録されている内容を_registeredMacrosに登録
+        this._registeredMacros[this._recordingMacroName] = %[
             commands : this._recordingMacroCommands,
-            defaultParameter : this._recordingMacroDefaultParameter
+            defaultAttributeValues: this._recordingMacroDefaultAttributeValues,
+            defaultAttributeNames : this._recordingMacroDefaultAttributeNames
         ];
 
-        // マクロ記録を終了
+        // マクロの記録を終了
         this._isMacroRecording = false;
         this._recordingMacroName = void;
         this._recordingMacroCommands = [];
-        this._recordingMacroDefaultParameter = %[];
+        this._recordingMacroDefaultAttributeValues = %[];
+        this._recordingMacroDefaultAttributeNames = [];
     }
 
-    Func(_registerParameterMacro)(command:Dictionary) {
+    Func(_registerAttributeMacro)(command:Dictionary) {
         checkArgs
-        // name属性の値を取得し、それ以外はparametersに記録
-        var name;
-        var parameters = [];
-        var keys = command.keys;
-        var values = command.values;
-        for (var i = 0; i < keys.count; ++i) {
-            if (name === void && keys[i] === "name") {
-                // name属性の値が指定されていなければエラー
-                if (values[i] === null) {
-                    return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_UNKNOWN_VALUE, "ARG_NAME", "name", "ARG_VALUE", null)) ];
-                }
-                name = values[i];
-                continue;
-            }
-            parameters.add(%[
-                key   : keys[i],
-                value : values[i]]
-            );
+        var attrMacroName = command.attributeValues._name;
+        switch (attrMacroName) {
+        case void: // _name属性が指定されていないのでエラー
+            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_REQUIRED, "ARG_NAME", "_name")) ];
+        case null: // 属性値が指定されていないのでエラー
+            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_VALUE_REQUIRED, "ARG_NAME", "_name")) ];
+        case "": case "*": // 使えない名前なのでエラー
+            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_VALUE_ILLEGAL, "ARG_NAME", "_name", "ARG_VALUE", attrMacroName)) ];
         }
 
-        // name属性が指定されていなければエラー
-        if (name === "") {
-            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ARGUMENT_REQUIRED, "ARG_NAME", "name")) ];
-        }
-
-        // マクロの内容を_registerdParameterMacroに登録
-        this._registerdParameterMacro[name] = parameters;
+        // 属性マクロを登録
+        this._registeredAttributeMacros[attrMacroName] = this._createAttributeMacro(command.attributeNames, command.attributeValues);
 
         // 処理済みなのでコマンドをキャンセル
         return %[ mode : KorvetParserModuleMode_Cancel ];
+    }
+
+    Func(_createAttributeMacro)(attrNames:Array, attrValues:Dictionary) {
+        var attrMacro = [];
+        for (var i = 0; i < attrNames.count; ++i) {
+            if (attrNames[i] === "_name") continue;
+            attrMacro.add(%[
+                name : attrNames[i],
+                value : attrValues[attrNames[i]]
+            ]);
+        }
+        return attrMacro;
     }
 }

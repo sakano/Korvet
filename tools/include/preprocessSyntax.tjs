@@ -66,6 +66,7 @@ m4_define(&--__FUNC_ARGS--&,&--m4_define(&--checkArgs--&)m4_ifelse($1,,,&--(__FU
 m4_define(&--__FUNC_ARG_REMOVE_TYPES--&,&--m4_ifelse($1,,,&--(__FUNC_ARGS_INTERNAL($@))--&)--&)m4_dnl
 m4_define(&--checkArgs--&)m4_dnl
 m4_define(&--Func--&,&--m4_dnl
+    m4_define(&--__FUNC_NAME--&,$1)m4_dnl
     m4_ifelse(RELEASE, 1,m4_dnl
         &--function $1 __FUNC_ARG_REMOVE_TYPES--&,m4_dnl
         &--__FuncImpl("__PARENT_CLASS_NAME","__CLASS_NAME","$1","m4___file__",m4___line__);function $1 __FUNC_ARGS--&)--&)m4_dnl

@@ -1,11 +1,11 @@
 ; 汎用
-@pmacro name=t time=*
-@pmacro name=f fade=*
+@amacro _name=t time=*
+@amacro _name=f fade=*
 
-[macro name=u][update][endmacro]
-[macro name=wt][waittrans][endmacro]
-[macro name=wact][waitaction][endmacro]
-@macro name=sync
+[macro _name=u][update][endmacro]
+[macro _name=wt][waittrans][endmacro]
+[macro _name=wact][waitaction][endmacro]
+@macro _name=sync
 	@u
 	@wt
 	@wact
@@ -14,17 +14,16 @@
 
 
 ; 背景コマンドの省略記法
-[macro name=道][stage place=道 *][endmacro]
-@pmacro name=昼 stime=昼
-@pmacro name=夜 stime=夜
-@pmacro name=小 size=0
-@pmacro name=中 size=1
-@pmacro name=大 size=2
+[macro _name=道][stage place=道 *][endmacro]
+@amacro _name=昼 stime=昼
+@amacro _name=夜 stime=夜
+@amacro _name=小 size=0
+@amacro _name=中 size=1
+@amacro _name=大 size=2
 
 
 
 ; 本編開始
-
 @道 昼 中 f=500
 背景を表示しました
 

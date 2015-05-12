@@ -171,22 +171,23 @@ ClassExtends(NovelMode, GameMode)
 
     Func(_resumeCommandLoop)() {
         while (true) {
-            var commandInfo = %[];
-            var error = _parser.getNextCommand(commandInfo);
+            var command = %[];
+            var error = _parser.getNextCommand(command);
             if (!success(error)) {
                 this.onScriptError(expandMessage(ASSERT_SCRIPT_PARSER_ERROR, "MES", error.message));
                 break;
             }
-            if (commandInfo.isEmpty()) break;
-            var interrupt = this._doCommand(commandInfo);
+            if (command.isEmpty()) break;
+            var interrupt = this._doCommand(command);
             if (interrupt) return;
         }
     }
 
-    Func(_doCommand)(commandInfo:Dictionary) {
+    Func(_doCommand)(command:Dictionary) {
+        checkArgs
         var interrupt = false;
         for (var i = 0; i < this._commandHandlers.count; ++i) {
-            var result = this._commandHandlers[i].onCommand(commandInfo);
+            var result = this._commandHandlers[i].onCommand(command);
             if (result === void) continue;
             if (result.trans !== void) {
                 this._systemCommandHandler.registerTransInfo(result.trans);
