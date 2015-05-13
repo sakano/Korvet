@@ -32,32 +32,33 @@ m4_dnl
 m4_dnl
 m4_define(&--__FUNC_ARG_CHECK--&,m4_dnl
     &--m4_define(&--__FUNC_ARG_CHECK_COND--&,0)--&m4_dnl
-    &--m4_ifelse($2,void,     &--typeVoid($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,null,     &--typeNull($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,null+,    &--typeNullVoid($1)--&    &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,object,   &--typeObject($1)--&      &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,object+,  &--typeObjectVoid($1)--&  &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,string,   &--typeString($1)--&      &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,string+,  &--typeStringVoid($1)--&  &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,int,      &--typeInt($1)--&         &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,int+,     &--typeIntVoid($1)--&     &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,real,     &--typeReal($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,real+,    &--typeRealVoid($1)--&    &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,octet,    &--typeOctet($1)--&       &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,octet+,   &--typeOctetVoid($1)--&   &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,Function, &--typeFunction($1)--&    &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,Function+,&--typeFunctionVoid($1)--&&--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,Property, &--typeProperty($1)--&    &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,Property+,&--typePropertyVoid($1)--&&--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,Class,    &--typeClass($1)--&       &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,Class+,   &--typeClassVoid($1)--&   &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,number,   &--typeNumber($1)--&      &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,number+,  &--typeNumberVoid($1)--&  &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,bool,     &--typeBool($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,bool+,    &--typeBoolVoid($1)--&    &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,any,      &--typeNotVoid($1)--&     &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse($2,any+,     &----&                    &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
-    &--m4_ifelse(m4_len($2),0,                          &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,void,     &--typeVoid($1)--&            &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,null,     &--typeNull($1)--&            &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,null+,    &--typeNullVoid($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,object,   &--typeObject($1)--&          &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,object+,  &--typeObjectVoid($1)--&      &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,string,   &--typeString($1)--&          &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,string+,  &--typeStringVoid($1)--&      &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,string?,  &--typeStringNullable($1)--&  &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,int,      &--typeInt($1)--&             &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,int+,     &--typeIntVoid($1)--&         &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,real,     &--typeReal($1)--&            &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,real+,    &--typeRealVoid($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,octet,    &--typeOctet($1)--&           &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,octet+,   &--typeOctetVoid($1)--&       &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,Function, &--typeFunction($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,Function+,&--typeFunctionVoid($1)--&    &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,Property, &--typeProperty($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,Property+,&--typePropertyVoid($1)--&    &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,Class,    &--typeClass($1)--&           &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,Class+,   &--typeClassVoid($1)--&       &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,number,   &--typeNumber($1)--&          &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,number+,  &--typeNumberVoid($1)--&      &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,bool,     &--typeBool($1)--&            &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,bool+,    &--typeBoolVoid($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,any,      &--typeNotVoid($1)--&         &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,any+,     &----&                        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse(m4_len($2),0,                              &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
     &--m4_ifelse(__FUNC_ARG_CHECK_COND,0,&--m4_ifelse(m4_index($2,?),m4_decr(m4_len($2)),typeCheckNullable($1,"m4_substr($2,0,m4_decr(m4_len($2)))"),typeCheck($1,"$2"))--&)--&m4_dnl
     &--m4_undefine(&--__FUNC_ARG_CHECK_COND--&)--&)m4_dnl
 m4_define(&--__FUNC_ARG--&,&--m4_regexp($1,&--\([^:]+?\):?\([^ =]+?\)\(.+\)?--&,&--m4_ifelse($1,\1:\2,m4_define(&--checkArgs--&, checkArgs __FUNC_ARG_CHECK(\1, \2)))\1\3--&)--&)m4_dnl

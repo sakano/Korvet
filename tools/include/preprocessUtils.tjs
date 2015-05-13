@@ -63,6 +63,8 @@ m4_define(&--typeClassVoid--&,    &--assert($1 === void || $1 instanceof "Class"
 m4_define(&--typeNumberVoid--&,   &--assert($1 === void || $1 instanceof "Number",      &--m4_ifelse($2,,&--"'__escape_string($1)' must be number.(%s)".sprintf($1)--&  ,$2)--&)--&)m4_dnl
 m4_define(&--typeBoolVoid--&,     &--assert($1 === void || $1 === true || $1 === false, &--m4_ifelse($2,,&--"'__escape_string($1)' must be bool.(%s)".sprintf($1)--&    ,$2)--&)--&)m4_dnl
 m4_dnl
+m4_define(&--typeStringNullable--&,   &--assert($1 === null || typeof $1 === "String",      &--m4_ifelse($2,,&--"'__escape_string($1)' must be string.(%s)".sprintf($1)--&  ,$2)--&)--&)m4_dnl
+m4_dnl
 m4_define(&--typeNotVoid--&, &--assert($1 !== void, &--m4_ifelse($2,,&--"'__escape_string($1)' must not be void.(%s)".sprintf($1)--&,$2)--&)--&)m4_dnl
 m4_define(&--typeNotNull--&, &--assert($1 !== null, &--m4_ifelse($2,,&--"'__escape_string($1)' must not be null.(%s)".sprintf($1)--&,$2)--&)--&)m4_dnl
 m4_dnl
