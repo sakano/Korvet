@@ -83,7 +83,7 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         parser.addHeadCommand(this._createPopMacroCommand(parser));
 
         // 記録されているコマンドを全て次のコマンドとして追加
-        var commands = macro.commands;
+        var commands = macro.commands.clone();
         for (var cmdIndex = commands.count-1; cmdIndex >= 0; --cmdIndex) {
             parser.addHeadCommand(commands[cmdIndex]);
         }
