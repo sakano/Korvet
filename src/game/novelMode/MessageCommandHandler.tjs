@@ -53,7 +53,7 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
     }
 
     Func(_chCommandImpl)(command:Dictionary) {
-        this._currentText += this._validateAttributeSpecified(command.attributeValues.text, "text", "X");
+        this._currentText += this._mode.validateAttributeSpecified(command.attributeValues.text, "text", "X");
     }
 
     Func(_sequenceFactory) {

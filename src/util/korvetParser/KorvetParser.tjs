@@ -118,6 +118,7 @@ Class(KorvetParser)
     }
 
 
+    var _novelMode;
 
     var _lineParser = new global.LineParser();
     var _modules = [];
@@ -141,7 +142,9 @@ Class(KorvetParser)
     Func(clear)() {}
     Func(clone)() {}
 
-    Constructor() {}
+    Constructor(novelMode:NovelMode) {
+        this._novelMode = novelMode;
+    }
 
     Finalize() {
         invalidate this._lineParser;
@@ -263,7 +266,10 @@ Class(KorvetParser)
             if (keyValueRegExp.matches[5] != "") value = keyValueRegExp.matches[5];
             else if (keyValueRegExp.matches[6] != "") value = keyValueRegExp.matches[6];
             else if (keyValueRegExp.matches[7] != "") value = keyValueRegExp.matches[7];
-            if (command.attributeValues[attrName] !== void) throw new Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_DUPLICATED, "ARG_NAME", attrName));
+            if (command.attributeValues[attrName] !== void) {
+                this._novelMode.notifyAttributeDuplicatedError(attrName);
+                command.attributeNames.remove(attrName);
+            }
             command.attributeNames.add(attrName);
             command.attributeValues[attrName] = value;
         }

@@ -33,6 +33,7 @@ ClassExtends(MacroParserModule, KorvetParserModule)
     }
 
 
+    var _novelMode;
 
     var _registeredMacros = %[];
     var _registeredAttributeMacros = %[];
@@ -46,8 +47,9 @@ ClassExtends(MacroParserModule, KorvetParserModule)
     var _macroParameters = [];
     var _macroAttributeMacros = [];
 
-    Constructor() {
+    Constructor(novelMode:NovelMode) {
         super.KorvetParserModule();
+        this._novelMode = novelMode;
     }
 
     Finalize() {
@@ -152,14 +154,20 @@ ClassExtends(MacroParserModule, KorvetParserModule)
                 var insertAttrValue = attrMacro[macroIndex].value;
                 var index = attrNames.find(insertAttrName);
                 if (index < 0) {
-                    attrNames.insert(nameIndex, insertAttrName);
-                    // 属性値が "*" のときは元の属性値に置き換える
-                    attrValues[insertAttrName] = insertAttrValue !== "*" ? insertAttrValue : attrValue;
+                    // 同じ属性は指定されていない
+                    // 属性を挿入する
+                    this._insertAttribute(nameIndex, insertAttrName, insertAttrValue, attrValue, attrNames, attrValues);
                 } else if (index < nameIndex) {
                     // 属性マクロより前に、属性マクロに含まれる属性名と同じ属性が指定されている
-                    return new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_DUPLICATED, "ARG_NAME", insertAttrName));
+                    this._novelMode.notifyAttributeDuplicatedError(insertAttrName);
+                    // 同じ属性を削除してから属性を挿入
+                    attrNames.erase(index);
+                    delete attrValues[insertAttrName];
+                    --nameIndex;
+                    this._insertAttribute(nameIndex, insertAttrName, insertAttrValue, attrValue, attrNames, attrValues);
                 } else {
                     // 属性マクロより後に、属性マクロに含まれる属性名と同じ属性が指定されている
+                    // 後の指定を優先するので何もしない
                     doNothing();
                 }
             }
@@ -167,6 +175,13 @@ ClassExtends(MacroParserModule, KorvetParserModule)
             // 展開した内容も再度チェックされるように１つ戻る
             --nameIndex;
         }
+    }
+
+    Func(_insertAttribute)(index:int, insertAttrName:string, insertAttrValue:string?, orgAttrValue:string?, attrNames:Array, attrValues:Dictionary) {
+        checkArgs
+        attrNames.insert(index, insertAttrName);
+        // 属性値が "*" のときは元の属性値に置き換える
+        attrValues[insertAttrName] = insertAttrValue !== "*" ? insertAttrValue : orgAttrValue;
     }
 
     Func(_beginRecordMacro)(command:Dictionary, parser:KorvetParser) {
@@ -180,23 +195,13 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         this._isMacroRecording = true;
 
         // マクロ名を記録
-        this._recordingMacroName = command.attributeValues._name;
-
-        // マクロ名が正しいかチェック
-        switch (this._recordingMacroName) {
-        case void: // _name属性が指定されていないのでエラー
-            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_REQUIRED, "ARG_NAME", "_name")) ];
-        case null: // 属性値が指定されていないのでエラー
-            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_VALUE_REQUIRED, "ARG_NAME", "_name")) ];
-        case "": case "*": // 使えない名前なのでエラー
-            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_VALUE_ILLEGAL, "ARG_NAME", "_name", "ARG_VALUE", this._recordingMacroName)) ];
-        }
+        this._recordingMacroName = this._validateMacroName(command.attributeValues._name);
 
         // デフォルト属性を記録
         this._recordingMacroDefaultAttributeValues.assign(command.attributeValues);
         this._recordingMacroDefaultAttributeNames.assign(command.attributeNames);
 
-        // _name属性を消去
+        // デフォルト属性から_name属性を消去
         delete this._recordingMacroDefaultAttributeValues._name;
         this._recordingMacroDefaultAttributeNames.remove("_name");
 
@@ -216,7 +221,8 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         checkArgs
         // マクロ記録中でなければエラー
         if (!this._isMacroRecording) {
-            return %[ error : new global.Error(ASSERT_SCRIPT_SINGLE_ENDMACRO) ];
+            this._novelMode.onScriptError(ASSERT_SCRIPT_SINGLE_ENDMACRO);
+            return %[ mode : KorvetParserModuleMode_Cancel ];
         }
         typeString(this._recordingMacroName)
 
@@ -233,19 +239,15 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         this._recordingMacroCommands = [];
         this._recordingMacroDefaultAttributeValues = %[];
         this._recordingMacroDefaultAttributeNames = [];
+
+        // 処理済みなのでコマンドをキャンセル
+        return %[ mode : KorvetParserModuleMode_Cancel ];
     }
 
     Func(_registerAttributeMacro)(command:Dictionary) {
         checkArgs
-        var attrMacroName = command.attributeValues._name;
-        switch (attrMacroName) {
-        case void: // _name属性が指定されていないのでエラー
-            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_REQUIRED, "ARG_NAME", "_name")) ];
-        case null: // 属性値が指定されていないのでエラー
-            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_VALUE_REQUIRED, "ARG_NAME", "_name")) ];
-        case "": case "*": // 使えない名前なのでエラー
-            return %[ error : new global.Error(expandMessage(ASSERT_SCRIPT_ATTRIBUTE_VALUE_ILLEGAL, "ARG_NAME", "_name", "ARG_VALUE", attrMacroName)) ];
-        }
+        // マクロ名を取得
+        var attrMacroName = this._validateMacroName(command.attributeValues._name);
 
         // 属性マクロを登録
         this._registeredAttributeMacros[attrMacroName] = this._createAttributeMacro(command.attributeNames, command.attributeValues);
@@ -264,5 +266,15 @@ ClassExtends(MacroParserModule, KorvetParserModule)
             ]);
         }
         return attrMacro;
+    }
+
+    Func(_validateMacroName)(attrValue:string?, attrName:string = "_name") {
+        attrValue = this._novelMode.validateAttributeSpecified(attrValue, attrName, "__error_macro_name");
+        attrValue = this._novelMode.validateAttributeValueSpecified(attrValue, attrName, "__error_macro_name");
+        if (attrValue.length === 0 || attrValue === "*") {
+            this._novelMode.notifyIllegalAttributeValueError(attrValue, attrName);
+            attrValue = "__error_macro_name";
+        }
+        return attrValue;
     }
 }

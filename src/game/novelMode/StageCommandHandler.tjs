@@ -59,7 +59,7 @@ ClassExtends(StageCommandHandler, SpriteCommandHandler)
 
     Func(_changeFileCommandImpl)(attrValue:any, attrName:string, attrValues:Dictionary) {
         checkArgs
-        var validatedValue = self._validateAttributeSpecified(attrValue, attrName, self[targetName]);
+        var validatedValue = self._mode.validateAttributeSpecified(attrValue, attrName, self[targetName]);
 
         // 同じままなら何もしない
         if (validatedValue === self[targetName]) return;
