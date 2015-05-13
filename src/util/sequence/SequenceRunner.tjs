@@ -36,6 +36,7 @@ Class(SequenceRunner)
     var _currentTick;
     var _holders = [];
     var _completedHolders = [];
+    var _foreachExecuteCount = 0;
 
     Constructor(currentTick:int) {
         checkArgs
@@ -56,14 +57,18 @@ Class(SequenceRunner)
     }
 
     Func(_foreachHolders)(callback:function, *) {
-        this._invalidateCompletedHolders();
-
+        ++this._foreachExecuteCount;
         // callbackを実行
         for (var i = 0; i < this._holders.count; ++i) {
-            callback(this._holders[i], *);
+            if (this._holders[i].running) {
+                callback(this._holders[i], *);
+            }
         }
+        --this._foreachExecuteCount;
 
-        this._invalidateCompletedHolders();
+        if (this._foreachExecuteCount === 0) {
+            this._invalidateCompletedHolders();
+        }
     }
 
     Func(_invalidateCompletedHolders)() {

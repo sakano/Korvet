@@ -134,7 +134,7 @@ ClassExtends(NovelMode, GameMode)
     }
 
     Func(onAllActionEnd)() {
-        assert(this._actionCount >= 0)
+        assert(this._actionCount == 0)
         this._actionCount = 0;
         this._trigger("allActionCompleted");
     }
@@ -242,13 +242,20 @@ ClassExtends(NovelMode, GameMode)
 
     Func(_resumeCommandLoop)() {
         while (true) {
+            // 次のコマンドを得る
             var command = %[];
             var error = _parser.getNextCommand(command);
+
+            // パース中にエラーが発生したら停止
             if (!success(error)) {
                 this.onScriptError(expandMessage(ASSERT_SCRIPT_PARSER_ERROR, "MES", error.message));
                 break;
             }
+
+            // コマンドが得られなかったら停止
             if (command.isEmpty()) break;
+
+            // コマンドを実行する
             var interrupt = this._doCommand(command);
             if (interrupt) return;
         }
@@ -256,6 +263,27 @@ ClassExtends(NovelMode, GameMode)
 
     Func(_doCommand)(command:Dictionary) {
         checkArgs
+        // delay属性が存在するなら遅延実行
+        if (command.attributeValues.delay !== void) {
+            var delay = command.attributeValues.delay;
+            delay = validateAttributeSpecified(delay, "delay", "1");
+            delay = validateAttributeValueInteger(delay, "delay", 1, void);
+            // delay属性を消去
+            command.attributeNames.remove("delay");
+            delete command.attributeValues.delay;
+            // コマンドを実行
+            this._runner.run(global.SequenceRunner.sequence()
+                .wait("update")
+                .beginSkip("skipDelay")
+                    .wait(delay)
+                    .call(this._doCommand, command)
+                    .call(this._doUpdateCommand)
+                .endSkip()
+            );
+            return false;
+        }
+
+        // コマンドを_commandHandlersに通知して実行
         var interrupt = false;
         for (var i = 0; i < this._commandHandlers.count; ++i) {
             var result = this._commandHandlers[i].onCommand(command);
@@ -263,7 +291,6 @@ ClassExtends(NovelMode, GameMode)
             if (result.trans !== void) {
                 this._systemCommandHandler.registerTransInfo(result.trans);
             }
-            // if (result.delays !== void) notImplemented();
             if (result.sequences !== void) for (var i = 0; i < result.sequences.count; ++i) {
                 this._runner.run(result.sequences[i]);
             }
@@ -273,8 +300,18 @@ ClassExtends(NovelMode, GameMode)
         return interrupt;
     }
 
+    Func(_doUpdateCommand)() {
+        this._doCommand(%[
+            name : "update",
+            attributeNames : [],
+            attributeValues : %[]
+        ]);
+    }
+
     Func(_resumeFromDrawMessage)() {
-        this._runner.skipAllSequences();
+        this._trigger("skipDelay");
+        this._trigger("skipAction");
+        this._trigger("skipTrans");
         this.resumeCommandLoopAsync();
     }
 

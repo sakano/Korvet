@@ -2851,6 +2851,27 @@ FILE_INCLUDE_GUARD
         assertAlways(props.targetProperty2 === 100)
         assertAlways(props.targetProperty3 === -100)
     }
+    {
+        init();
+        runner.run(sequence().wait("click").call(func).call(runner.trigger, "label"));
+        runner.run(sequence().wait("label").call(func2));
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2")
+    }
+    {
+        init();
+        runner.run(sequence()
+            .wait("click")
+            .call(func)
+            .call(LMD() {
+                runner.run(sequence().wait("label").call(func2));
+            } incontextof %[ runner:runner, sequence:sequence, func2:func2 ])
+            .call(runner.trigger, "label"));
+        assertAlways(called.join(":") === "")
+        runner.trigger("click");
+        assertAlways(called.join(":") === "func:func2")
+    }
 
 
     init();

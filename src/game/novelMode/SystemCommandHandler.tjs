@@ -52,8 +52,7 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
     }
 
     Func(_beginPageCommandImpl)() {
-        this._trigger("update");
-        return this._beginTransition();
+        return this._updateCommandImpl();
     }
 
     Func(_endPageCommandImpl)() {

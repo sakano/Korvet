@@ -1,6 +1,7 @@
 ; ”Ä—p
 @amacro _name=t time=*
 @amacro _name=f fade=*
+@amacro _name=d delay=*
 
 [macro _name=u][update][endmacro]
 [macro _name=wt][waittrans][endmacro]
@@ -25,23 +26,19 @@
 
 ; –{•ÒŠJŽn
 @“¹ ’‹ ’† f=500
+@“¹ –é d=2000
+@sync
 ”wŒi‚ð•\Ž¦‚µ‚Ü‚µ‚½
 
-@stage angle=180 t=1000
-@sync
+@stage angle=180 t=2000
+@stage angle=0 t=2000 d=2000
 ‰ñ“]‚µ‚Ü‚µ‚½
 
 @stage scalex=200 t=1000
-@sync
+@stage scaley=200 t=1000 d=1000
+@stage scalex=100 t=1000 d=1500
+@stage scaley=100 t=1000 d=2000
 Šg‘å‚µ‚Ü‚µ‚½
 
-@stage shearx=100 t=1000
-@sync
-™’’f‚µ‚Ü‚µ‚½
-
-@stage angle=0 t=1000
-@stage scalex=100 t=2000
-@stage shearx=0 t=3000
-@sync
-ƒŠƒZƒbƒg
+test
 
