@@ -15,6 +15,7 @@ ClassExtends(AbstractDrawableCommandHandler, AbstractCommandHandler)
     Constructor(mode:NovelMode) {
         checkArgs
         super.AbstractCommandHandler(mode);
+        assert(!this._inTransition)
     }
 
     Finalize() {

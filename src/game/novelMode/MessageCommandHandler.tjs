@@ -9,60 +9,241 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
         return method(command);
     }
 
+    Func(createResumeDrawingMessageSequence)() {
+        this._clearTextLayer();
+        return this._createDrawMessageSequence();
+    }
+
+    OverrideFunc(beforeTransition)() {
+        this._updateLayerBack();
+    }
+
+    OverrideFunc(afterTransition)() {
+        this._baseLayerFore <-> this._baseLayerBack;
+        this._textLayerFore <-> this._textLayerBack;
+    }
+
+    OverrideFunc(draw)(force:bool = false) {}
+    OverrideFunc(drawInTransition)() {}
+
 
 
     var _commandMethods = %[
         __beginpage : _beginPageCommandImpl,
         __endpage   : _endPageCommandImpl,
         __ch        : _chCommandImpl,
+        __reline    : _relineCommandImpl,
     ];
 
-    var _currentText = "";
-    var _drawnTextIndex = 0;
+    var _textLayerFore;
+    var _textLayerBack;
 
-    Constructor(mode:NovelMode) {
+    var _baseLayerFore;
+    var _baseLayerBack;
+
+    var _currentMessages = [];
+
+    var _textDrawer;
+
+    var _drawingMessageIndex = 0;
+    var _drawingLeft = 0;
+    var _drawingLineNumber = 0;
+
+    var _baseLeft = 0;
+    var _baseTop = 576;
+    var _baseWidth = 1280;
+    var _baseHeight = 132;
+
+    var _textLeft = 24;
+    var _textTop = 578;
+
+    property _fontHeight {
+        setter(value) { this._textDrawer.size = value; }
+        getter { return this._textDrawer.size; }
+    };
+    var _fontRubyHeight = 12;
+    var _fontSpace = 0;
+
+    var _lineHeight = 40;
+    var _lineWidth = 1232;
+    var _lineNumber = 3;
+    
+
+    Constructor(mode:NovelMode, parentLayerFore:Layer, parentLayerBack:Layer) {
         checkArgs
         super.AbstractDrawableCommandHandler(mode);
+
+        this._baseLayerFore = this._createBaseLayer(parentLayerFore);
+        this._baseLayerBack = this._createBaseLayer(parentLayerBack);
+
+        this._textLayerFore = this._createTextLayer(parentLayerFore);
+        this._textLayerBack = this._createTextLayer(parentLayerBack);
+
+        this._textDrawer = this._createTextDrawer(System_DefaultFont, 26);
     }
 
     Finalize() {
         super.finalize();
         invalidate this._commandMethods;
+
+        invalidate this._textLayerFore;
+        invalidate this._textLayerBack;
+
+        invalidate this._baseLayerFore;
+        invalidate this._baseLayerBack;
+
+        this._currentMessages.dispose();
+        invalidate this._currentMessages;
+
+        invalidate this._textDrawer;
     }
+
+    Func(_createTextLayer)(parentLayer:Layer) {
+        checkArgs
+        var layer = new global.Layer(parentLayer.window, parentLayer);
+        layer.setSize(parentLayer.width, parentLayer.height);
+        layer.fill(0);
+        layer.visible = true;
+        return layer;
+    }
+
+    Func(_createBaseLayer)(parentLayer:Layer) {
+        checkArgs
+        var layer = new global.Layer(parentLayer.window, parentLayer);
+        layer.setSize(parentLayer.width, parentLayer.height);
+        layer.fillRect(this._baseLeft, this._baseTop, this._baseWidth, this._baseHeight, 0xFF000000);
+        layer.opacity = 128;
+        layer.visible = true;
+        return layer;
+    }
+
+    Func(_createTextDrawer)(fontFace:string, size:int) {
+        checkArgs
+        this._textLayerFore.font.face = this._textLayerBack.face = fontFace;
+        this._textLayerFore.font.height = this._textLayerBack.font.height = size;
+        return new global.TextDrawer(fontFace, size);
+    }
+
+    Func(_updateLayerBack)() {
+        this._baseLayerBack.assignImages(this._baseLayerFore);
+        this._textLayerBack.assignImages(this._textLayerFore);
+    }
+
+    Func(_clearTextLayer)() {
+        this._textLayerFore.fill(0);
+        if (this._inTransition) {
+            this._textLayerBack.fill(0);
+        }
+    }
+
 
     Func(_beginPageCommandImpl)(command:Dictionary) {
-        this._currentText = "";
-        this._drawnTextIndex = 0;
-    }
-
-    Func(_endPageCommandImpl)(command:Dictionary) {
-        assert(this._currentText.length > 0)
-        return %[
-            interrupt : true,
-            sequences : [
-                global.SequenceRunner.sequence()
-                    .beginSkip("click")
-                        .beginLoop(this._currentText.length)
-                            .factory(this._sequenceFactory)
-                        .endLoop()
-                    .endSkip()
-                    .wait("click")
-                    .call(this._mode.onDrawMessageCompleted)
-            ]
-        ];
+        this._currentMessages.clear();
+        this._drawingMessageIndex = 0;
+        this._drawingLeft = 0;
+        this._drawingLineNumber = 0;
+        this._clearTextLayer();
     }
 
     Func(_chCommandImpl)(command:Dictionary) {
-        this._currentText += this._mode.validateAttributeSpecified(command.attributeValues.text, "text", "X");
+        var character = this._mode.validateAttributeSpecified(command.attributeValues.text, "text", "X");
+        this._currentMessages.add(%[ type:"character", text:character ]);
     }
 
-    Func(_sequenceFactory) {
+    Func(_relineCommandImpl)(command:Dictionary) {
+        this._currentMessages.add(%[ type:"reline" ]);
+    }
+
+    Func(_endPageCommandImpl)(command:Dictionary) {
+        assert(this._currentMessages.count> 0)
+        return %[
+            interrupt : true,
+            sequences : [ this._createDrawMessageSequence() ]
+        ];
+    }
+
+    Func(_createDrawMessageSequence)() {
         return global.SequenceRunner.sequence()
-            .call(this._drawCharacter, ++this._drawnTextIndex)
-            .wait(500);
+            .beginSkip("click")
+                .factory(this._drawMessageSequenceFactory)
+            .endSkip();
     }
 
-    Func(_drawCharacter)(index:int) {
-        global.Debug.message(this._currentText.substr(0, index));
+    Func(_drawMessageSequenceFactory) {
+        var message = this._currentMessages[this._drawingMessageIndex];
+        while (message !== void && message.type === "reline") {
+            // 改行
+            this._doReline();
+            ++this._drawingMessageIndex;
+            message = this._currentMessages[this._drawingMessageIndex];
+        }
+
+        // 最後まで実行し終わったら
+        if (message === void) {
+            return global.SequenceRunner.sequence().call(this._mode.onDrawMessageCompleted);
+        }
+
+        assert(message.type === "character")
+
+        // 既定行数を超えているので次のページに進む
+        if (this._drawingLineNumber >= this._lineNumber) {
+            this._doRepage();
+            return global.SequenceRunner.sequence().call(this._mode.repageWhileDrawingMessage);
+        }
+
+        return global.SequenceRunner.sequence()
+            .call(this._drawNextCharacter)
+            .wait(300)
+            .factory(this._drawMessageSequenceFactory);
+    }
+
+    Func(_drawNextCharacter)() {
+        // 描画する座標を計算
+        var left = this._textLeft + this._drawingLeft;
+        var top = this._textTop + this._drawingLineNumber * this._lineHeight + this._fontRubyHeight;
+        assert(left < this._lineWidth)
+
+        // 描画
+        var text = this._currentMessages[this._drawingMessageIndex].text;
+        this._textDrawer.drawTextToLayer(this._textLayerFore, left, top, text);
+
+        // 更新領域がおかしくなるので適当に設定
+        var updateArea = this._fontHeight * 2;
+        this._textLayerFore.update(left, top, updateArea, updateArea);
+
+        // トランジション中ならbackにも描画
+        if (this._inTransition) {
+            this._textDrawer.drawTextToLayer(this._textLayerBack, left, top, text);
+            this._textLayerBack.update(left, top, updateArea, updateArea);
+        }
+
+        // 描画したテキストの幅を記録
+        var drawnWidth;
+        if (text === " ") { // 半角スペース
+            drawnWidth = this._fontHeight/2;
+        } else if (text === "　") { // 全角スペース
+            drawnWidth = this._fontHeight;
+        } else {
+            drawnWidth = this._textDrawer.measureStringInternal(this._textLayerFore, text).width;
+        }
+        this._drawingLeft += (int)drawnWidth + this._fontSpace;
+
+        if (this._textLeft + this._drawingLeft > this._lineWidth) {
+            // 次に描画する位置が右端を越えていたら改行
+            this._doReline();
+        }
+
+        // 次のメッセージに進む
+        ++this._drawingMessageIndex;
+    }
+
+    Func(_doReline)() {
+        this._drawingLeft = 0;
+        this._drawingLineNumber += 1;
+    }
+
+    Func(_doRepage)() {
+        this._doReline();
+        this._drawingLineNumber = 0;
     }
 }

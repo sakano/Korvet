@@ -24,9 +24,22 @@ ClassExtends(NovelMode, GameMode)
     }
 
     Func(onDrawMessageCompleted)() {
-        this._runner.run(global.SequenceRunner.sequence()
+        // メッセージを最後まで描画し終わったときに呼ばれる
+        // クリックされたら遅延実行、アクション、トランジションの実行をスキップしてコマンド実行を再開
+        global.gAsyncCaller.call(this._runner.run, global.SequenceRunner.sequence()
             .wait("click")
-            .call(gAsyncCaller.callOnce, this._resumeFromDrawMessage));
+            .call(this._trigger, "skipDelay")
+            .call(this._trigger, "skipAction")
+            .call(this._trigger, "skipTrans")
+            .call(this.resumeCommandLoopAsync));
+    }
+
+    Func(repageWhileDrawingMessage)() {
+        // メッセージの描画の途中で次のページに進む必要があるときに呼ばれる
+        // クリックされたらメッセージ描画を再開
+        global.gAsyncCaller.call(this._runner.run, global.SequenceRunner.sequence()
+            .wait("click")
+            .factory(this._messageCommandHandler.createResumeDrawingMessageSequence));
     }
 
     Func(onScriptError)(message:string, args*) {
@@ -146,6 +159,7 @@ ClassExtends(NovelMode, GameMode)
 
     var _commandHandlers = [];
     var _drawables = [];
+    var _messageCommandHandler;
 
     var _screenLayer;
     var _foreLayer;
@@ -198,14 +212,17 @@ ClassExtends(NovelMode, GameMode)
     }
 
     Func(_initCommandHandlers)() {
+        this._systemCommandHandler = new global.SystemCommandHandler(this);
+        this._commandHandlers.add(this._systemCommandHandler);
+
         var stageCommandHandler = new global.StageCommandHandler(this, this._foreLayer, this._backLayer);
         this._drawables.add(stageCommandHandler);
         this._commandHandlers.add(stageCommandHandler);
 
-        this._commandHandlers.add(new global.MessageCommandHandler(this));
-
-        this._systemCommandHandler = new global.SystemCommandHandler(this);
-        this._commandHandlers.add(this._systemCommandHandler);
+        var messageCommandHandler = new global.MessageCommandHandler(this, this._foreLayer, this._backLayer);
+        this._commandHandlers.add(messageCommandHandler);
+        this._drawables.add(messageCommandHandler);
+        this._messageCommandHandler = messageCommandHandler;
     }
 
     Func(_createTargetLayer)(parentLayer:Layer) {
@@ -309,13 +326,6 @@ ClassExtends(NovelMode, GameMode)
             attributeNames : [],
             attributeValues : %[]
         ]);
-    }
-
-    Func(_resumeFromDrawMessage)() {
-        this._trigger("skipDelay");
-        this._trigger("skipAction");
-        this._trigger("skipTrans");
-        this.resumeCommandLoopAsync();
     }
 
     Func(_onLeftClick)(x:int, y:int, shift:int) {

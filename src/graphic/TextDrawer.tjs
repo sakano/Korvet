@@ -183,7 +183,7 @@ Class(TextDrawer)
     // @param x 描画位置X
     // @param y 描画位置Y
     // @param text 描画する文字列
-    function drawTextToLayer(layer:Layer, x:int, y:int, text:string = "") {
+    Func(drawTextToLayer)(layer:Layer, x:int, y:int, text:string) {
         checkArgs
         // apply antialiase and hinting
         if (this._antialiase) {
@@ -210,6 +210,11 @@ Class(TextDrawer)
             this._app.addBrush(this._brush, 0, 0);
         }
         return layer.drawPathString(this._font, this._app, x, y, text);
+    }
+
+    Func(measureStringInternal)(layer:Layer, text:string) {
+        checkArgs
+        return layer.measureStringInternal(this._font, text);
     }
 
 

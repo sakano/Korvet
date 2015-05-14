@@ -2,7 +2,7 @@
 FILE_INCLUDE_GUARD
 
 {
-    function doAsync() {
+    Func(doAsync)() {
         global.gAsyncCaller._do();
     }
 
