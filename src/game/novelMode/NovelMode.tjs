@@ -276,13 +276,17 @@ ClassExtends(NovelMode, GameMode)
                 .wait("update")
                 .beginSkip("skipDelay")
                     .wait(delay)
-                    .call(this._doCommand, command)
+                    .call(this._doCommandImmediately, command)
                     .call(this._doUpdateCommand)
                 .endSkip()
             );
             return false;
         }
+        return this._doCommandImmediately(...);
+    }
 
+    Func(_doCommandImmediately)(command:Dictionary) {
+        checkArgs
         // コマンドを_commandHandlersに通知して実行
         var interrupt = false;
         for (var i = 0; i < this._commandHandlers.count; ++i) {
@@ -296,12 +300,11 @@ ClassExtends(NovelMode, GameMode)
             }
             if (result.interrupt) interrupt = true;
         }
-
         return interrupt;
     }
 
     Func(_doUpdateCommand)() {
-        this._doCommand(%[
+        this._doCommandImmediately(%[
             name : "update",
             attributeNames : [],
             attributeValues : %[]
