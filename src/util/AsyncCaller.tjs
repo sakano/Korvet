@@ -4,7 +4,10 @@ FILE_INCLUDE_GUARD
 Class(AsyncCaller)
 {
     property mode {
-        setter(v) { this._trigger.mode = v; }
+        setter(value) {
+            assert(value === atmNormal || value === atmExclusive || value === atmAtIdle)
+            this._trigger.mode = value;
+        }
         getter { return this._trigger.mode; }
     }
 

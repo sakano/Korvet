@@ -4,46 +4,46 @@ FILE_INCLUDE_GUARD
 Class(MouseGesture)
 {
     property threshold {
-        setter(v:int) {
-            typeInt(v)
+        setter(value) {
+            typeInt(value)
             _clear();
-            _threshold = (int)v;
+            _threshold = (int)value;
         }
         getter { return _threshold; }
     }
 
     property type {
-        setter(v) {
+        setter(value) {
             assert(_type === MouseGestureType_FourDirection || _type === MouseGestureType_EightDirection)
             _clear();
-            _type = v;
+            _type = value;
         }
         getter { return _type; }
     }
 
     property limit {
-        setter(v:int) {
-            typeInt(v)
+        setter(value) {
+            typeInt(value)
             _clear();
-            _limit = (int)v;
+            _limit = (int)value;
         }
         getter { return _limit; }
     }
 
     property button {
-        setter(v) {
-            assert(v === mbLeft || v === mbRight || v === mbMiddle)
+        setter(value) {
+            assert(value === mbLeft || value === mbRight || value === mbMiddle)
             _clear();
-            _button = v;
+            _button = value;
         }
         getter { return _button; }
     }
 
     property enabled {
-        setter(v:bool) {
-            typeBool(v)
+        setter(value) {
+            typeBool(value)
             _clear();
-            _enabled = !!v;
+            _enabled = !!value;
         }
         getter { return _enabled;}
     }

@@ -5,10 +5,10 @@ Class(TextDrawer)
 {
     // 文字の色 0xAARRGGBB
     property color {
-        setter(v:int) {
-            checkArgs
+        setter(value) {
+            typeInt(value)
             this._brush.type = GdiPlus_BrushTypeSolidColor;
-            this._brush.color = v;
+            this._brush.color = (int)value;
             this._updateApp = true;
         }
         getter {
@@ -19,9 +19,9 @@ Class(TextDrawer)
 
     // ブラシを直接指定
     property brush {
-        setter(v:Dictionary) {
-            checkArgs
-            this._brush.assign(v);
+        setter(value) {
+            typeCheck(value, "Dictionary")
+            this._brush.assign(value);
             this._updateApp = true;
         }
         getter { return this._brush; }
@@ -29,45 +29,45 @@ Class(TextDrawer)
 
     // フォントの種類
     property face {
-        setter(v:string) {
-            checkArgs
-            this._font.familyName = v;
+        setter(value) {
+            typeString(value)
+            this._font.familyName = value;
         }
         getter { return this._font.familyName; }
     }
 
     // フォントサイズ
     property size {
-        setter(v:int) {
-            checkArgs
-            this._font.emSize = v;
+        setter(value) {
+            typeInt(value)
+            this._font.emSize = (int)value;
         }
         getter { return this._font.emSize; }
     }
 
     // アンチエイリアスをかけるか
     property antialiase {
-        setter(v:bool) {
-            checkArgs
-            this._antialiase = v;
+        setter(value) {
+            typeBool(value)
+            this._antialiase = !!value;
         }
         getter { return this._antialiase; }
     }
 
     // ヒンティングをするか
     property hinting {
-        setter(v:bool) {
-            checkArgs
-            this._hinting = v;
+        setter(value) {
+            typeBool(value)
+            this._hinting = !!value;
         }
         getter { return this._hinting; }
     }
 
     // 縁取りをするか
     property edge {
-        setter(v:bool) {
-            checkArgs
-            this._edge = v;
+        setter(value) {
+            typeBool(value)
+            this._edge = !!value;
             this._updateApp = true;
         }
         getter { return this._edge; }
@@ -75,9 +75,9 @@ Class(TextDrawer)
 
     // 縁取りの幅
     property edgeWidth {
-        setter(v:int) {
-            checkArgs
-            this._edgeWidth = v;
+        setter(value) {
+            typeInt(value)
+            this._edgeWidth = (int)value;
             this._updateApp = true;
         }
         getter { return this._edgeWidth; }
@@ -85,9 +85,9 @@ Class(TextDrawer)
 
     // 縁取りの色
     property edgeColor {
-        setter(v:int) {
-            checkArgs
-            this._edgeColor = v;
+        setter(value) {
+            typeInt(value)
+            this._edgeColor = (int)value;
             this._updateApp = true;
         }
         getter { return this._edgeColor; }
@@ -95,9 +95,9 @@ Class(TextDrawer)
 
     // 影をつけるか
     property shadow {
-        setter(v:bool) {
-            checkArgs
-            this._shadow = v;
+        setter(value) {
+            typeBool(value)
+            this._shadow = !!value;
             this._updateApp = true;
         }
         getter { return this._shadow; }
@@ -105,9 +105,9 @@ Class(TextDrawer)
 
     // 影の色
     property shadowColor {
-        setter(v:int) {
-            checkArgs
-            this._shadowColor = v;
+        setter(value) {
+            typeInt(value)
+            this._shadowColor = (int)value;
             this._updateApp = true;
         }
         getter { return this._shadowColor; }
@@ -115,18 +115,18 @@ Class(TextDrawer)
 
     // 影のXオフセット
     property shadowOffsetX {
-        setter(v:int) {
-            checkArgs
-            this._shadowOffsetX = v;
+        setter(value) {
+            typeInt(value)
+            this._shadowOffsetX = (int)value;
             this._updateApp = true;
         }
         getter { return this._shadowOffsetX; }
     }
     // 影のYオフセット
     property shadowOffsetY {
-        setter(v:int) {
-            checkArgs
-            this._shadowOffsetY = v;
+        setter(value) {
+            typeInt(value)
+            this._shadowOffsetY = (int)value;
             this._updateApp = true;
         }
         getter { return this._shadowOffsetY; }
@@ -134,9 +134,9 @@ Class(TextDrawer)
 
     // 影の幅
     property shadowWidth {
-        setter(v:int) {
-            checkArgs
-            this._shadowWidth = v;
+        setter(value) {
+            typeInt(value)
+            this._shadowWidth = (int)value;
             this._updateApp = true;
         }
         getter { return this._shadowWidth; }
@@ -144,36 +144,36 @@ Class(TextDrawer)
 
     // 斜体にするか
     property italic {
-        setter(v:bool) {
-            checkArgs
-            this._setFontStyle(GdiPlus_FontStyleItalic, v);
+        setter(value) {
+            typeBool(value)
+            this._setFontStyle(GdiPlus_FontStyleItalic, value);
         }
         getter { return this._getFontStyle(GdiPlus_FontStyleItalic); }
     }
 
     // 下線を引くか
     property underline {
-        setter(v:bool) {
-            checkArgs
-            this._setFontStyle(GdiPlus_FontStyleUnderline, v);
+        setter(value) {
+            typeBool(value)
+            this._setFontStyle(GdiPlus_FontStyleUnderline, value);
         }
         getter { return this._getFontStyle(GdiPlus_FontStyleUnderline); }
     }
 
     // 打ち消し線を引くか
     property strikeout {
-        setter(v:bool) {
-            checkArgs
-            this._setFontStyle(GdiPlus_FontStyleStrikeout, v);
+        setter(value) {
+            typeBool(value)
+            this._setFontStyle(GdiPlus_FontStyleStrikeout, value);
         }
         getter { return this._getFontStyle(GdiPlus_FontStyleStrikeout); }
     }
 
     // 太字にするか
     property bold {
-        setter(v:bool) {
-            checkArgs
-            this._setFontStyle(GdiPlus_FontStyleBold, v);
+        setter(value) {
+            typeBool(value)
+            this._setFontStyle(GdiPlus_FontStyleBold, value);
         }
         getter { return this._getFontStyle(GdiPlus_FontStyleBold); }
     }

@@ -8,9 +8,9 @@ Class(Sound)
      * @type bool
      */
     property loop {
-        setter(v) {
-            typeBool(v)
-            _buffer.looping  = _loop = !!v;
+        setter(value) {
+            typeBool(value)
+            _buffer.looping  = _loop = !!value;
             _buffer.flags[0] = _loop ? 0 : 1;
             _triggerEvent(SoundEventType_SetLoop, _loop);
         }
@@ -25,15 +25,15 @@ Class(Sound)
      */
     var _volume;
     property volume {
-        setter(v) {
-            typeNumber(v)
-            assert(0 <= v && v <= 100)
+        setter(value) {
+            typeNumber(value)
+            assert(0 <= value && value <= 100)
             _buffer.stopFade();
             for (var i = 0; i < _volumeFactors.count; ++i) {
-                v *= _volumeFactors[i] / 100;
+                value *= _volumeFactors[i] / 100;
             }
-            _buffer.volume2 = v * 1000;
-            _triggerEvent(SoundEventType_SetVolume, v);
+            _buffer.volume2 = value * 1000;
+            _triggerEvent(SoundEventType_SetVolume, value);
         }
         getter {
             return _volume !== void ? _volume : (int)(_buffer.volume2 / 1000);
@@ -45,11 +45,11 @@ Class(Sound)
      * @type int
      */
     property pan {
-        setter(v) {
-            typeNumber(v)
-            assert(-100 <= v && v <= 100)
-            _buffer.pan = v * 1000;
-            _triggerEvent(SoundEventType_SetPan, v);
+        setter(value) {
+            typeNumber(value)
+            assert(-100 <= value && value <= 100)
+            _buffer.pan = value * 1000;
+            _triggerEvent(SoundEventType_SetPan, value);
         }
         getter {
             return (int)(_buffer.pan / 1000);
@@ -57,7 +57,7 @@ Class(Sound)
     }
 
     property speed {
-        setter(v) { notImplemented(); }
+        setter(value) { notImplemented(); }
         getter { notImplemented(); }
     }
 

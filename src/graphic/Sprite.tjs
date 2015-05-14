@@ -44,7 +44,7 @@ Class(Sprite)
     property filename { getter { return this._image.filename; } }
 
     property offsetX {
-        setter(value:number) {
+        setter(value) {
             typeNumber(value)
             this._offsetMatrix.x = value;
         }
@@ -52,7 +52,7 @@ Class(Sprite)
     }
 
     property offsetY {
-        setter(value:number) {
+        setter(value) {
             typeNumber(value)
             this._offsetMatrix.y = value;
         }

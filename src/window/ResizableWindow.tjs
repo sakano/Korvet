@@ -8,9 +8,9 @@ ClassExtends(ResizableWindow, ObservableWindow)
     }
 
     property resizable {
-        setter(v) {
-            typeBool(v)
-            _resizable = !!v;
+        setter(value) {
+            typeBool(value)
+            _resizable = !!value;
             _triggerEvent(ResizableWindowEventType_ResizableChanged, _resizable);
         }
         getter { return _resizable; }

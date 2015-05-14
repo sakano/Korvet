@@ -152,8 +152,8 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
     }
 
     Finalize() {
-        invalidate _spriteFore;
-        invalidate _spriteBack;
+        invalidate this._spriteFore;
+        invalidate this._spriteBack;
         invalidate this._transitionTypes;
         invalidate this._attributeMethods;
     }

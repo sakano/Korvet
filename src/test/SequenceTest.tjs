@@ -23,15 +23,15 @@ FILE_INCLUDE_GUARD
 
         property targetProperty {
             getter { return this.values[0]; }
-            setter(v) { this.values[0] = v; }
+            setter(value) { this.values[0] = value; }
         }
         property targetProperty2 {
             getter { return this.values[1]; }
-            setter(v) { this.values[1] = v; }
+            setter(value) { this.values[1] = value; }
         }
         property targetProperty3 {
             getter { return this.values[2]; }
-            setter(v) { this.values[2] = v; }
+            setter(value) { this.values[2] = value; }
         }
 
         Func(clear) {
