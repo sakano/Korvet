@@ -33,7 +33,6 @@ ClassExtends(MacroParserModule, KorvetParserModule)
     }
 
 
-    var _novelMode;
 
     var _registeredMacros = %[];
     var _registeredAttributeMacros = %[];
@@ -47,9 +46,8 @@ ClassExtends(MacroParserModule, KorvetParserModule)
     var _macroParameters = [];
     var _macroAttributeMacros = [];
 
-    Constructor(novelMode:NovelMode) {
+    Constructor() {
         super.KorvetParserModule();
-        this._novelMode = novelMode;
     }
 
     Finalize() {
@@ -159,7 +157,7 @@ ClassExtends(MacroParserModule, KorvetParserModule)
                     this._insertAttribute(nameIndex, insertAttrName, insertAttrValue, attrValue, attrNames, attrValues);
                 } else if (index < nameIndex) {
                     // 属性マクロより前に、属性マクロに含まれる属性名と同じ属性が指定されている
-                    this._novelMode.notifyAttributeDuplicatedError(insertAttrName);
+                    global.gScriptLogger.notifyAttributeDuplicatedError(insertAttrName);
                     // 同じ属性を削除してから属性を挿入
                     attrNames.erase(index);
                     delete attrValues[insertAttrName];
@@ -221,7 +219,7 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         checkArgs
         // マクロ記録中でなければエラー
         if (!this._isMacroRecording) {
-            this._novelMode.onScriptError(ASSERT_SCRIPT_SINGLE_ENDMACRO);
+            global.gScriptLogger.onScriptError(ASSERT_SCRIPT_SINGLE_ENDMACRO);
             return %[ mode : KorvetParserModuleMode_Cancel ];
         }
         typeString(this._recordingMacroName)
@@ -269,10 +267,10 @@ ClassExtends(MacroParserModule, KorvetParserModule)
     }
 
     Func(_validateMacroName)(attrValue:string?, attrName:string = "_name") {
-        attrValue = this._novelMode.validateAttributeSpecified(attrValue, attrName, "__error_macro_name");
-        attrValue = this._novelMode.validateAttributeValueSpecified(attrValue, attrName, "__error_macro_name");
+        attrValue = global.gScriptLogger.validateAttributeSpecified(attrValue, attrName, "__error_macro_name");
+        attrValue = global.gScriptLogger.validateAttributeValueSpecified(attrValue, attrName, "__error_macro_name");
         if (attrValue.length === 0 || attrValue === "*") {
-            this._novelMode.notifyIllegalAttributeValueError(attrValue, attrName);
+            global.gScriptLogger.notifyIllegalAttributeValueError(attrValue, attrName);
             attrValue = "__error_macro_name";
         }
         return attrValue;

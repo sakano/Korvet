@@ -42,84 +42,6 @@ ClassExtends(NovelMode, GameMode)
             .factory(this._messageCommandHandler.createResumeDrawingMessageSequence));
     }
 
-    Func(onScriptError)(message:string, args*) {
-        checkArgs
-        var header = global.expandMessage(ASSERT_SCRIPT_HEADER,
-            "FILE", this._parser.currentStorage,
-            "LINE", this._parser.currentLineNumber);
-        global.gLog.warn(header + expandMessage(...));
-    }
-
-    Func(notifyIllegalAttributeValueError)(attrValue:any+, attrName:string) {
-        checkArgs
-        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_ILLEGAL, "ATTR_NAME", attrName, "ATTR_VALUE", attrValue);
-    }
-
-    Func(notifyUnusedAttributeError)(attrValue:any+, attrName:string) {
-        checkArgs
-        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_UNUSED, "ATTR_NAME", attrName, "ATTR_VALUE", attrValue);
-    }
-
-    Func(notifyAttributeNotSpecifiedError)(attrName:string) {
-        checkArgs
-        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_REQUIRED, "ATTR_NAME", attrName);
-    }
-
-    Func(notifyAttributeValueNotSpecifiedError)(attrName:string) {
-        checkArgs
-        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_REQUIRED, "ATTR_NAME", attrName);
-    }
-
-    Func(notifyAttributeDuplicatedError)(attrName:string) {
-        checkArgs
-        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_DUPLICATED, "ATTR_NAME", attrName);
-    }
-
-    Func(validateAttributeSpecified)(value:any+, attrName:string, defaultValue:any) {
-        checkArgs
-        if (value !== void && value !== null) return value;
-        this.notifyAttributeNotSpecifiedError(attrName);
-        return defaultValue;
-    }
-
-    Func(validateAttributeValueSpecified)(value:any+, attrName:string, defaultValue:string) {
-        checkArgs
-        if (value === null) {
-            this.notifyAttributeValueNotSpecifiedError(attrName);
-            return defaultValue;
-        }
-        return value;
-    }
-
-    Func(validateAttributeValueNotSpecified)(value:any+, attrName:string) {
-        checkArgs
-        if (value !== null) {
-            this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_UNUSED, "ATTR_NAME", attrName);
-        }
-        return null;
-    }
-
-    Func(validateAttributeValueInteger)(value:any+, attrName:string, min:int+, max:int+, defaultValue:int+) {
-        checkArgs
-        assert(min < max || min === void || max === void)
-        assert(min === void || defaultValue === void || min <= defaultValue)
-        assert(max === void || defaultValue === void || max >= defaultValue)
-        if (value === void) {
-            assert(defaultValue !== void)
-            return defaultValue;
-        }
-        var intValue = (int)value;
-        if (min !== void && intValue < min) {
-            this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_OUT_OF_RANGE, "ATTR_NAME", attrName, "ATTR_VALUE", value);
-            return min;
-        }
-        if (max !== void && max < intValue) {
-            this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_OUT_OF_RANGE, "ATTR_NAME", attrName, "ATTR_VALUE", value);
-            return max;
-        }
-        return intValue;
-    }
-
     Func(onTransitionBegin)() {
         this._trigger("skipTrans");
         for (var i = 0; i < this._drawables.count; ++i) {
@@ -187,6 +109,9 @@ ClassExtends(NovelMode, GameMode)
 
         this._initParser();
         this._initCommandHandlers();
+
+        global.gScriptLogger.setParser(this._parser);
+
         this.resumeCommandLoopAsync();
     }
 
@@ -205,8 +130,8 @@ ClassExtends(NovelMode, GameMode)
     }
 
     Func(_initParser)() {
-        this._parser = new global.KorvetParser(this);
-        this._parser.setModule(new global.MacroParserModule(this), PriorityQueue_Highest);
+        this._parser = new global.KorvetParser();
+        this._parser.setModule(new global.MacroParserModule(), PriorityQueue_Highest);
         this._parser.setModule(new global.PageBeginEndParserModule(), PriorityQueue_Normal);
         this._parser.initStorage("test.krs");
     }
@@ -265,7 +190,7 @@ ClassExtends(NovelMode, GameMode)
 
             // パース中にエラーが発生したら停止
             if (!success(error)) {
-                this.onScriptError(expandMessage(ASSERT_SCRIPT_PARSER_ERROR, "MES", error.message));
+                global.gScriptLogger.onScriptError(expandMessage(ASSERT_SCRIPT_PARSER_ERROR, "MES", error.message));
                 break;
             }
 
@@ -283,8 +208,8 @@ ClassExtends(NovelMode, GameMode)
         // delay属性が存在するなら遅延実行
         if (command.attributeValues.delay !== void) {
             var delay = command.attributeValues.delay;
-            delay = validateAttributeSpecified(delay, "delay", "1");
-            delay = validateAttributeValueInteger(delay, "delay", 1, void);
+            delay = global.gScriptLogger.validateAttributeSpecified(delay, "delay", "1");
+            delay = global.gScriptLogger.validateAttributeValueInteger(delay, "delay", 1, void);
             // delay属性を消去
             command.attributeNames.remove("delay");
             delete command.attributeValues.delay;

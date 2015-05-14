@@ -95,6 +95,7 @@ execStorage("MouseGesture.tjs");
 execStorage("ObservableWindow.tjs");
 execStorage("ResizableWindow.tjs");
 
+execStorage("ScriptLogger.tjs");
 execStorage("Config.tjs");
 execStorage("Game.tjs");
 execStorage("GameMode.tjs");

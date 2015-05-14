@@ -209,8 +209,8 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
                     global.SequenceRunner.sequence().wait("update").setValue(&self[propertyName + "Back"], (int)attrValue)
             ] ];
         } else {
-            var time = self._mode.validateAttributeValueSpecified(attrValues.time, "time", "1");
-            time = self._mode.validateAttributeValueInteger(time, "time", 1, void);
+            var time = global.gScriptLogger.validateAttributeValueSpecified(attrValues.time, "time", "1");
+            time = global.gScriptLogger.validateAttributeValueInteger(time, "time", 1, void);
             return %[ sequences : [
                     global.SequenceRunner.sequence().wait("update")
                         .call(self._mode.onActionBegin)
@@ -224,8 +224,8 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
 
     Func(_fadeCommandImpl)(attrValue:any) {
         checkArgs
-        attrValue = this._mode.validateAttributeValueSpecified(attrValue, "fade", (string)this._defaultTransTime);
-        attrValue = this._mode.validateAttributeValueInteger(attrValue, "fade", 1, void);
+        attrValue = global.gScriptLogger.validateAttributeValueSpecified(attrValue, "fade", (string)this._defaultTransTime);
+        attrValue = global.gScriptLogger.validateAttributeValueInteger(attrValue, "fade", 1, void);
         return %[
             trans : %[
                 priority : NovelModeTransPriority_Specified,
@@ -243,7 +243,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
 
         // 存在しないトランジションの種類ならエラー
         if (type === void) {
-            this._mode.notifyIllegalAttributeValueError(attrValue, "trans");
+            global.gScriptLogger.notifyIllegalAttributeValueError(attrValue, "trans");
             type = TransitionType_Crossfade;
         }
 
@@ -251,8 +251,8 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         var option = %[];
 
         // time属性
-        option.time = this._mode.validateAttributeSpecified(attrValues.time, "time", (string)this._defaultTransTime);
-        option.time = this._mode.validateAttributeValueInteger(option.time, "time",  1, void);
+        option.time = global.gScriptLogger.validateAttributeSpecified(attrValues.time, "time", (string)this._defaultTransTime);
+        option.time = global.gScriptLogger.validateAttributeValueInteger(option.time, "time",  1, void);
 
         switch(type) {
         case TransitionType_Crossfade:
@@ -260,15 +260,15 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
             break;
         case TransitionType_Universal:
             // rule属性
-            var rule = this._mode.validateAttributeSpecified(attrValues.rule, "rule", null);
+            var rule = global.gScriptLogger.validateAttributeSpecified(attrValues.rule, "rule", null);
             if (rule === null) {
                 type = TransitionType_Crossfade;
                 break;
             }
             option.rule = rule;
             // vague属性
-            option.vague = this._mode.validateAttributeValueSpecified(attrValues.vague, "vague", "128");
-            option.vague = this._mode.validateAttributeValueInteger(option.vague, "vague", 0, void);
+            option.vague = global.gScriptLogger.validateAttributeValueSpecified(attrValues.vague, "vague", "128");
+            option.vague = global.gScriptLogger.validateAttributeValueInteger(option.vague, "vague", 0, void);
             break;
         case TransitionType_Scroll:
             // dir属性
@@ -279,11 +279,11 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
             case "down":  option.from = sttTop;    break;
             case void:    option.from = sttLeft;   break;
             case null:
-                this._mode.notifyAttributeValueNotSpecifiedError("dir");
+                global.gScriptLogger.notifyAttributeValueNotSpecifiedError("dir");
                 option.from = sttLeft;
                 break;
             default:
-                this._mode.notifyIllegalAttributeValueError(attrValues.dir, "dir");
+                global.gScriptLogger.notifyIllegalAttributeValueError(attrValues.dir, "dir");
                 option.from = sttLeft;
                 break;
             }
@@ -294,11 +294,11 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
             case "out":   option.stay = ststStaySrc;  break;
             case void:    option.stay = ststNoStay;   break;
             case null:
-                this._mode.notifyAttributeValueNotSpecifiedError("scroll");
+                global.gScriptLogger.notifyAttributeValueNotSpecifiedError("scroll");
                 option.stay = ststNoStay;
                 break;
             default:
-                this._mode.notifyIllegalAttributeValueError(attrValues.scroll, "scroll");
+                global.gScriptLogger.notifyIllegalAttributeValueError(attrValues.scroll, "scroll");
                 option.stay = ststNoStay;
                 break;
             }

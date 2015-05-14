@@ -52,4 +52,5 @@ if (!global.gRelaseMode) {
     global.cleanMemoryLeakLogForDebug();
 }
 
+var gScriptLogger = new ScriptLogger();
 var gGame = new Game();

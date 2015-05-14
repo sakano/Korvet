@@ -118,7 +118,6 @@ Class(KorvetParser)
     }
 
 
-    var _novelMode;
 
     var _lines = [];
 
@@ -143,8 +142,7 @@ Class(KorvetParser)
     Func(clear)() {}
     Func(clone)() {}
 
-    Constructor(novelMode:NovelMode) {
-        this._novelMode = novelMode;
+    Constructor() {
     }
 
     Finalize() {
@@ -268,7 +266,7 @@ Class(KorvetParser)
             else if (keyValueRegExp.matches[6] != "") value = keyValueRegExp.matches[6];
             else if (keyValueRegExp.matches[7] != "") value = keyValueRegExp.matches[7];
             if (command.attributeValues[attrName] !== void) {
-                this._novelMode.notifyAttributeDuplicatedError(attrName);
+                global.gScriptLogger.notifyAttributeDuplicatedError(attrName);
                 command.attributeNames.remove(attrName);
             }
             command.attributeNames.add(attrName);
