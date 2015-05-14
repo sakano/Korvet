@@ -20,7 +20,7 @@ Class(KorvetParser)
         this._currentLineNumber = 0;
         this._currentLogicalLine = "";
         this._currentLogicalLineIndex = 0;
-        this._lineParser.initStorage(path, utf8);
+        this._lines.load(path);
 
         var command = %[];
         this._makeBeginFileCommand(command, this._currentStorage);
@@ -120,7 +120,8 @@ Class(KorvetParser)
 
     var _novelMode;
 
-    var _lineParser = new global.LineParser();
+    var _lines = [];
+
     var _modules = [];
     var _modulesPriority = [];
 
@@ -147,7 +148,7 @@ Class(KorvetParser)
     }
 
     Finalize() {
-        invalidate this._lineParser;
+        invalidate this._lines;
         this._modules.dispose();
         invalidate this._modules;
         invalidate this._commandList;
@@ -314,7 +315,7 @@ Class(KorvetParser)
     }
 
     Func(_goNextLine)() {
-        this._currentLine = this._lineParser.getNextLine();
+        this._currentLine = this._lines[this._currentLineNumber];
         this._currentLineNumber++;
     }
 

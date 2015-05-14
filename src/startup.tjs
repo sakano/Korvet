@@ -21,7 +21,6 @@ Plugins.link("layerExDraw.dll");
 Plugins.link("fstat.dll");
 Plugins.link("wuvorbis.dll");
 Plugins.link("windowEx.dll");
-Plugins.link("lineParser.dll");
 
 // load scripts
 Scripts.execStorage("Syntax.tjs");
