@@ -3,8 +3,14 @@ FILE_INCLUDE_GUARD
 
 // レイヤ全体を指定した色に塗る
 Layer.fill = LMD(color:int = 0) {
-    checkArgs
+    typeInt(color)
     fillRect(0, 0, imageWidth, imageHeight, color);
+};
+
+// ビットマップ全体を指定した色に塗る
+Bitmap.fill = LMD(color:int = 0) {
+    typeInt(color)
+    ImageFunction.fillRect(this, color);
 };
 
 {

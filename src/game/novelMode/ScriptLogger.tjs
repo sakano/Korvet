@@ -24,12 +24,12 @@ Class(ScriptLogger)
         global.gLog.warn(header + expandMessage(...));
     }
 
-    Func(notifyIllegalAttributeValueError)(attrValue:any+, attrName:string) {
+    Func(notifyIllegalAttributeValueError)(attrValue:string?, attrName:string) {
         checkArgs
         this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_ILLEGAL, "ATTR_NAME", attrName, "ATTR_VALUE", attrValue);
     }
 
-    Func(notifyUnusedAttributeError)(attrValue:any+, attrName:string) {
+    Func(notifyUnusedAttributeError)(attrValue:string?, attrName:string) {
         checkArgs
         this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_UNUSED, "ATTR_NAME", attrName, "ATTR_VALUE", attrValue);
     }

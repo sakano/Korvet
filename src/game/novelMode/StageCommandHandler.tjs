@@ -30,6 +30,7 @@ ClassExtends(StageCommandHandler, SpriteCommandHandler)
     Constructor(mode:NovelMode, parentLayerFore:Layer, parentLayerBack:Layer) {
         checkArgs
         super.SpriteCommandHandler(...);
+        this._showHideAutoTransition = this._stageAutoTransition;
     }
 
     Finalize() {
@@ -57,7 +58,7 @@ ClassExtends(StageCommandHandler, SpriteCommandHandler)
         return @"bg${this._place}_${this._time}_${this._size}";
     }
 
-    Func(_changeFileCommandImpl)(attrValue:any, attrName:string, attrValues:Dictionary) {
+    Func(_changeFileCommandImpl)(attrValue:string?, attrName:string, attrValues:Dictionary) {
         checkArgs
         var validatedValue = global.gScriptLogger.validateAttributeSpecified(attrValue, attrName, self[targetName]);
 

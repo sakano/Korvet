@@ -48,6 +48,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
 
     OverrideFunc(beforeTransition)() {
         this._updateSpriteBack();
+        this._spriteBack.visible = this._visible;
     }
 
     OverrideFunc(afterTransition)() {
@@ -66,12 +67,12 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
 
     OverrideFunc(drawInTransition)() {
         if (this._spriteFore.redraw) {
-            if (this._spriteFore.filename !== "") {
+            if (this._spriteFore.visible) {
                 this._spriteFore.draw(true);
             }
         }
         if (this._spriteBack.redraw) {
-            if (this._spriteBack.filename !== "") {
+            if (this._spriteBack.visible) {
                 this._spriteBack.draw(true);
             }
         }
@@ -128,6 +129,8 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
 
 
 
+    var _visible = false;
+
     var _spriteFore;
     var _spriteBack;
 
@@ -138,6 +141,8 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         universal : TransitionType_Universal,
         scroll : TransitionType_Scroll,
     ];
+
+    var _showHideAutoTransition;
 
     var _attributeMethods;
 
@@ -162,7 +167,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         checkArgs
         var layer = new global.Layer(parentLayer.window, parentLayer);
         layer.setSize(parentLayer.width, parentLayer.height);
-        layer.visible = true;
+        layer.visible = false;
         return new global.Sprite(layer, true);
     }
 
@@ -177,6 +182,8 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
             shearx  : this._transformCommandImpl incontextof %[ self:this, propertyName:"shearX" ],
             sheary  : this._transformCommandImpl incontextof %[ self:this, propertyName:"shearY" ],
             angle   : this._transformCommandImpl incontextof %[ self:this, propertyName:"angle" ],
+            show    : this._showHideCommandImpl incontextof %[ self:this, newVisible:true ],
+            hide    : this._showHideCommandImpl incontextof %[ self:this, newVisible:false ],
             fade    : this._fadeCommandImpl,
             trans   : this._transCommandImpl,
         ];
@@ -199,10 +206,11 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
             .shearY = src.shearY;
             .angle = src.angle;
             .alignment = src.alignment;
+            .visible = src.visible;
         }
     }
 
-    Func(_transformCommandImpl)(attrValue:any, attrName:string, attrValues:Dictionary) {
+    Func(_transformCommandImpl)(attrValue:string?, attrName:string, attrValues:Dictionary) {
         checkArgs
         if (attrValues.time === void) {
             return %[ sequences : [
@@ -222,7 +230,14 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         }
     }
 
-    Func(_fadeCommandImpl)(attrValue:any) {
+    Func(_showHideCommandImpl)(attrValue:string?, attrName:string) {
+        checkArgs
+        global.gScriptLogger.validateAttributeValueNotSpecified(attrValue, attrName);
+        self._visible = newVisible;
+        return %[ trans : self._showHideAutoTransition ];
+    }
+
+    Func(_fadeCommandImpl)(attrValue:string?) {
         checkArgs
         attrValue = global.gScriptLogger.validateAttributeValueSpecified(attrValue, "fade", (string)this._defaultTransTime);
         attrValue = global.gScriptLogger.validateAttributeValueInteger(attrValue, "fade", 1, void);
@@ -237,7 +252,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         ];
     }
 
-    Func(_transCommandImpl)(attrValue:any, attrName:string, attrValues:Dictionary) {
+    Func(_transCommandImpl)(attrValue:string?, attrName:string, attrValues:Dictionary) {
         checkArgs
         var type = this._transitionTypes[attrValue];
 

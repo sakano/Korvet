@@ -61,19 +61,6 @@ ClassExtends(Image, HierarchicalMatrix)
         }
     }
 
-    OverrideFunc(copyFrom)(src:Image) {
-        checkArgs
-        super.copyFrom(...);
-        with (src) {
-            if (._bitmap === null) {
-                this.clearBitmap();
-            } else {
-                this.load(._filename);
-            }
-        }
-        this._redraw = true;
-    }
-
 
 
     var _filename = "";

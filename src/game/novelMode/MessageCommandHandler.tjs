@@ -67,7 +67,6 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
     var _lineHeight = 40;
     var _lineWidth = 1232;
     var _lineNumber = 3;
-    
 
     Constructor(mode:NovelMode, parentLayerFore:Layer, parentLayerBack:Layer) {
         checkArgs

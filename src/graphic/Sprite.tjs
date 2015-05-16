@@ -43,6 +43,16 @@ Class(Sprite)
     property redraw { getter { return this._image.redraw; } }
     property filename { getter { return this._image.filename; } }
 
+    property visible {
+        setter(value) {
+            typeBool(value)
+            this._targetLayer.visible = value;
+        }
+        getter {
+            return this._targetLayer.visible;
+        }
+    }
+
     property offsetX {
         setter(value) {
             typeNumber(value)
@@ -72,7 +82,7 @@ Class(Sprite)
 
     Func(draw)(force:bool = false) {
         checkArgs
-        this._targetLayer.clear(0);
+        this._targetLayer.fill(0);
         this._image.draw(this._targetLayer, force);
     }
 
@@ -91,7 +101,7 @@ Class(Sprite)
         this._invalidateTargetLayer = invalidateTargetLayer;
 
         this._offsetMatrix = new global.HierarchicalMatrix();
-        this._image = new global.Image();
+        this._image = this._createImage();
         this._image.setParentMatrix(this._offsetMatrix);
     }
 
@@ -99,6 +109,10 @@ Class(Sprite)
         invalidate this._image;
         invalidate this._targetLayer if this._invalidateTargetLayer;
         invalidate this._offsetMatrix;
+    }
+
+    Func(_createImage)() {
+        return new global.Image();
     }
 
     Func(_resetOffset)() {
