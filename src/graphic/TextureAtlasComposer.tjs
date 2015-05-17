@@ -1,0 +1,70 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(TextureAtlasComposer, LayeredImage)
+{
+    OverrideFunc(load)(filename:string) {
+        checkArgs
+        super.load(filename);
+        this._bitmaps.dispose();
+        this._bitmaps.clear();
+    }
+
+    Func(clearBitmap)() {
+        super.clearBitmap();
+
+        this._bitmaps.dispose();
+        this._bitmaps.clear();
+    }
+
+
+
+    var _bitmaps = %[];
+
+    Constructor() {
+        super.HierarchicalMatrix();
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate this._bitmaps;
+    }
+
+    OverrideFunc(_compose)() {
+        // 合成結果のビットマップをクリア
+        this._composedBitmap.fill(0);
+
+        // レイヤ情報に従って合成
+        var layerInfos = this._layerInfos;
+        for (var i = 0; i < layerInfos.count; ++i) {
+            var layerInfo = layerInfos[i];
+            assert(layerInfo.condition === void, "not implemented")
+
+            // 使用する画像が含まれるビットマップを得る
+            var srcBitmap = this._getBitmap(layerInfo.filename);
+
+            // 合成
+            if (layerInfo.rotate) {
+                var srcRect = new Rect(layerInfo.textureX, layerInfo.textureY,
+                    layerInfo.textureX + layerInfo.height, layerInfo.textureY + layerInfo.width);
+                global.ImageFunction.operateAffine(this._composedBitmap, srcBitmap,
+                    0, -1, 1, 0, layerInfo.offsetX, layerInfo.offsetY + layerInfo.height,
+                    srcRect, null, true, omAlpha, dfAlpha, 255, stNearest, false);
+            } else {
+                var srcRect = new Rect(layerInfo.textureX, layerInfo.textureY,
+                    layerInfo.textureX + layerInfo.width, layerInfo.textureY + layerInfo.height);
+                global.ImageFunction.operateRect(this._composedBitmap,
+                    layerInfo.offsetX, layerInfo.offsetY,
+                    srcBitmap, srcRect,
+                    null, layerInfo.type, dfAlpha, layerInfo.opacity);
+            }
+        }
+    }
+
+    Func(_getBitmap)(filename) {
+        if (this._bitmaps[filename] === void) {
+            this._bitmaps[filename] = new global.Bitmap(filename);
+        }
+        return this._bitmaps[filename];
+    }
+}

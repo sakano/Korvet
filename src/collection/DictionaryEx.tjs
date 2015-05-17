@@ -111,6 +111,15 @@ Scripts.propSet(Dictionary, "getKeys", LMD() {
     return global.getKeys(this);
 }, pfHiddenMember | pfMemberEnsure);
 
+Scripts.propSet(Dictionary, "getValues", LMD() {
+    var values = [];
+    var keys = global.getKeys(this);
+    for (var i = 0; i < keys.count; ++i) {
+        values.add(this[keys[i]]);
+    }
+    return values;
+}, pfHiddenMember | pfMemberEnsure);
+
 Scripts.propSet(Dictionary, "isEmpty", LMD() {
     return global.getKeys(this).count === 0;
 }, pfHiddenMember | pfMemberEnsure);

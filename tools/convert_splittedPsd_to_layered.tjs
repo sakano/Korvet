@@ -1,0 +1,48 @@
+Plugins.link("scriptsex.dll");
+Plugins.link("json.dll");
+
+class ConvertWindow extends Window
+{
+    function ConvertWindow(parent, width = 200, height = 100) {
+        super.Window(parent);
+        setInnerSize(width, height);
+        with (this.primary = new Layer(this, null)) {
+            .setSize(width, height);
+            .fillRect(0, 0, width, height, 0xFFFFFFFF);
+            .drawText(20, 20, "tjsファイルをドロップ", 0x000000);
+            .visible = true;
+        }
+    }
+
+    function onFileDrop(files) {
+        for (var i = 0; i < files.count; ++i) {
+            this.convert(files[i], Storages.extractStoragePath(files[i]));
+        }
+    }
+
+    function convert(tjsPath, destFolderPath) {
+        var tjsData = Scripts.evalStorage(tjsPath);
+        var dtjsData = Scripts.evalStorage(Storages.chopStorageExt(tjsPath) + ".dtjs");
+        var layers = tjsData.layers;
+        var layerNames = Scripts.getObjectKeys(tjsData.layers);
+        for (var layerIndex = 0; layerIndex < layerNames.count; ++layerIndex) {
+            var layerName = layerNames[layerIndex];
+            // 画像を変換
+            this.convertImageFile(layerName, destFolderPath);
+            tjsData.layers[layerName].filename = layerName + ".tlg";
+        }
+        (Dictionary.saveStruct incontextof tjsData)(Storages.chopStorageExt(tjsPath) + ".led");
+    }
+
+    function convertImageFile(layerName, destFolderPath) {
+        var srcPath = destFolderPath + layerName + ".png";
+        if (!Storages.isExistentStorage(srcPath)) {
+            throw new Exception("画像ファイルが存在しません:" + srcPath);
+        }
+        var bitmap = new Bitmap(srcPath);
+        bitmap.save(destFolderPath + layerName + ".tlg", "tlg6");
+    }
+}
+
+var win = new ConvertWindow();
+win.visible = true;

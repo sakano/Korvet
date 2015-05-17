@@ -33,7 +33,7 @@ Class(Sprite)
                 || value === SpriteAlignment_TopCenter
                 || value === SpriteAlignment_TopRight)
             this._alignment = value;
-            this._resetOffset();
+            this._recalcOffset = true;
         }
         getter { return this._alignment; }
     }
@@ -56,17 +56,19 @@ Class(Sprite)
     property offsetX {
         setter(value) {
             typeNumber(value)
-            this._offsetMatrix.x = value;
+            this._offsetX = value;
+            this._recalcOffset = true;
         }
-        getter { return this._offsetMatrix.x; }
+        getter { return this._offsetX; }
     }
 
     property offsetY {
         setter(value) {
             typeNumber(value)
-            this._offsetMatrix.y = value;
+            this._offsetY = value;
+            this._recalcOffset = true;
         }
-        getter { return this._offsetMatrix.y; }
+        getter { return this._offsetY; }
     }
 
     Func(setParentMatrix)(matrix:HierarchicalMatrix) {
@@ -77,12 +79,15 @@ Class(Sprite)
     Func(load)(filename:string) {
         checkArgs
         this._image.load(filename);
-        this._resetOffset();
+        this._recalcOffset = true;
     }
 
     Func(draw)(force:bool = false) {
         checkArgs
         this._targetLayer.fill(0);
+        if (this._recalcOffset) {
+            this._resetOffset();
+        }
         this._image.draw(this._targetLayer, force);
     }
 
@@ -93,6 +98,9 @@ Class(Sprite)
 
     var _image;
     var _offsetMatrix;
+    var _offsetX = 0;
+    var _offsetY = 0;
+    var _recalcOffset = false;
     var _alignment = SpriteAlignment_MiddleCenter;
 
     Constructor(targetLayer:Layer, invalidateTargetLayer:bool = false) {
@@ -155,7 +163,10 @@ Class(Sprite)
             this._offsetMatrix.y = 0;
             break;
         }
+        this._offsetMatrix.x += this._offsetX;
+        this._offsetMatrix.y += this._offsetY;
         this._image.originX = this._image.width / 2 + this._offsetMatrix.x;
         this._image.originY = this._image.height / 2 + this._offsetMatrix.y;
+        this._recalcOffset = false;
     }
 }

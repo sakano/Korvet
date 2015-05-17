@@ -52,5 +52,8 @@ if (!global.gRelaseMode) {
     global.cleanMemoryLeakLogForDebug();
 }
 
+// 検索パスを追加
+Storages.addAutoPath(System.exePath + "start/fgimage/");
+
 var gScriptLogger = new ScriptLogger();
 var gGame = new Game();

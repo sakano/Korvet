@@ -1,0 +1,30 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(LayeredSprite, Sprite)
+{
+    property imageName { getter { return this._image.imageName; } }
+
+    Func(setDiff)() {
+        this._image.setDiff(...);
+    }
+
+    Func(copyImage)(src:LayeredSprite) {
+        checkArgs
+        this._image.copyImage(src._image);
+    }
+
+
+    Constructor(targetLayer:Layer, invalidateTargetLayer:bool = false) {
+        checkArgs
+        super.Sprite(...);
+    }
+
+    Finalize() {
+        super.finalize();
+    }
+
+    OverrideFunc(_createImage)() {
+        return new global.LayeredImage();
+    }
+}

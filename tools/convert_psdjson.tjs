@@ -1,0 +1,79 @@
+Plugins.link("scriptsex.dll");
+Plugins.link("json.dll");
+
+class TexturePackerConvertWindow extends Window
+{
+    function TexturePackerConvertWindow(parent, width = 200, height = 100) {
+        super.Window(parent);
+        setInnerSize(width, height);
+        with (this.primary = new Layer(this, null)) {
+            .setSize(width, height);
+            .fillRect(0, 0, width, height, 0xFFFFFFFF);
+            .drawText(20, 20, "pngファイルとjsonファイルを", 0x000000);
+            .drawText(20, 40, "ドロップしてください。", 0x000000);
+            .visible = true;
+        }
+    }
+
+    function onFileDrop(files) {
+        var tjsFile, pngFiles = [], jsonFiles = [];
+        for (var i = 0; i < files.count; ++i) {
+            switch (Storages.extractStorageExt(files[i])) {
+            case ".tjs":   tjsFile = files[i]; break;
+            case ".json": jsonFiles.add(files[i]); break;
+            case ".png":  pngFiles.add(files[i]); break;
+            }
+        }
+        if (tjsFile === void || pngFiles.count == 0 || jsonFiles.count === 0) { return; }
+
+        // jsonからテクスチャの位置情報を取得
+        var jsonData = %[];
+        for (var jsonIndex = 0; jsonIndex < jsonFiles.count; ++jsonIndex) {
+            var jsonFile = jsonFiles[jsonIndex];
+            var data = Scripts.evalJSONStorage(jsonFile);
+            var filenames = Scripts.getObjectKeys(data.frames);
+            for (var fileIndex = 0; fileIndex < filenames.count; ++fileIndex) {
+                var frameKey = filenames[fileIndex];
+                var data = data.frames[frameKey];
+                if (data.trimmed) throw new Exception("trimされたデータは未対応です");
+                var filename = Storages.chopStorageExt(frameKey);
+                if (jsonData[filename] !== void) throw new Exception("ファイル名が重複しています");
+                jsonData[filename] = %[
+                    x : data.frame.x,
+                    y : data.frame.y,
+                    w : data.frame.w,
+                    h : data.frame.h,
+                    rotated : !!data.rotated,
+                    filename : Storages.extractStorageName(Storages.chopStorageExt(jsonFile)),
+                ];
+            }
+        }
+
+        // tjsデータにテクスチャの位置情報を追加
+        var tjsData = Scripts.evalStorage(tjsFile);
+        var layers = tjsData.layers;
+        var layerNames = Scripts.getObjectKeys(tjsData.layers);
+        for (var layerIndex = 0; layerIndex < layerNames.count; ++layerIndex) {
+            var layerName = layerNames[layerIndex];
+            var layer = layers[layerName];
+            if (jsonData[layerName] === void) throw new Exception("jsonに存在しないレイヤ名です:" + layerName);
+            layer.filename = jsonData[layerName].filename + ".tlg";
+            layer.textureX = jsonData[layerName].x;
+            layer.textureY = jsonData[layerName].y;
+            layer.rotate = jsonData[layerName].rotated;
+        }
+
+        // tjsデータを出力
+        (Dictionary.saveStruct incontextof tjsData)(Storages.chopStorageExt(tjsFile) + ".tex", "");
+
+        // pngをtlgに変換
+        var bitmap = new Bitmap();
+        for (var i = 0; i < pngFiles.count; ++i) {
+            bitmap.load(pngFiles[i]);
+            bitmap.save(Storages.chopStorageExt(pngFiles[i]) + ".tlg", "tlg5");
+        }
+    }
+}
+
+var win = new TexturePackerConvertWindow();
+win.visible = true;

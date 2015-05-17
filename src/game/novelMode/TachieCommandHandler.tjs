@@ -1,0 +1,115 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(TachieCommandHandler, SpriteCommandHandler)
+{
+    OverrideFunc(beforeTransition)() {
+        if (this._fileChanged) {
+            this._spriteBack.load(this._getFilename());
+            this._fileChanged = false;
+        } else if (this._spriteFore.imageName != this._spriteBack.imageName) {
+            this._spriteBack.copyImage(this._spriteFore);
+        }
+
+        if (this._diffChanged) {
+            this._spriteBack.setDiff(this._diffs.getValues()*);
+            this._diffChanged = false;
+        }
+        super.beforeTransition();
+    }
+
+
+
+    var _charName = "";
+    var _pose = "";
+    var _size = "";
+    var _diffs = %[];
+
+    var _diffCommandGroup = %[];
+
+    var _fileChanged = false;
+    var _diffChanged = false;
+
+    var _tachieAutoTransition = %[
+        priority : NovelModeTransPriority_AutoAll,
+        type : TransitionType_Crossfade,
+        option: %[
+            time:300,
+        ]
+    ];
+
+    Constructor(mode:NovelMode, parentLayerFore:Layer, parentLayerBack:Layer, charName:string) {
+        checkArgs
+        super.SpriteCommandHandler(...);
+        this._showHideAutoTransition = this._tachieAutoTransition;
+        this._charName = charName;
+    }
+
+    Finalize() {
+        super.finalize();
+    }
+
+    OverrideFunc(_createSprite)(parentLayer:Layer) {
+        checkArgs
+        var layer = new global.Layer(parentLayer.window, parentLayer);
+        layer.setSize(parentLayer.width, parentLayer.height);
+        layer.visible = false;
+        return new global.LayeredSprite(layer, true);
+    }
+
+    OverrideFunc(_createAttributeMethods)() {
+        var methods = super._createAttributeMethods();
+        methods.name = this._changeFileCommandImpl incontextof %[ self:this, targetName:"_charName" ];
+        methods.pose = this._changeFileCommandImpl incontextof %[ self:this, targetName:"_pose" ];
+        methods.size = this._changeFileCommandImpl incontextof %[ self:this, targetName:"_size" ];
+        return methods;
+    }
+
+    OverrideFunc(_isIgnoreCommand)(command:Dictionary) {
+        checkArgs
+        return command.name !== "char" || command.attributeValues.name !== this._charName;
+    }
+
+    OverrideFunc(_getAttributeMethod)(attrName:string) {
+        checkArgs
+        if (this._diffCommandGroup[attrName] !== void) {
+            return this._changeDiffCommandImpl;
+        }
+        return super._getAttributeMethod(...);
+    }
+
+    Func(_changeFileCommandImpl)(attrValue:string?, attrName:string) {
+        checkArgs
+        var validatedValue = global.gScriptLogger.validateAttributeSpecified(attrValue, attrName, self[targetName]);
+        validatedValue = global.gScriptLogger.validateAttributeValueSpecified(validatedValue, attrName, self[targetName]);
+
+        // 同じままなら何もしない
+        if (validatedValue === self[targetName]) return;
+
+        self[targetName] = validatedValue;
+        self._diffs.clear();
+        self._fileChanged = true;
+        self._diffChanged = true;
+        var filename = self._getFilename();
+        if (global.Storages.isExistentStorage(filename)) {
+            var data = global.Scripts.evalStorage(filename);
+            self._diffCommandGroup = data.groups;
+        }
+        return %[ trans : self._tachieAutoTransition ];
+    }
+
+    Func(_changeDiffCommandImpl)(attrValue:string?, attrName:string) {
+        checkArgs
+        global.gScriptLogger.validateAttributeValueNotSpecified(attrValue, attrName);
+        var targetGroup = this._diffCommandGroup[attrName];
+        typeString(targetGroup)
+        if (this._diffs[targetGroup] === attrName) { return; }
+        this._diffs[targetGroup] = attrName;
+        this._diffChanged = true;
+        return %[ trans : this._tachieAutoTransition ];
+    }
+
+    Func(_getFilename)() {
+        return @"fg${this._charName}_${this._pose}_${this._size}.led";
+    }
+}

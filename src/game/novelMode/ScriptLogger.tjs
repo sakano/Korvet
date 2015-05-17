@@ -51,9 +51,11 @@ Class(ScriptLogger)
 
     Func(validateAttributeSpecified)(value:any+, attrName:string, defaultValue:any) {
         checkArgs
-        if (value !== void && value !== null) return value;
-        this.notifyAttributeNotSpecifiedError(attrName);
-        return defaultValue;
+        if (value === void) {
+            this.notifyAttributeNotSpecifiedError(attrName);
+            return defaultValue;
+        }
+        return value;
     }
 
     Func(validateAttributeValueSpecified)(value:any+, attrName:string, defaultValue:string) {

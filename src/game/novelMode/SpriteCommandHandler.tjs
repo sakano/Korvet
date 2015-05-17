@@ -4,26 +4,7 @@ FILE_INCLUDE_GUARD
 ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
 {
     m4_define(&--SPRITE_PROPERTY--&,
-        property $1Both {
-            setter(value) {
-                typeNumber(value)
-                if (this._inTransition) {
-                    this._spriteFore.$1 = value;
-                    this._spriteBack.$1 = value;
-                } else {
-                    this._spriteFore.$1 = value;
-                }
-            }
-        }
-        property $1Fore {
-            setter(value) {
-                typeNumber(value)
-                if (this._inTransition) {
-                    this._spriteFore.$1 = value;
-                }
-            }
-        }
-        property $1Back {
+        property $1 {
             setter(value) {
                 typeNumber(value)
                 if (this._inTransition) {
@@ -45,6 +26,20 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
     SPRITE_PROPERTY(shearX)
     SPRITE_PROPERTY(shearY)
     SPRITE_PROPERTY(angle)
+    SPRITE_PROPERTY(offsetX)
+    SPRITE_PROPERTY(offsetY)
+    property alignment {
+        setter(value) {
+            if (this._inTransition) {
+                this._spriteBack.alignment = value;
+            } else {
+                this._spriteFore.alignment = value;
+            }
+        }
+        getter {
+            return this._inTransition ? this._spriteBack.alignment : this._spriteFore.alignment;
+        }
+    }
 
     OverrideFunc(beforeTransition)() {
         this._updateSpriteBack();
@@ -59,7 +54,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
     OverrideFunc(draw)(force:bool = false) {
         checkArgs
         if (this._spriteFore.redraw || force) {
-            if (this._spriteFore.filename !== "") {
+            if (this._spriteFore.visible) {
                 this._spriteFore.draw(true);
             }
         }
@@ -99,7 +94,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
             var attrValue = attrValues[attrName];
 
             // メソッドが存在しない属性は何もしない
-            var method = this._attributeMethods[attrName];
+            var method = this._getAttributeMethod(attrName);
             if (method === void) continue;
 
             // 属性に対応するメソッドを呼出し
@@ -191,6 +186,11 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
 
     AbstractFunc(_isIgnoreCommand)(command:Dictionary)
 
+    Func(_getAttributeMethod)(attrName:string) {
+        checkArgs
+        return this._attributeMethods[attrName];
+    }
+
     Func(_updateSpriteBack)() {
         checkArgs
         // spriteForeをspriteBackにコピー
@@ -205,6 +205,8 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
             .shearX = src.shearX;
             .shearY = src.shearY;
             .angle = src.angle;
+            .offsetX = src.offsetX;
+            .offsetY = src.offsetY;
             .alignment = src.alignment;
             .visible = src.visible;
         }
@@ -214,7 +216,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         checkArgs
         if (attrValues.time === void) {
             return %[ sequences : [
-                    global.SequenceRunner.sequence().wait("update").setValue(&self[propertyName + "Back"], (int)attrValue)
+                    global.SequenceRunner.sequence().wait("update").setValue(&self[propertyName], (int)attrValue)
             ] ];
         } else {
             var time = global.gScriptLogger.validateAttributeValueSpecified(attrValues.time, "time", "1");
@@ -223,7 +225,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
                     global.SequenceRunner.sequence().wait("update")
                         .call(self._mode.onActionBegin)
                         .beginSkip("skipAction")
-                            .action(&self[propertyName + "Back"]).to((int)attrValue, time)
+                            .action(&self[propertyName]).to((int)attrValue, time)
                         .endSkip()
                         .call(self._mode.onActionEnd)
             ]];
@@ -276,6 +278,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         case TransitionType_Universal:
             // rule属性
             var rule = global.gScriptLogger.validateAttributeSpecified(attrValues.rule, "rule", null);
+            rule = global.gScriptLogger.validateAttributeValueSpecified(rule, "rule", null);
             if (rule === null) {
                 type = TransitionType_Crossfade;
                 break;

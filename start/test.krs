@@ -24,19 +24,36 @@
 
 
 
+; 立ち絵コマンドの省略表記
+[macro _name=楓][char name=楓 *][endmacro]
+@amacro _name=基本 pose=基本
+@amacro _name=奥 size=奥
+@amacro _name=後 size=後
+@amacro _name=前 size=前
+@amacro _name=最前 size=最前
+
+
+
 ; 本編開始
 @道 昼 中 show
 背景を表示しました。
+
+@楓 基本 前 メイド服 涙なし 眉通常 目通常 口閉じ y=1200 show
+立ち絵を表示しました。
+
+@楓 基本 前 私服 涙なし 眉通常3 目ジト目 口丸 y=1200
+立ち絵を変更。
 
 @道 夜 中
 背景変更。
 
 @道 hide
+@楓 hide
 非表示にしました。
 
 @道 show
+@楓 show
 再度表示
 
-@道 hide
 おわり
 

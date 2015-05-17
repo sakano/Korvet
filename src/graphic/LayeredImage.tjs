@@ -1,0 +1,185 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(LayeredImage, HierarchicalMatrix)
+{
+    property width {
+        getter {
+            if (this._fileData === void) {
+                assert(false)
+                return 0;
+            }
+            return this._fileData.width;
+        }
+    }
+
+    property height {
+        getter {
+            if (this._fileData === void) {
+                assert(false)
+                return 0;
+            }
+            return this._fileData.height;
+        }
+    }
+
+    property redraw {
+        getter { return this._redraw; }
+    }
+
+    property filename {
+        getter { return this._filename; }
+    }
+
+    property imageName {
+        getter { return this._filename + ":" + this._layerNumbers; }
+    }
+
+    Func(load)(filename:string) {
+        checkArgs
+        this._filename = filename;
+        this._layerNumbers = "";
+        this._diffNames.clear();
+
+        this._fileData = Scripts.evalStorage(filename);
+
+        this._layerInfos.clear();
+
+        this._composedBitmap.setSize(this._fileData.width, this._fileData.height);
+
+        this._redraw = true;
+        this._recompose = true;
+
+        this.reset();
+    }
+
+    Func(setDiff)(diffNames*) {
+        checkArgs
+        assert(diffNames.count > 0)
+        assert(this._filename.length > 0)
+        typeCheck(this._fileData, "Dictionary")
+        this._diffNames = diffNames;
+
+        // 再描画フラグ
+        this._redraw = true;
+        this._recompose = true;
+
+        // 現在のレイヤ情報はクリア
+        var layerInfos = this._layerInfos;
+        layerInfos.clear();
+        this._layerNumbers = "";
+        var layerData = this._fileData.layers;
+        for (var diffIndex = 0; diffIndex < diffNames.count; ++diffIndex) {
+            // 指定された差分に必要なレイヤの名前を得る
+            var layerNames = this._fileData.diffs[diffNames[diffIndex]];
+
+            // 存在しない差分はエラー
+            if (layerNames === void) {
+                assert(false, diffNames[diffIndex])
+                continue;
+            }
+
+            // レイヤ情報をレイヤ番号順にlayerInfosに格納
+            for (var layerIndex = 0; layerIndex < layerNames.count; ++layerIndex) {
+                var insertLayerInfo = layerData[layerNames[layerIndex]];
+                typeNotVoid(insertLayerInfo)
+                for (var insertIndex = 0; true; ++insertIndex) {
+                    if (layerInfos.count <= insertIndex || insertLayerInfo.layerNumber < layerInfos[insertIndex].layerNumber) {
+                        layerInfos.insert(insertIndex, insertLayerInfo);
+                        this._layerNumbers += insertLayerInfo.layerNumber + ",";
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    Func(copyImage)(src:LayeredImage) {
+        checkArgs
+        if (this._filename != src._filename) {
+            this.load(src._filename);
+        }
+        this.setDiff(src._diffNames*);
+    }
+
+    Func(clearBitmap)() {
+        this._filename = "";
+        this._layerNumbers = "";
+
+        invalidate this._fileData;
+        this._fileData = void;
+
+        this._layerInfos.clear();
+
+        this._composedBitmap.setSize(32, 32);
+
+        this.reset();
+    }
+
+    Func(draw)(dest, force:bool = false) {
+        checkArgs
+        assert(dest instanceof "Layer" || dest instanceof "Bitmap")
+        assert(this._filename !== "")
+        assert(this._layerNumbers !== "")
+        assert(this._fileData !== void)
+
+        if (this._redraw || force) {
+            if (this._recompose) {
+                this._compose();
+            }
+            // 合成済みビットマップから描画先へコピー
+            this._getMatrix().operateAffine(dest, this._composedBitmap);
+            this._redraw = false;
+        }
+    }
+
+
+
+    var _filename = "";
+    var _layerNumbers =  "";
+    var _diffNames = [];
+    var _fileData;
+    var _layerInfos = [];
+    var _bitmap = new Bitmap();
+    var _composedBitmap = new Bitmap();
+    var _redraw = true;
+    var _recompose = true;
+
+    Constructor() {
+        super.HierarchicalMatrix();
+    }
+
+    Finalize() {
+        this.clearBitmap();
+        invalidate this._diffNames;
+        invalidate this._layerInfos;
+        invalidate this._bitmap;
+        invalidate this._composedBitmap;
+        super.finalize();
+    }
+
+    OverrideFunc(_onParentMatrixUpdated) {
+        super._onParentMatrixUpdated();
+        this._redraw = true;
+    }
+
+    Func(_compose)() {
+        // 合成結果のビットマップをクリア
+        this._composedBitmap.fill(0);
+
+        // レイヤ情報に従って合成
+        var layerInfos = this._layerInfos;
+        var srcBitmap = this._bitmap;
+        for (var i = 0; i < layerInfos.count; ++i) {
+            var layerInfo = layerInfos[i];
+            assert(layerInfo.condition === void, "not implemented")
+
+            // 画像を読み込んで合成
+            srcBitmap.load(layerInfo.filename);
+            global.ImageFunction.operateRect(this._composedBitmap,
+                layerInfo.offsetX, layerInfo.offsetY, srcBitmap,
+                new Rect(layerInfo.textureX, layerInfo.textureY, layerInfo.textureX + layerInfo.width, layerInfo.textureY + layerInfo.height),
+                null, layerInfo.type, dfAlpha, layerInfo.opacity);
+        }
+    }
+}

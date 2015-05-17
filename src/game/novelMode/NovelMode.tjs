@@ -141,8 +141,13 @@ ClassExtends(NovelMode, GameMode)
         this._commandHandlers.add(this._systemCommandHandler);
 
         var stageCommandHandler = new global.StageCommandHandler(this, this._foreLayer, this._backLayer);
-        this._drawables.add(stageCommandHandler);
         this._commandHandlers.add(stageCommandHandler);
+        this._drawables.add(stageCommandHandler);
+
+        var tachieCommandHandler = new global.TachieCommandHandler(this, this._foreLayer, this._backLayer, "楓");
+        tachieCommandHandler.alignment = SpriteAlignment_BottomCenter;
+        this._commandHandlers.add(tachieCommandHandler);
+        this._drawables.add(tachieCommandHandler);
 
         var messageCommandHandler = new global.MessageCommandHandler(this, this._foreLayer, this._backLayer);
         this._commandHandlers.add(messageCommandHandler);

@@ -85,7 +85,10 @@ execStorage("KorvetParser.tjs");
 execStorage("Drawing2DMatrix.tjs");
 execStorage("HierarchicalMatrix.tjs");
 execStorage("Image.tjs");
+execStorage("LayeredImage.tjs");
+execStorage("TextureAtlasComposer.tjs");
 execStorage("Sprite.tjs");
+execStorage("LayeredSprite.tjs");
 execStorage("ScaleLevelImage.tjs");
 
 execStorage("TextDrawer.tjs");
@@ -104,6 +107,7 @@ execStorage("AbstractCommandHandler.tjs");
 execStorage("AbstractDrawableCommandHandler.tjs");
 execStorage("SpriteCommandHandler.tjs");
 execStorage("StageCommandHandler.tjs");
+execStorage("TachieCommandHandler.tjs");
 execStorage("MessageCommandHandler.tjs");
 execStorage("SystemCommandHandler.tjs");
 

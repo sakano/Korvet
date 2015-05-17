@@ -61,6 +61,7 @@ ClassExtends(StageCommandHandler, SpriteCommandHandler)
     Func(_changeFileCommandImpl)(attrValue:string?, attrName:string, attrValues:Dictionary) {
         checkArgs
         var validatedValue = global.gScriptLogger.validateAttributeSpecified(attrValue, attrName, self[targetName]);
+        validatedValue = global.gScriptLogger.validateAttributeValueSpecified(validatedValue, attrName, self[targetName]);
 
         // 同じままなら何もしない
         if (validatedValue === self[targetName]) return;
