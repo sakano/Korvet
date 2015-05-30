@@ -55,5 +55,6 @@ if (!global.gRelaseMode) {
 // 検索パスを追加
 Storages.addAutoPath(System.exePath + "start/fgimage/");
 
+var gConfig = new Config();
 var gScriptLogger = new ScriptLogger();
 var gGame = new Game();

@@ -21,6 +21,7 @@ Plugins.link("layerExDraw.dll");
 Plugins.link("fstat.dll");
 Plugins.link("wuvorbis.dll");
 Plugins.link("windowEx.dll");
+Plugins.link("menu.dll");
 
 // load scripts
 Scripts.execStorage("Syntax.tjs");
@@ -100,6 +101,7 @@ execStorage("ResizableWindow.tjs");
 
 execStorage("ScriptLogger.tjs");
 execStorage("Config.tjs");
+execStorage("GameMenu.tjs");
 execStorage("Game.tjs");
 execStorage("GameMode.tjs");
 

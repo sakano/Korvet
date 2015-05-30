@@ -1,3 +1,11 @@
+m4_dnl // ConfigMode
+m4_define(&--ConfigMode_Default--&, &--"default"--&)m4_dnl
+m4_define(&--ConfigMode_Auto--&, &--"auto"--&)m4_dnl
+m4_define(&--ConfigMode_Skip--&, &--"skip"--&)m4_dnl
+m4_dnl
+m4_dnl // ConfigValueType
+m4_define(&--ConfigValueType_TextWaitTime--&, &--"textWaitTime"--&)m4_dnl
+m4_dnl
 m4_dnl // TransitionType
 m4_define(&--TransitionType_Crossfade--&, &--"crossfade"--&)m4_dnl
 m4_define(&--TransitionType_Universal--&, &--"universal"--&)m4_dnl
@@ -13,7 +21,7 @@ m4_define(&--NovelModeTransPriority_Specified--&, &--2--&)m4_dnl
 m4_define(&--NovelModeTransPriority_AutoAll--&, &--1--&)m4_dnl
 m4_define(&--NovelModeTransPriority_Auto--&, &--0--&)m4_dnl
 m4_dnl
-m4_dnl // ActionType
+m4_dnl // ActionHandler
 m4_define(&--ActionHandler_Easing--&, &--"ez"--&)m4_dnl
 m4_define(&--ActionHandler_SquareWave--&, &--"sq"--&)m4_dnl
 m4_define(&--ActionHandler_TriangleWave--&, &--"tr"--&)m4_dnl
@@ -68,6 +76,9 @@ m4_define(&--MouseGestureDirection_UpLeft--&, &--7--&)m4_dnl
 m4_dnl
 m4_dnl // EventType
 m4_define(&--EventType_All--&, &--"a"--&)m4_dnl
+m4_dnl // ConfigEventType
+m4_define(&--ConfigEventType_ValueUpdate--&, &--"u_co"--&)m4_dnl
+m4_define(&--ConfigEventType_ValueUpdateAll--&, &--"a_co"--&)m4_dnl
 m4_dnl // SoundEventType
 m4_define(&--SoundEventType_Play--&, &--"ply_so"--&)m4_dnl
 m4_define(&--SoundEventType_Stop--&, &--"stp_so"--&)m4_dnl

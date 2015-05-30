@@ -1,0 +1,52 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(GameMenu)
+{
+    Constructor(window:Window) {
+        checkArgs
+        this._initMenu(window);
+    }
+
+    Finalize() {
+    }
+
+    Func(_initMenu)(window:Window) {
+        checkArgs
+        var textSettingMenu = new global.MenuItem(window, "テキスト設定");
+        var messageMenu = this._createRangeOptionMenu(window, "メッセージ速度", 11, "%03.2f秒(&%c)",  "index/100", "index*10", "(index+1)*10", ConfigValueType_TextWaitTime);
+        textSettingMenu.add(messageMenu);
+        window.menu.add(textSettingMenu);
+    }
+
+    Func(_createRangeOptionMenu)(window:Window, parentMenuCaption:string, count:int, captionFormat:string, captionExpr:string, minExpr:string, maxExpr:string, configValueType:string) {
+        checkArgs
+        var context = %[];
+        var eval = global.Scripts.eval;
+        var parentMenu = new global.MenuItem(window, parentMenuCaption);
+        var currentValue = global.gConfig.getValue(configValueType);
+        for (var index = 0; index < count; ++index) {
+            context.index = index;
+            var captionValue = eval(captionExpr,,,context);
+            var menu = new global.MenuItem(window, captionFormat.sprintf(captionValue, $(#'A' + index)));
+            menu.minValue = eval(minExpr,,,context);
+            menu.maxValue = eval(maxExpr,,,context);
+            menu.configValueType = configValueType;
+            menu.onClick = this._onClickCallback incontextof menu;
+            menu.checked = true if (menu.minValue <= currentValue && currentValue < menu.maxValue);
+            parentMenu.add(menu);
+            global.gConfig.bindEvent(ConfigEventType_ValueUpdate, this._onValueUpdatedCallback incontextof menu);
+        }
+        return parentMenu;
+    }
+
+    Func(_onClickCallback)() {
+        global.gConfig.setValue(this.configValueType, this.minValue);
+    }
+
+    Func(_onValueUpdatedCallback)(valueType:string, value:number) {
+        checkArgs
+        if (valueType !== this.configValueType) { return; }
+        this.checked = this.minValue <= value && value < this.maxValue;
+    }
+}

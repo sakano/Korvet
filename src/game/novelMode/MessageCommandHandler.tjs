@@ -67,6 +67,7 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
     var _lineHeight = 40;
     var _lineWidth = 1232;
     var _lineNumber = 3;
+    var _textWaitTime = 50;
 
     Constructor(mode:NovelMode, parentLayerFore:Layer, parentLayerBack:Layer) {
         checkArgs
@@ -79,6 +80,8 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
         this._textLayerBack = this._createTextLayer(parentLayerBack);
 
         this._textDrawer = this._createTextDrawer(System_DefaultFont, 26);
+
+        global.gConfig.newValue(ConfigValueType_TextWaitTime, this._textWaitTime, this._setTextWaitTime);
     }
 
     Finalize() {
@@ -193,7 +196,7 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
 
         return global.SequenceRunner.sequence()
             .call(this._drawNextCharacter)
-            .wait(300)
+            .wait(this._textWaitTime)
             .factory(this._drawMessageSequenceFactory);
     }
 
@@ -245,5 +248,10 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
     Func(_doRepage)() {
         this._doReline();
         this._drawingLineNumber = 0;
+    }
+
+    Func(_setTextWaitTime)(value:int) {
+        checkArgs
+        this._textWaitTime = (int)value;
     }
 }

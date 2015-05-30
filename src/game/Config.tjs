@@ -20,12 +20,12 @@ Class(Config)
         var configTo = this._getConfigHierarchy(mode);
 
         // 全ての項目をチェックして値が変わるもののみ適用
-        this._config[ConfigMode_Default].getKeys().foreach(LMD(index, name:string) {
+        this._config[ConfigMode_Default].getKeys().foreach(LMD(index, valueType:string) {
             for (var configIndex = 0; configIndex < configTo.count; ++configIndex) {
-                if (typeof configTo[configIndex][name] === "undefined") { continue; }
-                var valueTo = configTo[configIndex][name];
-                if (valueTo != configFrom[name]) {
-                    _notifyUpdate(name, valueTo, mode);
+                if (typeof configTo[configIndex][valueType] === "undefined") { continue; }
+                var valueTo = configTo[configIndex][valueType];
+                if (valueTo != configFrom[valueType]) {
+                    _notifyUpdate(valueType, valueTo, mode);
                 }
             }
         } incontextof %[
@@ -35,38 +35,39 @@ Class(Config)
         ]);
     }
 
-    Func(newValue)(name:string, value:any+, setCallback:Function) {
+    Func(newValue)(valueType:string, value:any+, setCallback:Function) {
         checkArgs
-        typeVoid(this._setCallbacks[name])
-        typeVoid(this._getCallbacks[name])
-        typeVoid(this._config[ConfigMode_Default][name])
-        this._setCallbacks[name] = setCallback;
-        setValue(name, value, ConfigMode_Default);
+        typeVoid(this._setCallbacks[valueType])
+        typeVoid(this._config[ConfigMode_Default][valueType])
+        this._setCallbacks[valueType] = setCallback;
+        setValue(valueType, value, ConfigMode_Default);
     }
 
-    Func(setValue)(name:string, value:any+, mode:string+ = this._currentMode) {
+    Func(setValue)(valueType:string, value:any+, mode:string+ = this._currentMode) {
         checkArgs
-        this._config[mode][name] = value;
-        this._notifyUpdate(name, value, mode);
+        this._config[mode][valueType] = value;
+        this._notifyUpdate(valueType, value, mode);
     }
 
-    Func(getValue)(name:string, mode:string+ = this._currentMode) {
+    Func(getValue)(valueType:string, mode:string+ = this._currentMode) {
         checkArgs
         var config = this._config[mode];
-        while (typeof config[name] === "undefined") {
+        while (typeof config[valueType] === "undefined") {
             typeString(config.__parent)
             config = this._config[config.__parent];
         }
-        return config[name];
+        return config[valueType];
     }
 
     Func(serialize)() { notImplemented(); }
     Func(deserialize)(data:Dictionary) { notImplemented(); }
 
+
+
     var _currentMode = ConfigMode_Default;
 
     var _config = %[
-        ConfigMode_Default : %[
+        ConfigMode_Default => %[
             __parent : null
         ]
     ];
@@ -79,14 +80,17 @@ Class(Config)
 
     Finalize() {
         global.finalizeObservable(this);
+        this._config.dispose();
+        invalidate this._config;
+        invalidate this._setCallbacks;
     }
 
-    Func(_notifyUpdate)(name:string, value:any+, mode:string) {
-        this._setCallbacks[name](value);
+    Func(_notifyUpdate)(valueType:string, value:any+, mode:string) {
+        this._setCallbacks[valueType](value, valueType);
         if (mode === this._currentMode) {
-            triggerEvent(ConfigEventType_ValueUpdate, name, value);
+            this._triggerEvent(ConfigEventType_ValueUpdate, valueType, value);
         }
-        triggerEvent(ConfigEventType_ValueUpdateAll, name, value, mode);
+        this._triggerEvent(ConfigEventType_ValueUpdateAll, valueType, value, mode);
     }
 
     Func(_getConfigHierarchy)(mode:string) {

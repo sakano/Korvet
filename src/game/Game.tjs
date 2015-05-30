@@ -27,6 +27,7 @@ Class(Game)
 
     var _window;
     var _mode;
+    var _menu;
     var _currentTick;
     var _layers = [];
 
@@ -34,10 +35,12 @@ Class(Game)
         this._currentTick = global.System.getTickCount();
         global.gAsyncCaller.callOnce(global.System.addContinuousHandler, this._onTick);
 
-        this._window = new ResizableWindow(null, 1280, 720);
+        this._window = new global.ResizableWindow(null, 1280, 720);
 
-        this._mode = new NovelMode(this, this._currentTick);
+        this._mode = new global.NovelMode(this, this._currentTick);
         this._mode.initialize();
+
+        this._menu = new global.GameMenu(this._window);
 
         this._window.visible = true;
 
@@ -54,9 +57,11 @@ Class(Game)
     }
 
     Func(_disposeCallback)() {
-        invalidate _mode if this._mode isvalid;
         this._checkMemoryLeak();
-        invalidate _window if this._window isvalid;
+        invalidate this._mode if this._mode isvalid;
+        invalidate this._window if this._window isvalid;
+        invalidate this._menu if this._menu isvalid;
+        invalidate this._mode if this._mode isvalid;
     }
 
     Func(_checkMemoryLeak) {
