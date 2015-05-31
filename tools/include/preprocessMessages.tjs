@@ -55,6 +55,8 @@ m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_REQUIRED--&, &--"必須属性({ATTR_NAME})�
 m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_UNUSED--&, &--"未使用の属性です({ATTR_NAME}={ATTR_VALUE})"--&)m4_dnl
 m4_dnl // 不正な属性値
 m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_REQUIRED--&, &--"この属性({ATTR_NAME})の値は省略できません"--&)m4_dnl
-m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_UNUSED--&, &--"この属性({ATTR_NAME})には値を指定しないでください"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_UNUSED--&, &--"この属性({ATTR_NAME})には値を指定しないでください(現在の値:{ATTR_VALUE})"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_ILLEGAL--&, &--"不正な値が指定されています({ATTR_NAME}={ATTR_VALUE})"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_NOT_INTEGER--&, &--"この属性({ATTR_NAME})には整数を指定してください(現在の値:{ATTR_VALUE})"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_NOT_BOOLEAN--&, &--"この属性({ATTR_NAME})には\"true\"または\"false\"を指定してください(現在の値:{ATTR_VALUE})"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_OUT_OF_RANGE--&, &--"指定された数値は範囲外です({ATTR_NAME}={ATTR_VALUE})"--&)m4_dnl

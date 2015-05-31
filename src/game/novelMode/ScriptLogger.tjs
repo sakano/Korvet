@@ -24,9 +24,9 @@ Class(ScriptLogger)
         global.gLog.warn(header + expandMessage(...));
     }
 
-    Func(notifyIllegalAttributeValueError)(attrValue:string?, attrName:string) {
+    Func(notifyAttributeDuplicatedError)(attrName:string) {
         checkArgs
-        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_ILLEGAL, "ATTR_NAME", attrName, "ATTR_VALUE", attrValue);
+        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_DUPLICATED, "ATTR_NAME", attrName);
     }
 
     Func(notifyUnusedAttributeError)(attrValue:string?, attrName:string) {
@@ -44,61 +44,101 @@ Class(ScriptLogger)
         this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_REQUIRED, "ATTR_NAME", attrName);
     }
 
-    Func(notifyAttributeDuplicatedError)(attrName:string) {
+    Func(notifyAttributeValueNotBooleanError)(attrValue:string?, attrName:string) {
         checkArgs
-        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_DUPLICATED, "ATTR_NAME", attrName);
+        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_NOT_BOOLEAN, "ATTR_NAME", attrName, "ATTR_VALUE", attrValue);
     }
 
-    Func(validateAttributeSpecified)(value:any+, attrName:string, defaultValue:any) {
+    Func(notifyIllegalAttributeValueError)(attrValue:string?, attrName:string) {
         checkArgs
-        if (value === void) {
-            this.notifyAttributeNotSpecifiedError(attrName);
-            return defaultValue;
-        }
-        return value;
+        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_ILLEGAL, "ATTR_NAME", attrName, "ATTR_VALUE", attrValue);
     }
 
-    Func(validateAttributeValueSpecified)(value:any+, attrName:string, defaultValue:string) {
+    Func(notifyAttributeUnusedValueSpecifiedError)(attrValue:string?, attrName:string) {
         checkArgs
-        if (value === null) {
-            this.notifyAttributeValueNotSpecifiedError(attrName);
-            return defaultValue;
-        }
-        return value;
+        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_UNUSED, "ATTR_NAME", attrName, "ATTR_VALUE", attrValue);
     }
 
-    Func(validateAttributeValueNotSpecified)(value:any+, attrName:string) {
+    Func(notifyAttributeValueNotIntegerError)(attrValue:string?, attrName:string) {
         checkArgs
-        if (value !== null) {
-            this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_UNUSED, "ATTR_NAME", attrName);
-        }
-        return null;
+        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_NOT_INTEGER, "ATTR_NAME", attrName, "ATTR_VALUE", attrValue);
     }
 
-    Func(validateAttributeValueInteger)(value:any+, attrName:string, min:int+, max:int+, defaultValue:int+) {
+    Func(notifyAttributeValueOutOfRangeError)(attrValue:string?, attrName:string) {
         checkArgs
-        assert(min < max || min === void || max === void)
-        assert(min === void || defaultValue === void || min <= defaultValue)
-        assert(max === void || defaultValue === void || max >= defaultValue)
-        if (value === void) {
-            assert(defaultValue !== void)
-            return defaultValue;
+        this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_OUT_OF_RANGE, "ATTR_NAME", attrName, "ATTR_VALUE", attrValue);
+    }
+
+    Func(validateAttribute)(defaultValue:string?, attrName:string, attributeValues:Dictionary, attributeType:int, attributeValueType:int, args*) {
+        checkArgs
+        assert(attributeType === AttributeType_Required || attributeType === AttributeType_Omissible || attributeType === AttributeType_Verified)
+        assert(attributeValueType === AttributeValueType_Null || attributeValueType === AttributeValueType_String || attributeValueType === AttributeValueType_Boolean || attributeValueType === AttributeValueType_Integer)
+
+        // 検証対象となる属性値を得る。指定されていなければデフォルト値を使う
+        var attrValue = attributeValues[attrName];
+        if (attrValue === void) {
+            assert(attributeType !== AttributeType_Verified)
+            attrValue = defaultValue;
+            if (attributeType === AttributeType_Required) {
+                // 必須属性が指定されていないのはエラー
+                this.notifyAttributeNotSpecifiedError(attrName);
+            }
         }
-        var intValue = (int)value;
-        if (min !== void && intValue < min) {
-            this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_OUT_OF_RANGE, "ATTR_NAME", attrName, "ATTR_VALUE", value);
-            return min;
+        typeStringNullable(attrValue)
+        // 属性値の種類ごとに検証
+        switch (attributeValueType) {
+        case AttributeValueType_Null:
+            // 属性値はnull(未指定)
+            if (attrValue !== null) {
+                this.notifyAttributeUnusedValueSpecifiedError(attrValue, attrName);
+                typeNull(defaultValue)
+            }
+            return null;
+        case AttributeValueType_String:
+            // 属性値は文字列
+            if (attrValue === null || attrValue.length === 0) {
+                this.notifyAttributeValueNotSpecifiedError(attrName);
+                typeString(defaultValue)
+                assert(defaultValue.length > 0)
+                return defaultValue;
+            }
+            return attrValue;
+        case AttributeValueType_Boolean:
+            // 属性値は"true"または"false"
+            switch (attrValue) {
+            case "true":  return true;
+            case "false": return false;
+            default:
+                this.notifyAttributeValueNotBooleanError(attrName);
+                assert(defaultValue === "true" || defaultValue === "false")
+                return defaultValue === "true";
+            }
+        case AttributeValueType_Integer:
+            // 属性値は整数
+            var min = args[0], max = args[1];
+            assert(min === void || (typeof min === "Integer" && min <= (int)defaultValue))
+            assert(max === void || (typeof max === "Integer" && max >= (int)defaultValue))
+            if (!/^[+-]?[1-9][0-9]+$/.test(attrValue)) {
+                this.notifyAttributeValueNotIntegerError(attrValue, attrName);
+                return (int)defaultValue;
+            }
+            attrValue = (int)attrValue;
+            if (min !== void && min > attrValue) {
+                this.notifyAttributeValueOutOfRangeError(attrValue, attrName);
+                return (int)defaultValue;
+            }
+            if (max !== void && max < attrValue) {
+                this.notifyAttributeValueOutOfRangeError(attrValue, attrName);
+                return (int)defaultValue;
+            }
+            return attrValue;
         }
-        if (max !== void && max < intValue) {
-            this.onScriptError(ASSERT_SCRIPT_ATTRIBUTE_VALUE_OUT_OF_RANGE, "ATTR_NAME", attrName, "ATTR_VALUE", value);
-            return max;
-        }
-        return intValue;
+        assert(false)
     }
 
 
 
-    var _parser;
+    var _parser = null;
 
     Constructor() {
     }

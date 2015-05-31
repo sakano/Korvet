@@ -193,7 +193,7 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         this._isMacroRecording = true;
 
         // マクロ名を記録
-        this._recordingMacroName = this._validateMacroName(command.attributeValues._name);
+        this._recordingMacroName = this._validateMacroName(command.attributeValues);
 
         // デフォルト属性を記録
         this._recordingMacroDefaultAttributeValues.assign(command.attributeValues);
@@ -245,7 +245,7 @@ ClassExtends(MacroParserModule, KorvetParserModule)
     Func(_registerAttributeMacro)(command:Dictionary) {
         checkArgs
         // マクロ名を取得
-        var attrMacroName = this._validateMacroName(command.attributeValues._name);
+        var attrMacroName = this._validateMacroName(command.attributeValues);
 
         // 属性マクロを登録
         this._registeredAttributeMacros[attrMacroName] = this._createAttributeMacro(command.attributeNames, command.attributeValues);
@@ -266,10 +266,9 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         return attrMacro;
     }
 
-    Func(_validateMacroName)(attrValue:string?, attrName:string = "_name") {
-        attrValue = global.gScriptLogger.validateAttributeSpecified(attrValue, attrName, "__error_macro_name");
-        attrValue = global.gScriptLogger.validateAttributeValueSpecified(attrValue, attrName, "__error_macro_name");
-        if (attrValue.length === 0 || attrValue === "*") {
+    Func(_validateMacroName)(attrValues:Dictionary, attrName:string = "_name") {
+        var attrValue = global.gScriptLogger.validateAttribute("__error_macro_name", attrName, attrValues, AttributeType_Required, AttributeValueType_String);
+        if (attrValue === "*") {
             global.gScriptLogger.notifyIllegalAttributeValueError(attrValue, attrName);
             attrValue = "__error_macro_name";
         }

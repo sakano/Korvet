@@ -1,3 +1,14 @@
+m4_dnl // AttributeType
+m4_define(&--AttributeType_Required--&, &--0--&)m4_dnl
+m4_define(&--AttributeType_Omissible--&, &--1--&)m4_dnl
+m4_define(&--AttributeType_Verified--&, &--2--&)m4_dnl
+m4_dnl
+m4_dnl // AttributeType
+m4_define(&--AttributeValueType_Null--&, &--0--&)m4_dnl
+m4_define(&--AttributeValueType_String--&, &--1--&)m4_dnl
+m4_define(&--AttributeValueType_Boolean--&, &--2--&)m4_dnl
+m4_define(&--AttributeValueType_Integer--&, &--3--&)m4_dnl
+m4_dnl
 m4_dnl // ConfigMode
 m4_define(&--ConfigMode_Default--&, &--"default"--&)m4_dnl
 m4_define(&--ConfigMode_Auto--&, &--"auto"--&)m4_dnl
@@ -73,6 +84,7 @@ m4_define(&--MouseGestureDirection_Down--&, &--4--&)m4_dnl
 m4_define(&--MouseGestureDirection_DownLeft--&, &--5--&)m4_dnl
 m4_define(&--MouseGestureDirection_Left--&, &--6--&)m4_dnl
 m4_define(&--MouseGestureDirection_UpLeft--&, &--7--&)m4_dnl
+m4_dnl
 m4_dnl
 m4_dnl // EventType
 m4_define(&--EventType_All--&, &--"a"--&)m4_dnl

@@ -91,14 +91,13 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
 
         for (var i = 0; i < attrNames.count; ++i) {
             var attrName = attrNames[i];
-            var attrValue = attrValues[attrName];
 
             // メソッドが存在しない属性は何もしない
             var method = this._getAttributeMethod(attrName);
             if (method === void) continue;
 
             // 属性に対応するメソッドを呼出し
-            var methodResult = method(attrValue, attrName, attrValues);
+            var methodResult = method(attrValues, attrName);
 
             if (methodResult === void) continue;
             // 優先度の高いトランジション情報が返されたらresult.transに記録
@@ -129,7 +128,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
     var _spriteFore;
     var _spriteBack;
 
-    var _defaultTransTime = 500;
+    var _defaultTransTime = "500";
     var _transitionTypes = %[
         fade : TransitionType_Crossfade,
         crossfade : TransitionType_Crossfade,
@@ -212,55 +211,54 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         }
     }
 
-    Func(_transformCommandImpl)(attrValue:string?, attrName:string, attrValues:Dictionary) {
+    Func(_transformCommandImpl)(attrValues:Dictionary, attrName:string) {
         checkArgs
         if (attrValues.time === void) {
             return %[ sequences : [
-                    global.SequenceRunner.sequence().wait("update").setValue(&self[propertyName], (int)attrValue)
+                    global.SequenceRunner.sequence().wait("update").setValue(&self[propertyName], (int)attrValues[attrName])
             ] ];
         } else {
-            var time = global.gScriptLogger.validateAttributeValueSpecified(attrValues.time, "time", "1");
-            time = global.gScriptLogger.validateAttributeValueInteger(time, "time", 1, void);
+            var time = global.gScriptLogger.validateAttribute("1", "time", attrValues, AttributeType_Verified, AttributeValueType_Integer, 1);
             return %[ sequences : [
                     global.SequenceRunner.sequence().wait("update")
                         .call(self._mode.onActionBegin)
                         .beginSkip("skipAction")
-                            .action(&self[propertyName]).to((int)attrValue, time)
+                            .action(&self[propertyName]).to((int)attrValues[attrName], time)
                         .endSkip()
                         .call(self._mode.onActionEnd)
             ]];
         }
     }
 
-    Func(_showHideCommandImpl)(attrValue:string?, attrName:string) {
+    Func(_showHideCommandImpl)(attrValues:Dictionary, attrName:string) {
         checkArgs
-        global.gScriptLogger.validateAttributeValueNotSpecified(attrValue, attrName);
+        assert(attrName === "show" || attrName === "hide")
+        global.gScriptLogger.validateAttribute(null, attrName, attrValues, AttributeType_Verified, AttributeValueType_Null);
         self._visible = newVisible;
         return %[ trans : self._showHideAutoTransition ];
     }
 
-    Func(_fadeCommandImpl)(attrValue:string?) {
+    Func(_fadeCommandImpl)(attrValues:Dictionary, attrName:string?) {
         checkArgs
-        attrValue = global.gScriptLogger.validateAttributeValueSpecified(attrValue, "fade", (string)this._defaultTransTime);
-        attrValue = global.gScriptLogger.validateAttributeValueInteger(attrValue, "fade", 1, void);
+        var time = global.gScriptLogger.validateAttribute(this._defaultTransTime, "fade", attrValues, AttributeType_Verified, AttributeValueType_Integer, 1);
         return %[
             trans : %[
                 priority : NovelModeTransPriority_Specified,
                 type : TransitionType_Crossfade,
                 option: %[
-                    time : attrValue
+                    time : time
                 ]
             ]
         ];
     }
 
-    Func(_transCommandImpl)(attrValue:string?, attrName:string, attrValues:Dictionary) {
+    Func(_transCommandImpl)(attrValues:Dictionary, attrName:string) {
         checkArgs
-        var type = this._transitionTypes[attrValue];
+        var type = this._transitionTypes[attrValues[attrName]];
 
         // 存在しないトランジションの種類ならエラー
         if (type === void) {
-            global.gScriptLogger.notifyIllegalAttributeValueError(attrValue, "trans");
+            global.gScriptLogger.notifyIllegalAttributeValueError(attrValues[attrName], attrName);
             type = TransitionType_Crossfade;
         }
 
@@ -268,8 +266,7 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         var option = %[];
 
         // time属性
-        option.time = global.gScriptLogger.validateAttributeSpecified(attrValues.time, "time", (string)this._defaultTransTime);
-        option.time = global.gScriptLogger.validateAttributeValueInteger(option.time, "time",  1, void);
+        option.time = global.gScriptLogger.validateAttribute(this._defaultTransTime, "time", attrValues, AttributeType_Required, AttributeValueType_Integer, 1);
 
         switch(type) {
         case TransitionType_Crossfade:
@@ -277,16 +274,14 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
             break;
         case TransitionType_Universal:
             // rule属性
-            var rule = global.gScriptLogger.validateAttributeSpecified(attrValues.rule, "rule", null);
-            rule = global.gScriptLogger.validateAttributeValueSpecified(rule, "rule", null);
-            if (rule === null) {
+            var rule = global.gScriptLogger.validateAttribute("__ERROR", "rule", attrValues, AttributeType_Required, AttributeValueType_String);
+            if (rule === "__ERROR") {
                 type = TransitionType_Crossfade;
                 break;
             }
             option.rule = rule;
             // vague属性
-            option.vague = global.gScriptLogger.validateAttributeValueSpecified(attrValues.vague, "vague", "128");
-            option.vague = global.gScriptLogger.validateAttributeValueInteger(option.vague, "vague", 0, void);
+            option.vague = global.gScriptLogger.validateAttribute("128", "vague", attrValues, AttributeType_Omissible, AttributeValueType_Integer, 0);
             break;
         case TransitionType_Scroll:
             // dir属性

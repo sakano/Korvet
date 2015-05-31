@@ -148,9 +148,8 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
     }
 
     Func(_chCommandImpl)(command:Dictionary) {
-        var character = global.gScriptLogger.validateAttributeSpecified(command.attributeValues.text, "text", "X");
-        character = global.gScriptLogger.validateAttributeValueSpecified(character, "text", "X");
-        this._currentMessages.add(%[ type:"character", text:character ]);
+        var text = global.gScriptLogger.validateAttribute("ERROR", "text", command.attributeValues, AttributeType_Required, AttributeValueType_String);
+        this._currentMessages.add(%[ type:"character", text:text ]);
     }
 
     Func(_relineCommandImpl)(command:Dictionary) {

@@ -212,9 +212,7 @@ ClassExtends(NovelMode, GameMode)
         checkArgs
         // delay属性が存在するなら遅延実行
         if (command.attributeValues.delay !== void) {
-            var delay = command.attributeValues.delay;
-            delay = global.gScriptLogger.validateAttributeSpecified(delay, "delay", "1");
-            delay = global.gScriptLogger.validateAttributeValueInteger(delay, "delay", 1, void);
+            var delayTime = global.gScriptLogger.validateAttribute("1", "delay", command.attributeValues, AttributeType_Verified, AttributeValueType_Integer, 1);
             // delay属性を消去
             command.attributeNames.remove("delay");
             delete command.attributeValues.delay;
@@ -222,7 +220,7 @@ ClassExtends(NovelMode, GameMode)
             this._runner.run(global.SequenceRunner.sequence()
                 .wait("update")
                 .beginSkip("skipDelay")
-                    .wait(delay)
+                    .wait(delayTime)
                     .call(this._doCommandImmediately, command)
                     .call(this._doUpdateCommand)
                 .endSkip()

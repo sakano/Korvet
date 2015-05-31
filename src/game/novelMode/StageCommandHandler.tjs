@@ -58,10 +58,9 @@ ClassExtends(StageCommandHandler, SpriteCommandHandler)
         return @"bg${this._place}_${this._time}_${this._size}";
     }
 
-    Func(_changeFileCommandImpl)(attrValue:string?, attrName:string, attrValues:Dictionary) {
+    Func(_changeFileCommandImpl)(attrValues:Dictionary, attrName:string) {
         checkArgs
-        var validatedValue = global.gScriptLogger.validateAttributeSpecified(attrValue, attrName, self[targetName]);
-        validatedValue = global.gScriptLogger.validateAttributeValueSpecified(validatedValue, attrName, self[targetName]);
+        var validatedValue = global.gScriptLogger.validateAttribute(self[targetName], attrName, attrValues, AttributeType_Verified, AttributeValueType_String);
 
         // 同じままなら何もしない
         if (validatedValue === self[targetName]) return;

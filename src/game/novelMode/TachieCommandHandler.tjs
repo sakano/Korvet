@@ -78,10 +78,9 @@ ClassExtends(TachieCommandHandler, SpriteCommandHandler)
         return super._getAttributeMethod(...);
     }
 
-    Func(_changeFileCommandImpl)(attrValue:string?, attrName:string) {
+    Func(_changeFileCommandImpl)(attrValues:Dictionary, attrName:string) {
         checkArgs
-        var validatedValue = global.gScriptLogger.validateAttributeSpecified(attrValue, attrName, self[targetName]);
-        validatedValue = global.gScriptLogger.validateAttributeValueSpecified(validatedValue, attrName, self[targetName]);
+        var validatedValue = global.gScriptLogger.validateAttribute(self[targetName], attrName, attrValues, AttributeType_Verified, AttributeValueType_String);
 
         // 同じままなら何もしない
         if (validatedValue === self[targetName]) return;
@@ -98,9 +97,9 @@ ClassExtends(TachieCommandHandler, SpriteCommandHandler)
         return %[ trans : self._tachieAutoTransition ];
     }
 
-    Func(_changeDiffCommandImpl)(attrValue:string?, attrName:string) {
+    Func(_changeDiffCommandImpl)(attrValues:Dictionary, attrName:string) {
         checkArgs
-        global.gScriptLogger.validateAttributeValueNotSpecified(attrValue, attrName);
+        global.gScriptLogger.validateAttribute(null, attrName, attrValues, AttributeType_Verified, AttributeValueType_Null);
         var targetGroup = this._diffCommandGroup[attrName];
         typeString(targetGroup)
         if (this._diffs[targetGroup] === attrName) { return; }
