@@ -1,0 +1,104 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(Config)
+{
+    Func(createMode)(mode:string, parent:string = ConfigMode_Default) {
+        checkArgs
+        typeVoid(this._config[mode])
+        if (this._config[mode] !== void) return;
+        this._config[mode] = %[ __parent:parent ];
+    }
+
+    Func(changeMode)(mode:string) {
+        checkArgs
+        typeCheck(this._config[mode], "Dictionary")
+        if (this._currentMode === mode) return;
+        var configFrom = this._config[this._currentMode];
+        this._currentMode = mode;
+
+        var configTo = this._getConfigHierarchy(mode);
+
+        // 全ての項目をチェックして値が変わるもののみ適用
+        FOR_EACH(valueType, this._config[ConfigMode_Default].getKeys()) {
+            for (var configIndex = 0; configIndex < configTo.count; ++configIndex) {
+                if (typeof configTo[configIndex][valueType] === "undefined") { continue; }
+                var valueTo = configTo[configIndex][valueType];
+                if (valueTo !== configFrom[valueType]) {
+                    this._notifyUpdate(valueType, valueTo, mode);
+                }
+            }
+        }
+    }
+
+    Func(newValue)(valueType:string, value:any+, setCallback:Function) {
+        checkArgs
+        typeVoid(this._setCallbacks[valueType])
+        typeVoid(this._config[ConfigMode_Default][valueType])
+        this._setCallbacks[valueType] = setCallback;
+        setValue(valueType, value, ConfigMode_Default);
+    }
+
+    Func(setValue)(valueType:string, value:any+, mode:string+ = this._currentMode) {
+        checkArgs
+        this._config[mode][valueType] = value;
+        this._notifyUpdate(valueType, value, mode);
+    }
+
+    Func(getValue)(valueType:string, mode:string+ = this._currentMode) {
+        checkArgs
+        var config = this._config[mode];
+        while (typeof config[valueType] === "undefined") {
+            typeString(config.__parent)
+            config = this._config[config.__parent];
+        }
+        return config[valueType];
+    }
+
+    Func(serialize)() { notImplemented(); }
+    Func(deserialize)(data:Dictionary) { notImplemented(); }
+
+
+
+    var _currentMode = ConfigMode_Default;
+
+    var _config = %[
+        ConfigMode_Default => %[
+            __parent : null
+        ]
+    ];
+
+    var _setCallbacks = %[];
+
+    Constructor() {
+        global.includeObservable(this);
+    }
+
+    Finalize() {
+        global.finalizeObservable(this);
+        this._config.dispose();
+        invalidate this._config;
+        invalidate this._setCallbacks;
+    }
+
+    Func(_notifyUpdate)(valueType:string, value:any+, mode:string) {
+        this._setCallbacks[valueType](value, valueType);
+        if (mode === this._currentMode) {
+            this._triggerEvent(ConfigEventType_ValueUpdate, valueType, value);
+        }
+        this._triggerEvent(ConfigEventType_ValueUpdateAll, valueType, value, mode);
+    }
+
+    Func(_getConfigHierarchy)(mode:string) {
+        checkArgs
+        var configs = [];
+        var config = this._config[mode];
+        while (true) {
+            configs.add(config);
+            if (config.__parent === null) break;
+            config = config.__parent;
+        }
+        assert(configs[configs.count - 1] === this._config[ConfigMode_Default])
+        return configs;
+    }
+}

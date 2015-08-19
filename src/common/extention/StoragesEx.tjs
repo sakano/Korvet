@@ -1,0 +1,45 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+/**
+ * Get the sound file name.
+ * @param string name The file name, whose extension may be omitted.
+ * @return string The file name whose extension is completed.
+ */
+setStaticMember(Storages, "getExistSoundFileName", LMD(file:string) {
+    checkArgs
+    with (Storages) {
+        if (.isExistentStorage(file)) { return file; }
+        m4_pushdef(&--CHECK_EXT--&, &--if (.isExistentStorage(file + $1)) { return file + $1; }--&)
+        CHECK_EXT(".ogg")
+        CHECK_EXT(".opus")
+        CHECK_EXT(".wav")
+        m4_popdef(&--CHECK_EXT--&)
+    }
+    return void;
+});
+
+
+/**
+ * Get paths to the files in the specified directory.
+ * @param string dirPath The path to the directory.
+ * @param bool recur If true, files in subdirectories are included.
+ * @return array The paths to the files.
+ */
+setStaticMember(Storages, "getFilesInDirectory", LMD(dirPath:string, recur:bool=true) {
+    checkArgs
+    var list = Storages.dirlist(dirPath);
+    var files = [];
+    FOR_EACH(file, list) {
+        if (file[file.length-1] === "/") { // directory
+            if (file[0] === ".") { continue; }
+            if (!recur) { continue; }
+            var innerFiles = Storages.getFilesInDirectory(dirPath + file);
+            for (var j = innerFiles.count-1; j >= 0; --j) { innerFiles[j] = file + innerFiles[j]; }
+            files.push(innerFiles*);
+        } else { // file
+            files.push(file);
+        }
+    }
+    return files;
+});

@@ -5,3 +5,13 @@
 
 # savedata
 /savedata/
+
+# plugin
+/plugin/
+
+# ctag
+tags
+
+# tvp
+tvpwin32.exe
+tvpwin32_p.exe

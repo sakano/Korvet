@@ -1,0 +1,67 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(MessageCommandConverter)
+{
+    Func(convert)(command:Dictionary) {
+        checkArgs
+        var method = this._commandMethods[command.name];
+        if (method === void) { return void; }
+        method(command);
+    }
+
+    Func(createSyncData)() {
+        // 末尾の改行コマンドを消去
+        assert(this._currentCommands.count > 0)
+        while (this._currentCommands[-1].type === MessageCommadType_Reline) {
+            this._currentCommands.pop();
+        }
+        assert(this._currentCommands.count > 0)
+        return _currentCommands.clone();
+    }
+
+
+    
+    var _commandMethods = %[
+        __beginpage : _beginPageCommandImpl,
+        __endpage   : _endPageCommandImpl,
+        __ch        : _chCommandImpl,
+        __reline    : _relineCommandImpl,
+    ];
+
+    var _currentText = "";
+    var _currentCommands = [];
+
+    Constructor() {}
+
+    Finalize() {
+        invalidate this._commandMethods;
+        this._currentCommands.dispose();
+        invalidate _currentCommands;
+    }
+
+    Func(_beginPageCommandImpl)(command:Dictionary) {
+        this._currentText = "";
+        this._currentCommands.clear();
+    }
+
+    Func(_chCommandImpl)(command:Dictionary) {
+        var text = global.gScriptLogger.validateAttribute("ERROR", "text", command.attributeValues, AttributeType_Required, AttributeValueType_String);
+        this._currentText += text;
+    }
+
+    Func(_relineCommandImpl)(command:Dictionary) {
+        this._addCurrentTextAsCommand();
+        this._currentCommands.add(%[ type:MessageCommadType_Reline ]);
+    }
+
+    Func(_endPageCommandImpl)(command:Dictionary) {
+        this._addCurrentTextAsCommand();
+    }
+
+    Func(_addCurrentTextAsCommand)() {
+        if (this._currentText.length === 0) return;
+        this._currentCommands.add(%[ type:MessageCommadType_Character, text:this._currentText ]);
+        this._currentText = "";
+    }
+}

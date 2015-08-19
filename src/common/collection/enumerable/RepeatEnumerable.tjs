@@ -1,0 +1,38 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(RepeatEnumerable, Enumerable)
+{
+    OverrideFunc(getEnumerator)() {
+        return new global.RepeatEnumerator(this._element, this._count);
+    }
+
+    var _element;
+    var _count;
+
+    Constructor(element:any+, count:int) {
+        checkArgs
+        assert(count >= 0)
+        this._element = element;
+        this._count = count;
+    }
+}
+
+ClassExtends(RepeatEnumerator, Enumerator)
+{
+    property current { getter { return this._element; } }
+
+    OverrideFunc(moveNext) {
+        return --this._count >= 0;
+    }
+
+    var _element;
+    var _count;
+
+    Constructor(element:any+, count:int) {
+        checkArgs
+        assert(count >= 0)
+        this._element = element;
+        this._count = count;
+    }
+}

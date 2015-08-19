@@ -1,9 +1,0 @@
-背景画像素材はきまぐれアフターのものを使っています。
-きまぐれアフター : http://www5d.biglobe.ne.jp/~gakai/
-
-立ち絵画像素材は著作権フリー立ちキャラクター素材集vol.5のものを使っています。
-著作権フリー立ちキャラクター素材集vol.5 : http://www.dlsite.com/maniax/work/=/product_id/RJ060599.html/?unique_op=af
-
-k2compat/以下のスクリプトは吉里吉里Zリポジトリで公開されている吉里吉里Ｚ向け「吉里吉里２互換実装」スクリプトです。
-公開元 : https://github.com/krkrz/krkrz/tree/master/script/Krkr2Compat
-

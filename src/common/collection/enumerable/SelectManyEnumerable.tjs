@@ -1,0 +1,50 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(SelectManyEnumerable, Enumerable)
+{
+    OverrideFunc(getEnumerator)() {
+        return new global.SelectManyEnumerator(this);
+    }
+
+    var _source;
+    var _selector;
+
+    Constructor(source:Object, selector:Function) {
+        checkArgs
+        typeFunction(source.getEnumerator)
+        this._source = source;
+        this._selector = selector;
+    }
+}
+
+ClassExtends(SelectManyEnumerator, Enumerator)
+{
+    property current { getter { return this._selectedEnumerator.current; } }
+
+    OverrideFunc(moveNext) {
+        this._source = this._parent._source.getEnumerator();
+        this._selector = this._parent._selector;
+        this._selectedEnumerator = global.Enumerable.empty().getEnumerator();
+        this.moveNext = this._moveNextImpl;
+        return this._moveNextImpl();
+    }
+
+    var _parent;
+    var _source;
+    var _selector;
+    var _selectedEnumerator;
+
+    Constructor(parent:SelectManyEnumerable) {
+        checkArgs
+        this._parent = parent;
+    }
+
+    Func(_moveNextImpl)() {
+        while (!this._selectedEnumerator.moveNext()) {
+            if (!this._source.moveNext()) return false;
+            this._selectedEnumerator = this._selector(this._source.current).getEnumerator();
+        }
+        return true;
+    }
+}

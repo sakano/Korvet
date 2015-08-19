@@ -1,0 +1,131 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(Event)
+{
+    /**
+     * Bind a callback function to an event.
+     * The callback will be invoked whenever the event is fired.
+     *
+     * Callbacks bound to the special "all" event will be invoked when any event is fired.
+     * These callbacks are passed the name of the event as the first argument.
+     * @param string event The event name to bind.
+     * @param func callback The function to bind.
+     */
+    Func(bind)(event:string, callback:Function) {
+        checkArgs
+        assert(callback isvalid)
+        _eventCallbacks.put(event, callback);
+    }
+
+    /**
+     * Bind callbacks to events according to a specified dictionary.
+     * The following two lines are almost same.
+     *   bindMap(%[ event => callback, even2 => callback2 ]);
+     *   bind(event, callback), bind(event2, callback2);
+     * @param dictionary map The dictionary object contains evant names and callbacks.
+     */
+    Func(bindMap)(map:Dictionary) {
+        checkArgs
+        FOR_EACH(pair, map) {
+            bind(pair.key, pair.value);
+        }
+    }
+
+    /**
+     * Remove a callback function from an event.
+     * If no event is specified, callback for all events will be removed.
+     * If no callback is specified, all callback for the event will be removed.
+     * If neither event nor callback is specified, all callback will be removed.
+     * @param string event The event name to unbind.
+     * @param func callback The function to unbind.
+     */
+    Func(unbind)(event:string+, callback:Function+) {
+        checkArgs
+        if (event !== void) {
+            if (callback !== void) {
+                _eventCallbacks.remove(event, callback);
+            } else {
+                _eventCallbacks.removeKey(event);
+            }
+        } else if (callback !== void) {
+            _eventCallbacks.removeValue(callback);
+        } else {
+            _eventCallbacks.clear();
+        }
+    }
+
+    /**
+     * Trigger callback for the given event.
+     * Subsequent arguments will be passed along to the event callbacks.
+     * @param string event The event name to trigger.
+     * @param mixed * The arguments passed to callbacks.
+     */
+    Func(trigger)(event:string, *) {
+        checkArgs
+        triggerWhile(event, LMD{ return true; }, *);
+    }
+
+    Func(triggerWhile)(event:string, predicate:Function, *) {
+        checkArgs
+        if (event !== EventType_All && _eventCallbacks.containsKey(event)) {
+            var callbacks = _eventCallbacks.get(event);
+            for (var i = 0; i < callbacks.count; ++i) {
+                var ret = callbacks[i](*);
+                if (!predicate(ret)) {
+                    return ret;
+                }
+            }
+        }
+        if (_eventCallbacks.containsKey(EventType_All)) {
+            var callbacks = _eventCallbacks.get(EventType_All);
+            for (var i = 0; i < callbacks.count; ++i) {
+                var ret = callbacks[i](*);
+                if (!predicate(ret)) {
+                    return ret;
+                }
+            }
+        }
+    }
+
+
+
+    var _eventCallbacks = new MultiMap();
+
+    Constructor() {}
+
+    Finalize() {
+        invalidate _eventCallbacks;
+    }
+
+    Func(_doCallback)(index, callback:Function, predicate:Function, *) {
+        checkArgs
+        var ret = callback(*);
+        if (!predicate(ret)) {
+            return [ ret ]; // voidでも中断できるように
+        }
+    }
+}
+
+Func(includeObservable)(obj:object) {
+    checkArgs
+    assert(typeof obj.__event === "undefined")
+    assert(typeof obj.bindEvent === "undefined")
+    assert(typeof obj.bindMapEvent === "undefined")
+    assert(typeof obj.unbindEvent === "undefined")
+    assert(typeof obj._triggerEvent === "undefined")
+    assert(typeof obj._triggerEventWhile === "undefined")
+    with (obj.__event = new Event()) {
+        obj.bindEvent = .bind;
+        obj.bindMapEvent = .bindMap;
+        obj.unbindEvent = .unbind;
+        obj._triggerEvent = .trigger;
+        obj._triggerEventWhile = .triggerWhile;
+    }
+}
+
+Func(finalizeObservable)(obj:object) {
+    checkArgs
+    invalidate obj.__event;
+}
+

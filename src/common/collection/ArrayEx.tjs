@@ -1,0 +1,111 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+// もとのArray.assignStructではもとのDictionary.assignStructが呼ばれてDictionaryのHiddenMemberが消されてしまうので上書きする
+Array.assignStruct = LMD(src:Array) {
+    checkArgs
+    this.clear();
+    for (var i = 0; i < src.count; ++i) {
+        if (src[i] instanceof "Array") {
+            this[i] = [];
+            this[i].assignStruct(src[i]);
+        } else if (src[i] instanceof "Dictionary") {
+            this[i] = %[];
+            this[i].assignStruct(src[i]);
+        } else {
+            this[i] = src[i];
+        }
+    }
+};
+
+Array.clone = LMD() {
+    var result = [];
+    for (var i = 0; i < this.count; ++i) {
+        result[i] = global.clone(this[i]);
+    }
+    return result;
+};
+
+Array.cloneShallow = LMD() {
+    var result = [];
+    result.push(this*);
+    return result;
+};
+
+Array.equals = LMD(target:any+) {
+    checkArgs
+    return global.Array._equalsImpl(target, LMD(a, b) { return global.equals(a, b); });
+};
+
+Array.equalsShallow = LMD(target:any+) {
+    checkArgs
+    return global.Array._equalsImpl(target, LMD(a, b) { return a === b; });
+};
+
+Array.toString = LMD() {
+    if (this.count === 0) return "[]";
+    var returnValue = "[" + global.toString(this[0]);
+    for (var i = 1; i < this.count; ++i) {
+        returnValue += ", " + global.toString(this[i]);
+    }
+    return returnValue + "]";
+};
+
+Array.dispose = LMD() {
+    for (var i = 0; i < this.count; ++i) {
+        assert(this[i] isvalid)
+        assert(typeof this[i] === "Object")
+        invalidate this[i];
+    }
+    this.clear();
+};
+
+Array.isEmpty = LMD() {
+    return this.count === 0;
+};
+
+Array.contains = LMD(target:any+) {
+    checkArgs
+    return this.find(target) >= 0;
+};
+
+Array.shuffle = LMD() {
+    for (var i = count-1; i > 0; --i) {
+        var j = global.Math.randomInt(0, i);
+        this[i] <-> this[j];
+    }
+};
+
+Array.getEnumerator = LMD() {
+    return new global.ArrayEnumerator(this);
+};
+
+ClassExtends(ArrayEnumerator, Enumerator)
+{
+    property current { getter { return this._source[this._index]; } }
+
+    OverrideFunc(moveNext)() {
+        return ++this._index < this._source.count;
+    }
+
+    var _source;
+    var _index = -1;
+
+    Constructor(source:Array) {
+        checkArgs
+        this._source = source;
+    }
+}
+
+setStaticMember(Array, "_equalsImpl", LMD(target:any+, comparer:Function) {
+    checkArgs
+    if (target === null) return false;
+    if (!target isvalid) return false;
+    if (!target instanceof "Array") return false;
+    if (target === this) return true;
+    if (count !== target.count) return false;
+    for (var i = 0; i < count; ++i) {
+        if (!comparer(this[i], target[i])) return false;
+    }
+    return true;
+});

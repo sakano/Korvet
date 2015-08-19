@@ -1,0 +1,277 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+{
+    Class(TestClass) {
+        var value;
+        var cloneCalled = 0;
+        var equalsCalled = 0;
+        var toStringCalled = 0;
+
+        Constructor(value:any+) {
+            checkArgs
+            this.value = value;
+        }
+
+        Func(clone)() {
+            ++cloneCalled;
+            var obj = new global.TestClass();
+            obj.value = this.value;
+            return obj;
+        }
+
+        Func(equals)(target:any+) {
+            checkArgs
+            ++equalsCalled;
+            if (target === null) return false;
+            if (!target isvalid) return false;
+            if (!target instanceof "TestClass") return false;
+            if (target === this) return true;
+            return global.equals(this.value, target.value);
+        }
+
+        Func(toString)() {
+            ++toStringCalled;
+            return "(TestClass) value=" + global.toString(value);
+        }
+    }
+
+    {   // Array.clone
+        var array = [ 1, 2, 3, null, void ];
+        var clonedArray = array.clone();
+        assertAlways(array !== clonedArray)
+        assertAlways(array.count === 5)
+        assertAlways(clonedArray.count === 5)
+        for (var i = 0; i < array.count; ++i) {
+            assertAlways(global.equals(array[i], clonedArray[i]))
+        }
+        invalidate array;
+        invalidate clonedArray;
+
+        var array = [ new TestClass(1), new TestClass(2) ];
+        var clonedArray = array.clone();
+        assertAlways(array !== clonedArray)
+        assertAlways(array.count === 2)
+        assertAlways(clonedArray.count === 2)
+        assertAlways(array[0] !== clonedArray[0])
+        assertAlways(array[1] !== clonedArray[1])
+        assertAlways(array[0].cloneCalled === 1)
+        assertAlways(array[1].cloneCalled === 1)
+        assertAlways(clonedArray[0].cloneCalled === 0)
+        assertAlways(clonedArray[1].cloneCalled === 0)
+        for (var i = 0; i < array.count; ++i) {
+            assertAlways(global.equals(array[i], clonedArray[i]))
+        }
+        array.dispose();
+        invalidate array;
+        clonedArray.dispose();
+        invalidate clonedArray;
+
+        assertAlways( [].clone().count === 0)
+    }
+    {   // Array.cloneShallow
+        var array = [ 1, 2, 3, null, void ];
+        var clonedArray = array.cloneShallow();
+        assertAlways(array !== clonedArray)
+        assertAlways(array.count === 5)
+        assertAlways(clonedArray.count === 5)
+        for (var i = 0; i < array.count; ++i) {
+            assertAlways(global.equals(array[i], clonedArray[i]))
+        }
+        invalidate array;
+        invalidate clonedArray;
+
+        var array = [ new TestClass(1), new TestClass(2) ];
+        var clonedArray = array.cloneShallow();
+        assertAlways(array !== clonedArray)
+        assertAlways(array.count === 2)
+        assertAlways(clonedArray.count === 2)
+        assertAlways(array[0] === clonedArray[0])
+        assertAlways(array[1] === clonedArray[1])
+        assertAlways(array[0].cloneCalled === 0)
+        assertAlways(array[1].cloneCalled === 0)
+        array.dispose();
+        invalidate array;
+        invalidate clonedArray;
+    }
+    {   // Array.equals
+        assertAlways([].equals([]))
+        assertAlways(![].equals([0]))
+        assertAlways(![0].equals([]))
+        assertAlways([1].equals([1]))
+        assertAlways(![1].equals(["1"]))
+        assertAlways(&--[1,2,3,void,null].equals([1,2,3,void,null])--&)
+        assertAlways(&--![1,2,"3"].equals([1,2,3])--&)
+        assertAlways(&--![1,2,3].equals([1,2,3,4])--&)
+        assertAlways(&--![1,2,3,4,5].equals([1,2,3,4])--&)
+        assertAlways(![].equals(void))
+        assertAlways(![].equals(null))
+        assertAlways(![].equals(%[]))
+
+        var array = [ new TestClass(1) ];
+        var array2 = [ new TestClass(1) ];
+        assertAlways(array.equals(array))
+        assertAlways(array[0].equalsCalled === 0)
+        assertAlways(array.equals(array2))
+        assertAlways(array[0].equalsCalled === 1)
+        assertAlways(array2[0].equalsCalled === 0)
+        array2[0].value = 2;
+        assertAlways(!array.equals(array2))
+        assertAlways(array[0].equalsCalled === 2)
+        assertAlways(array2[0].equalsCalled === 0)
+        array.dispose();
+        invalidate array;
+        array2.dispose();
+        invalidate array2;
+    }
+    {   // Array.equalsShallow
+        assertAlways([].equalsShallow([]))
+        assertAlways(![].equalsShallow([0]))
+        assertAlways(![0].equalsShallow([]))
+        assertAlways([1].equalsShallow([1]))
+        assertAlways(![1].equalsShallow(["1"]))
+        assertAlways(&--[1,2,3,void,null].equalsShallow([1,2,3,void,null])--&)
+        assertAlways(&--![1,2,"3"].equalsShallow([1,2,3])--&)
+        assertAlways(&--![1,2,3].equalsShallow([1,2,3,4])--&)
+        assertAlways(&--![1,2,3,4,5].equalsShallow([1,2,3,4])--&)
+        assertAlways(![].equalsShallow(void))
+        assertAlways(![].equalsShallow(null))
+        assertAlways(![].equalsShallow(%[]))
+
+        var array = [ new TestClass(1) ];
+        var array2 = [ new TestClass(1) ];
+        assertAlways(!array.equalsShallow(array2))
+        assertAlways(array[0].equalsCalled === 0)
+        assertAlways(array2[0].equalsCalled === 0)
+        array2.dispose();
+        array2[0] = array[0];
+        assertAlways(array.equalsShallow(array2))
+        assertAlways(array[0].equalsCalled === 0)
+        array.dispose();
+        invalidate array;
+        invalidate array2;
+    }
+    {   // Array.toString
+        assertAlways([].toString() === "[]")
+        assertAlways([void].toString() === "[void]")
+        assertAlways(&--[1,2].toString() === "[(int)1, (int)2]"--&)
+
+        var array = [ new TestClass(void), new TestClass(null) ];
+        assertAlways(&--array.toString() === "[(TestClass) value=void, (TestClass) value=null]"--&)
+        assertAlways(array[0].toStringCalled === 1)
+        assertAlways(array[1].toStringCalled === 1)
+        array.dispose();
+        invalidate array;
+    }
+    {   // Array.dispose
+        var array = [ [], [], [] ];
+        var clonedArray = array.cloneShallow();
+        assertAlways(array.dispose() === void)
+        assertAlways(array.count === 0)
+        assertAlways(!clonedArray[0] isvalid)
+        assertAlways(!clonedArray[1] isvalid)
+        assertAlways(!clonedArray[2] isvalid)
+        invalidate array;
+        invalidate clonedArray;
+    }
+    {   // Array.isEmpty
+        assertAlways([].isEmpty())
+        assertAlways(![1].isEmpty())
+        assertAlways(![void].isEmpty())
+        assertAlways(&--![1,2,3].isEmpty()--&)
+
+        var array = [];
+        array.push(1);
+        assertAlways(!array.isEmpty())
+        array.pop();
+        assertAlways(array.isEmpty())
+        invalidate array;
+    }
+    {   // Array.contains
+        assertAlways(&--[1].contains(1)--&)
+        assertAlways(&--![1].contains(2)--&)
+        assertAlways(&--[1,2].contains(2)--&)
+        assertAlways(&--[1,2].contains(1)--&)
+        assertAlways(&--![].contains(1)--&)
+        assertAlways(&--![].contains(void)--&)
+        assertAlways(&--[1,2,3].contains(1)--&)
+        assertAlways(&--![1,2,3].contains(4)--&)
+        assertAlways(&--[1,void,3].contains(void)--&)
+        assertAlways(&--[1,"str",3].contains("str")--&)
+        assertAlways(&--![1].contains("1")--&)
+        assertAlways(&--![1].contains(1.0)--&)
+        assertAlways(![[1]].contains([1]))
+
+        var array = [];
+        assertAlways(!array.contains(null))
+        array.push(null);
+        assertAlways(array.contains(null))
+        array.pop();
+        assertAlways(!array.contains(null))
+        invalidate array;
+    }
+    {   // Array.shuffle
+        var array = [1,2,3];
+        assertAlways(array.shuffle() === void)
+        assertAlways(array.count === 3)
+        assertAlways(array.contains(1))
+        assertAlways(array.contains(2))
+        assertAlways(array.contains(3))
+        invalidate array;
+    }
+    {   // Array.getEnumerator
+        var array = [1,2,3];
+        var clonedArray = array.clone();
+        for (var loopIndex = 0; loopIndex < 3; ++loopIndex) {
+            var e = array.getEnumerator();
+            assertAlways(e instanceof "ArrayEnumerator")
+            for (var i = 0; i < 3; ++i) {
+                assertAlways(e.moveNext() === true)
+                assertAlways(&--e.current === array[i]--&)
+            }
+            for (var i = 0; i < 100; ++i) {
+                assertAlways(e.moveNext() === false)
+            }
+            invalidate e;
+            assertAlways(array.equals(clonedArray))
+        }
+        invalidate array;
+        invalidate clonedArray;
+
+        var e = [].getEnumerator();
+        assertAlways(e instanceof "ArrayEnumerator")
+        for (var i = 0; i < 100; ++i) {
+            assertAlways(e.moveNext() === false)
+        }
+        invalidate e;
+
+        var called = [];
+        FOR_EACH(value, [1,2,3,4,void,null]) {
+            called.add(value);
+        }
+        assertAlways(called.count === 6)
+        assertAlways(called[0] === 1)
+        assertAlways(called[1] === 2)
+        assertAlways(called[2] === 3)
+        assertAlways(called[3] === 4)
+        assertAlways(called[4] === void)
+        assertAlways(called[5] === null)
+        invalidate called;
+
+        var called = [];
+        FOR_EACH(array, [ [1,2,3], [10, 20] ]) {
+            FOR_EACH(value, array) {
+                called.add(value);
+            }
+        }
+        assertAlways(called.count === 5)
+        assertAlways(called[0] === 1)
+        assertAlways(called[1] === 2)
+        assertAlways(called[2] === 3)
+        assertAlways(called[3] === 10)
+        assertAlways(called[4] === 20)
+        invalidate called;
+    }
+
+    invalidate TestClass;
+}

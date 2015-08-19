@@ -1,0 +1,46 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(SkipEnumerable, Enumerable)
+{
+    OverrideFunc(getEnumerator)() {
+        return new global.SkipEnumerator(this);
+    }
+
+    var _source;
+    var _count;
+
+    Constructor(source:Object, count:int) {
+        checkArgs
+        typeFunction(source.getEnumerator)
+        assert(count >= 0)
+        this._source = source;
+        this._count = count;
+    }
+}
+
+ClassExtends(SkipEnumerator, Enumerator)
+{
+    property current { getter { return this._source.current; } }
+
+    OverrideFunc(moveNext) {
+        this._source = this._parent._source.getEnumerator();
+        for (var i = this._parent._count - 1; i >= 0; --i) {
+            this._source.moveNext();
+        }
+        this.moveNext = this._moveNextImpl;
+        return this._moveNextImpl();
+    }
+
+    var _parent;
+    var _source;
+
+    Constructor(parent:SkipEnumerable) {
+        checkArgs
+        this._parent = parent;
+    }
+
+    Func(_moveNextImpl)() {
+        return this._source.moveNext();
+    }
+}

@@ -1,0 +1,158 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(SpriteCommandConverter)
+{
+    Func(convert)(command:Dictionary) {
+        checkArgs
+        if (this._isIgnoreCommand(command)) return;
+
+        var attrNames = command.attributeNames;
+        var attrValues = command.attributeValues;
+
+        for (var i = 0; i < attrNames.count; ++i) {
+            var attrName = attrNames[i];
+
+            // メソッドが存在しない属性は何もしない
+            var method = this._getAttributeMethod(attrName);
+            if (method === void) continue;
+
+            // 属性に対応するメソッドを呼出し
+            var methodResult = method(attrValues, attrName);
+
+            if (methodResult !== void) {
+                this._handleAttributeMethodResult(methodResult);
+            }
+        }
+
+        var method = this._attributeMethods[command.name];
+        if (method === void) { return void; }
+        return method(command);
+    }
+
+    Func(createSyncData)() {
+        var data = %[];
+        m4_pushdef(&--recordChangedProp--&,
+            if (this.$1 !== this.$1DefaultValue) data.$1 = this.$1;
+        )
+        recordChangedProp(x)
+        recordChangedProp(y)
+        recordChangedProp(originX)
+        recordChangedProp(originY)
+        recordChangedProp(scaleX)
+        recordChangedProp(scaleY)
+        recordChangedProp(angle)
+        recordChangedProp(offsetX)
+        recordChangedProp(offsetY)
+        recordChangedProp(alignment)
+        m4_popdef(&--recordChangedProp--&)
+
+        return data;
+    }
+
+    
+    m4_pushdef(&--AUTO_PROPERTY--&,
+        var _$1 = $2;
+        property $1 {
+            setter(value) { this._$1 = value; }
+            getter { return _$1; }
+        }
+        property $1DefaultValue {
+            getter { return $2; }
+        }
+    )
+
+    AUTO_PROPERTY(x, 0)
+    AUTO_PROPERTY(y, 0)
+    AUTO_PROPERTY(originX, 0)
+    AUTO_PROPERTY(originY, 0)
+    AUTO_PROPERTY(scaleX, 100)
+    AUTO_PROPERTY(scaleY, 100)
+    AUTO_PROPERTY(shearX, 0)
+    AUTO_PROPERTY(shearY, 0)
+    AUTO_PROPERTY(angle, 0)
+    AUTO_PROPERTY(offsetX, 0)
+    AUTO_PROPERTY(offsetY, 0)
+    AUTO_PROPERTY(alignment, SpriteAlignment_MiddleCenter)
+
+    m4_popdef(&--AUTO_PROPERTY--&)
+
+
+    var _visible = false;
+
+    var _attributeMethods;
+    var _currentTransInfo;
+
+    Constructor() {
+        this._attributeMethods = this._createAttributeMethods();
+    }
+
+    Finalize() {
+    }
+
+    AbstractFunc(_isIgnoreCommand)(command:Dictionary)
+
+    Func(_createAttributeMethods)() {
+        return %[
+            x       : this._transformCommandImpl incontextof %[ self:this, propertyName:"x" ],
+            y       : this._transformCommandImpl incontextof %[ self:this, propertyName:"y" ],
+            originx : this._transformCommandImpl incontextof %[ self:this, propertyName:"originX" ],
+            originy : this._transformCommandImpl incontextof %[ self:this, propertyName:"originY" ],
+            scalex  : this._transformCommandImpl incontextof %[ self:this, propertyName:"scaleX" ],
+            scaley  : this._transformCommandImpl incontextof %[ self:this, propertyName:"scaleY" ],
+            shearx  : this._transformCommandImpl incontextof %[ self:this, propertyName:"shearX" ],
+            sheary  : this._transformCommandImpl incontextof %[ self:this, propertyName:"shearY" ],
+            angle   : this._transformCommandImpl incontextof %[ self:this, propertyName:"angle" ],
+            show    : this._showHideCommandImpl incontextof %[ self:this, newVisible:true ],
+            hide    : this._showHideCommandImpl incontextof %[ self:this, newVisible:false ],
+            //fade    : this._fadeCommandImpl,
+            //trans   : this._transCommandImpl,
+        ];
+    }
+
+    Func(_handleAttributeMethodResult)(methodResult:Dictionary) {
+        // 優先度の高いトランジション情報があれば記録
+        if (methodResult.trans !== void) {
+            if (this._transInfo === void || this._transInfo.priority <= methodResult.trans.priority) {
+                this._transInfo = methodResult.trans;
+            }
+        }
+    }
+
+    Func(_getAttributeMethod)(attrName:string) {
+        checkArgs
+        return this._attributeMethods[attrName];
+    }
+
+    Func(_transformCommandImpl)(attrValues:Dictionary, attrName:string) {
+        checkArgs
+        self[propertyName] = (int)attrValues[attrName];
+
+        /*
+        if (attrValues.time === void) {
+            return %[ sequences : [
+                    global.SequenceRunner.sequence().wait("update").setValue(&self[propertyName], (int)attrValues[attrName])
+            ] ];
+        } else */{
+            var time = global.gScriptLogger.validateAttribute("1", "time", attrValues, AttributeType_Verified, AttributeValueType_Integer, 1);
+            return %[ sequences : [
+                    global.SequenceRunner.sequence().wait("update")
+                        .call(self._mode.onActionBegin)
+                        .beginSkip("skipAction")
+                            .action(&self[propertyName]).to((int)attrValues[attrName], time)
+                        .endSkip()
+                        .call(self._mode.onActionEnd)
+            ]];
+        }
+    }
+
+    Func(_showHideCommandImpl)(attrValues:Dictionary, attrName:string) {
+        checkArgs
+        assert(attrName === "show" || attrName === "hide")
+        global.gScriptLogger.validateAttribute(null, attrName, attrValues, AttributeType_Verified, AttributeValueType_Null);
+        if (self._visible === newVisible) return;
+        self._visible = newVisible;
+        // return %[ trans : self._showHideAutoTransition ];
+    }
+
+}

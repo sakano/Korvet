@@ -1,1 +1,1 @@
-ruby tools/compile.rb --release --debug --clean
+call src/_convert.bat "recompile"

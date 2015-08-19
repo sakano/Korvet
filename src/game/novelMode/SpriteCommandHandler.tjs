@@ -327,4 +327,11 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
             ]
         ];
     }
+
+    OverrideFunc(onCommandConvert)(command:Dictionary) {
+    }
+
+    OverrideFunc(serializeCurrentState)() {
+        return %[];
+    }
 }

@@ -1,0 +1,48 @@
+// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Scripts.execStorage("initialize.tjs");
+
+{
+    // テスト中にウィンドウを使っても終了しないように一時的にfalseにする
+    System.exitOnWindowClose = false;
+
+    // テストスクリプトを実行
+    execStorage("ObjectTest.otjs");
+
+    execStorage("ArrayTest.otjs");
+    execStorage("DictionaryTest.otjs");
+    execStorage("ArrayExTest.otjs");
+    execStorage("DictionaryExTest.otjs");
+    execStorage("MultiMapTest.otjs");
+    execStorage("PriorityQueueTest.otjs");
+    execStorage("EnumerableTest.otjs");
+
+    execStorage("DeferredTest.otjs");
+    execStorage("EventsTest.otjs");
+    // execStorage("mathExTest.otjs"); // 吉里吉里のバグでテスト失敗する cf.)https://github.com/krkrz/krkrz/issues/161
+    execStorage("RegExpTest.otjs");
+    execStorage("ScriptsExTest.otjs");
+    execStorage("UtilsTest.otjs");
+    execStorage("SequenceTest.otjs");
+    execStorage("AsyncCallerTest.otjs");
+
+    System.exitOnWindowClose = true;
+}
+
+m4_ifelse(DEBUG,1,global.cleanMemoryLeakLogForDebug();)
+
+// 検索パスを追加
+Storages.addAutoPath(System.exePath + "data/image_bg/");
+Storages.addAutoPath(System.exePath + "data/image_fg/");
+Storages.addAutoPath(System.exePath + "data/image_rl/");
+Storages.addAutoPath(System.exePath + "data/script/");
+
+var gConfig = new Config();
+var gScriptLogger = new ScriptLogger();
+
+var gGame = new Game();
+
+//var gConverter = new KorvetConverter();
+//gConverter.setCommonFile("macros.krs");
+//gConverter.convert("sc01.krs", System.exePath + "sc01.bin");

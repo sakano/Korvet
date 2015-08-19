@@ -1,0 +1,143 @@
+// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(PSDLoader)
+{
+    var win;
+    var psd;
+    var delimiters = [ "@" , "&", ";", "$", "#", "!", "?", "/", "|", ">", "^" ];
+
+    property width { getter { return psd.width; } }
+    property height { getter { return psd.height; } }
+
+    Func(getLayerData)() { return psd.getLayerData(...); }
+    Func(getLayerDataRaw)() { return psd.getLayerDataRaw(...); }
+
+    Constructor() {
+        win = new Window();
+        psd = new PSD();
+        win.add(new global.Layer(win, null));
+    }
+
+    /// @param filename string psdファイルパス
+    /// @return Dictionary レイヤ情報
+    Func(getLayersInfo)(filename:string) {
+        checkArgs
+        psd.load(filename);
+        var layersInfo = [];
+        var replaceTo = "";
+        var layerSetStack = [
+            %[ replaces:[], delims:getDelimInfoFromLayerName("") ]
+        ];
+
+        for (var i = psd.layer_count-1; i >= 0; --i) {
+            var psdInfo = psd.getLayerInfo(i);
+            switch (psdInfo.layer_type) {
+            case PSD.layer_type_folder:
+                var stack = %[];
+                if (psdInfo.name[0] == "*") {
+                    psdInfo.name = applyReplaceInfoToString(psdInfo.name, layerSetStack[-1].replaces);
+                    stack.delims = getDelimInfoFromLayerName(psdInfo.name);
+                    pushDelimiters(stack.delims, layerSetStack[-1].delims);
+                    stack.replaces = getReplaceInfoFromDelims(stack.delims);
+                    stack.replaces.push(layerSetStack[-1].replaces*);
+                } else {
+                    stack.delims = %[];
+                    (Dictionary.assignStruct incontextof stack.delims)(layerSetStack[-1].delims);
+                    stack.replaces = [];
+                    stack.replaces.assign(layerSetStack[-1].replaces);
+                }
+                layerSetStack.push(stack);
+                break;
+            case PSD.layer_type_hidden:
+                if (psdInfo.name == '</Layer set>' || psdInfo.name == '</Layer group>') { invalidate layerSetStack.pop(); }
+                break;
+            case PSD.layer_type_normal:
+                if (psdInfo.name[0] == "*") {
+                    psdInfo.name = applyReplaceInfoToString(psdInfo.name, layerSetStack[-1].replaces);
+                    var delims = getDelimInfoFromLayerName(psdInfo.name);
+                    var replaces = getReplaceInfoFromDelims(delims);
+                    pushDelimiters(delims, layerSetStack[-1].delims);
+                    replaces.push(layerSetStack[-1].replaces*);
+                    layerSetStack[-1].replaces.assign(replaces);
+
+                    var info = %[];
+                    info.delims     = delims;
+                    info.name       = psdInfo.name;
+                    info.layer_type = psdInfo.layer_type;
+                    info.left       = psdInfo.left;
+                    info.top        = psdInfo.top;
+                    info.right      = psdInfo.right;
+                    info.bottom     = psdInfo.bottom;
+                    info.width      = psdInfo.width;
+                    info.height     = psdInfo.height;
+                    info.blend_mode = psdInfo.blend_mode;
+                    info.opacity    = psdInfo.opacity;
+                    info.visible    = psdInfo.visible;
+                    info.type       = psdInfo.type;
+                    info.clipping   = psdInfo.clipping;
+                    info.mask       = psdInfo.mask;
+                    info.layer_comp = psdInfo.layer_comp;
+                    info.layerNumber = i;
+                    layersInfo.add(info);
+                }
+                break;
+            }
+        }
+        return layersInfo;
+    }
+
+    /// @param layerName string レイヤ名
+    /// @return Dictionary デリミタ情報
+    Func(getDelimInfoFromLayerName)(layerName:string) {
+        checkArgs
+        var delims = %[];
+        for (var i = 0; i < delimiters.count; ++i) { delims[delimiters[i]] = []; }
+
+        var preIndex;
+        for (var i = 0; i <= layerName.length; ++i) { // 一文字ずつサーチ
+            if (i == layerName.length || delims[layerName[i]] !== void) { // 最後 or 区切り文字なら
+                if (preIndex !== void) {
+                    delims[layerName[preIndex]].add(layerName.substr(preIndex + 1, i - preIndex - 1));
+                }
+                preIndex = i;
+            }
+        }
+        return delims;
+    }
+
+    /// @param delims デリミタ情報
+    /// @return Array 置換情報
+    Func(getReplaceInfoFromDelims)(delims:Dictionary) {
+        checkArgs
+        var info = [];
+        for (var i = 0; i < delims[">"].count; i += 2) {
+            var from = delims[">"][i];
+            var to = delims[">"][i+1];
+            info.add(%[ from:from, to:to, regex : new RegExp(from, "g") ]);
+        }
+        return info;
+    }
+
+    /// @param str 対象となる文字列
+    /// @param replaces 置換情報
+    /// @return String 置換済み文字列
+    Func(applyReplaceInfoToString)(str:string, replaces:Array) {
+        checkArgs
+        for (var i = 0; i < replaces.count; ++i) {
+            str = replaces[i].regex.replace(str, replaces[i].to);
+        }
+        return str;
+    }
+
+    /// @param delim1 デリミタ情報
+    /// @param delim2 デリミタ情報2
+    /// array1の末尾にarray2を追加する
+    Func(pushDelimiters)(delim1:Dictionary, delim2:Dictionary) {
+        checkArgs
+        for (var i = 0; i < delimiters.count; ++i) {
+            var type = delimiters[i];
+            delim1[type].push(delim2[type]*);
+        }
+    }
+}

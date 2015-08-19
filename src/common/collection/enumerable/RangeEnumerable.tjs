@@ -1,0 +1,38 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(RangeEnumerable, Enumerable)
+{
+    OverrideFunc(getEnumerator)() {
+        return new RangeEnumerator(this._start, this._count);
+    }
+
+    var _start;
+    var _count;
+
+    Constructor(start:int, count:int) {
+        checkArgs
+        assert(count >= 0)
+        this._start = start;
+        this._count = count;
+    }
+}
+
+ClassExtends(RangeEnumerator, Enumerator)
+{
+    property current { getter { return this._current; } }
+
+    OverrideFunc(moveNext) {
+        return ++this._current <= this._max;
+    }
+
+    var _current;
+    var _max;
+
+    Constructor(start:int, count:int) {
+        checkArgs
+        assert(count >= 0)
+        this._current = start - 1;
+        this._max = start + count - 1;
+    }
+}

@@ -1,0 +1,164 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(Enumerator)
+{
+    property current { getter { notImplemented(); } }
+    Func(moveNext)() { return false; }
+}
+Class(Enumerable)
+{
+    AbstractFunc(getEnumerator)()
+
+    Func(where)(predicate:Function) { return new global.WhereEnumerable(this, *); }
+    Func(select)(selector:Function) { return new global.SelectEnumerable(this, *); }
+    Func(selectMany)(selector:Function) { return new global.SelectManyEnumerable(this, *); }
+    Func(take)() { return new global.TakeEnumerable(this, *); }
+    Func(takeWhile)() { return new global.TakeWhileEnumerable(this, *); }
+    Func(skip)() { return new global.SkipEnumerable(this, *); }
+    Func(skipWhile)() { return new global.SkipWhileEnumerable(this, *); }
+    Func(distinct)() { return new global.DistinctEnumerable(this); }
+
+    Func(toArray)() {
+        var array = [];
+        var enumerator = this.getEnumerator();
+        while  (enumerator.moveNext()) {
+            array.add(enumerator.current);
+        }
+        return array;
+    }
+
+    Func(toDictionary)(keySelector:Function, elementSelector:Function+, *) {
+        checkArgs
+        notImplemented();
+    }
+
+    Func(toMultiMap)(keySelector:Function, elementSelector:Function+, *) {
+        checkArgs
+        notImplemented();
+    }
+
+    Func(foreach)(callback:Function, *) {
+        checkArgs
+        var enumerator = this.getEnumerator();
+        while (enumerator.moveNext()) {
+            callback(enumerator.current, *);
+        }
+    }
+
+    Func(count)(predicate:Function+, *) {
+        checkArgs
+        var counter = 0;
+        var enumerator = this.getEnumerator();
+        if (predicate === void) {
+            while (enumerator.moveNext()) {
+                ++counter;
+            }
+        } else {
+            while (enumerator.moveNext()) {
+                if (predicate(enumerator.current, *)) ++counter;
+            }
+        }
+        return counter;
+    }
+
+    Func(any)(predicate:Function+, *) {
+        checkArgs
+        if (predicate === void) return this.moveNext();
+        var enumerator = this.getEnumerator();
+        while (enumerator.moveNext()) {
+            if (predicate(enumerator.current, *)) return true;
+        }
+        return false;
+    }
+
+    Func(all)(predicate:Function, *) {
+        checkArgs
+        var enumerator = this.getEnumerator();
+        while (enumerator.moveNext()) {
+            if (!predicate(enumerator.current, *)) return false;
+        }
+        return true;
+    }
+
+    Func(elementAt)(defaultValue:any+, index:int) {
+        checkArgs
+        var enumerator = this.getEnumerator();
+        for (var i = 0; i <= index; ++i) {
+            if (!enumerator.moveNext()) return defaultValue;
+        }
+        return enumerator.current;
+    }
+
+    Func(first)(defaultValue:any+, predicate:Function+, *) {
+        checkArgs
+        notImplemented();
+    }
+
+    Func(last)(defaultValue:any+, predicate:Function+, *) {
+        checkArgs
+        notImplemented();
+    }
+
+    Func(aggregate)(seed:any+, func:Function) {
+        checkArgs
+        var result = seed;
+        var enumerator = this.getEnumerator();
+        while (enumerator.moveNext()) {
+            result = func(result, enumerator.current);
+        }
+        return result;
+    }
+}
+
+setStaticMember(Enumerable, "methodNames", [
+    "where",
+    "select", "selectMany",
+    "take", "takeWhile",
+    "skip", "skipWhile",
+    "distinct",
+    "toArray", "toDictionary", "toMultiMap",
+    "foreach",
+    // "count",
+    "any", "all",
+    "elementAt", "first", "last",
+    "aggregate"
+]);
+setStaticMember(Enumerable, "addEnumerableMethod", LMD(target:Class, flags) {
+    checkArgs
+    typeFunction(target.getEnumerator)
+    FOR_EACH(name, global.Enumerable.methodNames) {
+        if (typeof target[name] === "undefined") {
+            global.Scripts.propSet(target, name, global.Enumerable[name], flags | pfMemberEnsure);
+        }
+    }
+});
+
+setStaticMember(Enumerable, "removeEnumerableMethod", LMD(target:any) {
+    checkArgs
+    FOR_EACH(name, global.Enumerable.methodNames) {
+        delete target[name];
+    }
+});
+
+setStaticMember(Enumerable, "empty", LMD() {
+    var obj = new global.Enumerable();
+    obj.getEnumerator = LMD() { return new global.Enumerator(); };
+    return obj;
+});
+
+setStaticMember(Enumerable, "range", LMD(start:int, count:int) {
+    checkArgs
+    assert(count >= 0)
+    return new global.RangeEnumerable(...);
+});
+
+setStaticMember(Enumerable, "repeat", LMD(element:any+, count:int) {
+    checkArgs
+    assert(count >= 0)
+    return new global.RepeatEnumerable(...);
+});
+
+Enumerable.addEnumerableMethod(global.Array);
+Enumerable.addEnumerableMethod(global.MultiMap);
+Enumerable.addEnumerableMethod(global.Dictionary, pfHiddenMember);

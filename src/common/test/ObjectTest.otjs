@@ -1,0 +1,172 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+{
+    Class(TestClass) {
+        var value;
+        var cloneCalled = 0;
+        var equalsCalled = 0;
+        var toStringCalled = 0;
+
+        Constructor(value:any+) {
+            checkArgs
+            this.value = value;
+        }
+
+        Func(clone)() {
+            ++cloneCalled;
+            var obj = new global.TestClass();
+            obj.value = this.value;
+            return obj;
+        }
+
+        Func(equals)(target:any+) {
+            checkArgs
+            ++equalsCalled;
+            if (target === null) return false;
+            if (!target isvalid) return false;
+            if (!target instanceof "TestClass") return false;
+            if (target === this) return true;
+            return global.equals(this.value, target.value);
+        }
+
+        Func(toString)() {
+            ++toStringCalled;
+            return "(TestClass) value=" + global.toString(value);
+        }
+    }
+
+    {   // clone
+        assertAlways(clone(123) === 123)
+        assertAlways(clone(0.5) === 0.5)
+        assertAlways(clone("str") === "str")
+        assertAlways(clone(<% 11 22 33 %>) === <% 11 22 33 %>)
+        assertAlways(clone(void) === void)
+        assertAlways(clone(null) === null)
+        
+        var obj = new TestClass(100);
+        var clonedObj = clone(obj);
+        assertAlways(obj.cloneCalled === 1)
+        assertAlways(clonedObj.cloneCalled === 0)
+        assertAlways(obj !== clonedObj)
+        assertAlways(obj instanceof "TestClass")
+        assertAlways(obj.value === 100)
+        assertAlways(clonedObj instanceof "TestClass")
+        assertAlways(clonedObj.value === 100)
+        invalidate obj;
+        invalidate clonedObj;
+    }
+    {   // equals
+        assertAlways(equals(123, 123) === true)
+        assertAlways(equals(0.5, 0.5) === true)
+        assertAlways(equals("str", "str") === true)
+        assertAlways(equals(<% 11 22 33 %>, <% 11 22 33 %>) === true)
+        assertAlways(equals(void, void) === true)
+        assertAlways(equals(null, null) === true)
+
+        assertAlways(equals(123, 124) === false)
+        assertAlways(equals(0.5, 0.6) === false)
+        assertAlways(equals("str", "str2") === false)
+        assertAlways(equals(<% 11 22 33 %>, <% 11 11 11 %>) === false)
+        assertAlways(equals(void, null) === false)
+        assertAlways(equals(null, void) === false)
+
+        assertAlways(equals(123, 123.0) === false)
+        assertAlways(equals(1.0, 1) === false)
+        assertAlways(equals("str", void) === false)
+        assertAlways(equals(<% 11 22 33 %>, 123) === false)
+        assertAlways(equals(void, "") === false)
+        assertAlways(equals(null, true) === false)
+        assertAlways(equals([], void) === false)
+        assertAlways(equals(%[], []) === false)
+        assertAlways(equals(null, []) === false)
+        assertAlways(equals(123, []) === false)
+
+        assertAlways(equals(123, 123.0) === false)
+        assertAlways(equals(1.0, 1) === false)
+        assertAlways(equals("str", void) === false)
+        assertAlways(equals(<% 11 22 33 %>, 123) === false)
+        assertAlways(equals(void, "") === false)
+        assertAlways(equals(null, true) === false)
+
+        var obj = new TestClass(1);
+        var obj2 = new TestClass(1);
+        assertAlways(equals(obj, obj) === true)
+        assertAlways(obj.equalsCalled === 1)
+        assertAlways(equals(obj2, obj2) === true)
+        assertAlways(obj2.equalsCalled === 1)
+        assertAlways(equals(obj, obj2) === true)
+        assertAlways(obj.equalsCalled === 2)
+        assertAlways(equals(obj2, obj) === true)
+        assertAlways(obj2.equalsCalled === 2)
+        assertAlways(equals(obj, void) === false)
+        assertAlways(obj.equalsCalled === 2)
+        assertAlways(equals(obj, null) === false)
+        assertAlways(obj.equalsCalled === 2)
+        assertAlways(equals(123, obj) === false)
+        assertAlways(obj.equalsCalled === 2)
+        assertAlways(equals(void, obj) === false)
+        assertAlways(obj.equalsCalled === 2)
+        assertAlways(equals(null, obj) === false)
+        assertAlways(obj.equalsCalled === 2)
+        obj.value = 123;
+        assertAlways(equals(obj, obj2) === false)
+        assertAlways(obj.equalsCalled === 3)
+        assertAlways(equals(obj2, obj) === false)
+        assertAlways(obj2.equalsCalled === 3)
+        obj2.value = 123;
+        assertAlways(equals(obj, obj2) === true)
+        assertAlways(obj.equalsCalled === 4)
+        
+        obj.value = new TestClass();
+        obj2.value = new TestClass();
+        assertAlways(equals(obj, obj2) === true)
+        assertAlways(obj.equalsCalled === 5)
+        assertAlways(obj.value.equalsCalled === 1)
+        obj.value.value = 100;
+        assertAlways(equals(obj, obj2) === false)
+        assertAlways(obj.equalsCalled === 6)
+        assertAlways(obj.value.equalsCalled === 2)
+        obj2.value.value = 100;
+        assertAlways(equals(obj, obj2) === true)
+        assertAlways(obj.equalsCalled === 7)
+        assertAlways(obj.value.equalsCalled === 3)
+        invalidate obj.value;
+        obj.value = obj2.value;
+        assertAlways(equals(obj, obj2) === true)
+        assertAlways(obj.equalsCalled === 8)
+        assertAlways(obj.value.equalsCalled === 1)
+        invalidate obj.value;
+        invalidate obj;
+        invalidate obj2;
+
+        obj = new TestClass();
+        obj2 = new TestClass();
+        assertAlways(equals(obj, obj2) === true)
+        assertAlways(obj.equalsCalled === 1)
+        assertAlways(obj2.equalsCalled === 0)
+        invalidate obj;
+        assertAlways(equals(obj, obj2) === false)
+        assertAlways(obj2.equalsCalled === 0)
+        assertAlways(equals(obj2, obj) === false)
+        assertAlways(obj2.equalsCalled === 0)
+        invalidate obj2;
+        assertAlways(equals(obj, obj2) === false)
+        assertAlways(equals(obj2, obj) === false)
+    }
+    {   // toString
+        assertAlways(toString(123) === "(int)123")
+        assertAlways(toString(0.5) === "(real)0.5")
+        assertAlways(toString("str") === '"str"')
+        assertAlways(toString(<% 11 22 33 %>) === "(octet)<% 11 22 33 %>")
+        assertAlways(toString(void) === "void")
+        assertAlways(toString(null) === "null")
+
+        var obj = new TestClass(null);
+        assertAlways(obj.toString() === "(TestClass) value=null")
+        assertAlways(obj.toStringCalled === 1)
+        invalidate obj;
+    }
+
+    invalidate TestClass;
+}

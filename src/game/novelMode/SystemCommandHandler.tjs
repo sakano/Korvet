@@ -108,4 +108,11 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
             ]
         ];
     }
+
+    OverrideFunc(onCommandConvert)(command:Dictionary) {
+    }
+
+    OverrideFunc(serializeCurrentState)() {
+        return %[];
+    }
 }

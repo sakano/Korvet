@@ -4,6 +4,6 @@ taskkill /f /im "tvpwin32_p.exe" >NUL 2>&1
 taskkill /f /im "tvpwin32_d.exe" >NUL 2>&1
 taskkill /f /im "tvpwin32_dbg.exe" >NUL 2>&1
 
-call compile_release.bat
+call src/_convert.bat "update_release"
 
-start "" tvpwin32_p.exe "%~dp0start" -rlmode="yes"
+tvpwin32_p.exe "%~dp0data/release/" -rlmode="yes"

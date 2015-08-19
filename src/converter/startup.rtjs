@@ -1,0 +1,221 @@
+// Copyright (C) 2015 Biscrat
+
+Plugins.link("fstat.dll");
+Plugins.link("shellexecute.dll");
+Plugins.link("savestruct.dll");
+
+// ファイルパスを引数から取得
+var dataPath = System.getArgument("-dataPath");
+var srcPath = System.getArgument("-srcPath");
+var includePath = System.getArgument("-includePath");
+var headerPath = System.getArgument("-headerPath");
+var convertMethod = System.getArgument("-method");
+
+// 引数が指定されていなければエラー
+if (dataPath == void) { throw new Exception("dataPath must be specified"); }
+if (srcPath == void) { throw new Exception("srcPath must be spedified"); }
+if (includePath == void) { throw new Exception("includePath must be spedified"); }
+if (headerPath == void) { throw new Exception("headerPath must be spedified"); }
+if (convertMethod == void) { throw new Exception("method must be specified"); }
+
+// パスをフルパスに変換
+dataPath = Storages.getLocalName(dataPath);
+srcPath = Storages.getLocalName(srcPath);
+includePath = Storages.getLocalName(includePath);
+headerPath = Storages.getLocalName(headerPath);
+
+// 現在の時間を表す文字列を生成
+var dateString = (function() {
+    var dateObj = new Date();
+    var day = [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ][dateObj.getDay()];
+    var month = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ][dateObj.getMonth()];
+    var date = dateObj.getDate();
+    var year = dateObj.getYear();
+    var hours = dateObj.getHours();
+    var minutes = dateObj.getMinutes();
+    var seconds = dateObj.getSeconds();
+    return @"${day} ${month} ${date} %02d:%02d:%02d ${year}".sprintf(hours, minutes, seconds);
+})();
+
+var preprocessExecuted = false;
+var compileExecuted = false;
+
+class DirectoryHandler
+{
+    var paths;
+    function DirectoryHandler(recur, dir, ext) {
+        var recursive = recur !== void ? !!recur : true; // ディレクトリを再帰的に処理するか
+        var dir = expandSpecialPath(dir); // 対象のディレクトリ
+        var extensions = ext.split("|"); // 処理するファイルの拡張子
+        this.paths = getFilesInDirectory(dir, recursive, extensions);
+    }
+
+    function foreach(func, *) {
+        for (var i = 0; i < paths.count; ++i) {
+            func(paths[i], *);
+        }
+    }
+
+    // 指定されたディレクトリ内の操作対象ファイルのフルパスを返す
+    function getFilesInDirectory(dirPath, recur, ext) {
+        if (dirPath == "") throw new Exception("invalid argument(dirPath)");
+        var list = Storages.dirlist(dirPath);
+        var paths = [];
+        for (var i = 0; i < list.count; ++i) {
+            var file = list[i];
+            if (file[file.length-1] !== "/") { // file
+                if (ext.find(Storages.extractStorageExt(file)) < 0) { continue; }
+                paths.push(dirPath + file);
+            } else if (recur) { // directory
+                if (file[0] === ".") { continue; }
+                var innerPaths = getFilesInDirectory(dirPath + file, recur, ext);
+                for (var j = 0; j < innerPaths.count; ++j) {
+                    paths.add(innerPaths[j]);
+                }
+            }
+        }
+        return paths;
+    }
+}
+
+// 指定されたディレクトリのファイルを削除
+function clean(option) {
+    var handler = new DirectoryHandler(option.recur, option.dir, option.ext);
+    handler.foreach(ensureDeleteFile);
+}
+
+// 指定されたディレクトリのファイルをプリプロセスして出力
+function preprocess(option) {
+    var toDir = expandSpecialPath(option.to); // 出力先ディレクトリ
+    var handler = new DirectoryHandler(option.recur, option.from, option.ext);
+    handler.foreach(function(path, toDir, mode) {
+        preprocessFile(%[
+            from : path,
+            to : toDir + Storages.extractStorageName(path),
+            mode : mode
+        ]);
+    }, toDir, option.mode);
+}
+
+// 指定されたディレクトリのファイルをコンパイルして出力
+function compile(option) {
+    var toDir = expandSpecialPath(option.to); // 出力先ディレクトリ
+    var handler = new DirectoryHandler(option.recur, option.from, option.ext);
+    handler.foreach(function(path, toDir) {
+        compileFile(%[
+            from : path,
+            to : toDir + Storages.extractStorageName(path),
+        ]);
+    }, toDir);
+}
+
+// 指定されたファイルをプリプロセスして出力
+function preprocessFile(option) {
+    var from = Storages.getLocalName(expandSpecialPath(option.from)); // 出力先ファイル名
+    var to = Storages.getLocalName(expandSpecialPath(option.to)); // 元ファイル名
+
+    if (!removeOldFileIfExist(from, to)) return;
+
+    // パラメータを生成
+    var mode = option.mode.toLowerCase() === "debug"
+        ? '-DDEBUG=1 -DRELEASE=0'
+        : '-DDEBUG=0 -DRELEASE=1';
+    var param = @'-E -P -Dm4___time__="${dateString}" ${mode}'
+        ' --include=${Storages.extractStoragePath(from)} --include=${includePath}'
+        ' "${headerPath}" "${from}"';
+
+    // プリプロセス実行
+    Debug.message("m4 " + param);
+    var result = System.commandExecute("m4", param, 0, true);
+
+    if (result.status === "ok" && result.exitcode === 0) {
+        // 成功したら実行結果をファイルに出力
+        result.stdout[0] = result.stdout[0].substr(0);
+        result.stdout.save2(to, true);
+
+        // 更新日時を元ファイルに合わせる
+        var fromModifiedTime = Storages.getLastModifiedFileTime(from);
+        Storages.setLastModifiedFileTime(to, fromModifiedTime);
+
+        // 書き込み禁止にする
+        Storages.setFileAttributes(to, FILE_ATTRIBUTE_READONLY);
+    } else {
+        Debug.message("\n ====== PREPROCESS ERROR ======\n\n", result.stdout.join("\n"), "\n\n ====== PREPROCESS ERROR ======\n");
+        throw new Exception(
+            @"preprocess failed\n\n"
+            "FROM:\n"
+            "${from}\n"
+            "TO:\n"
+            "${to}\n\n"
+            "MESSAGE:\n"
+            "${result.stdout[-1]}"
+        );
+    }
+
+    preprocessExecuted = true;
+}
+
+// 指定されたファイルをコンパイルして出力
+function compileFile(option) {
+    var from = Storages.getLocalName(expandSpecialPath(option.from)); // 出力先ファイル名
+    var to = Storages.getLocalName(expandSpecialPath(option.to)); // 元ファイル名
+
+    if (!removeOldFileIfExist(from, to)) return;
+
+    // コンパイル実行
+    Debug.message(@"compile from=${from} to=${to}");
+    Scripts.compileStorage(from, to);
+
+    // 更新日時を元ファイルに合わせる
+    var fromModifiedTime = Storages.getLastModifiedFileTime(from);
+    Storages.setLastModifiedFileTime(to, fromModifiedTime);
+
+    compileExecuted = true;
+}
+
+// 更新日時の異なる古いファイルが存在すれば削除
+function removeOldFileIfExist(from, to) {
+    if (!Storages.isExistentStorage(to)) {
+        return true;
+    }
+
+    // 出力先ファイルと元ファイルの更新日時が同じ
+    if (Storages.getLastModifiedFileTime(from) == Storages.getLastModifiedFileTime(to)) {
+        return false;
+    }
+
+    // 既に存在する出力先ファイルを削除
+    ensureDeleteFile(to);
+    return true;
+}
+
+// 指定されたファイルを削除
+function ensureDeleteFile(path) {
+    Storages.resetFileAttributes(path, FILE_ATTRIBUTE_READONLY);
+    if (!Storages.deleteFile(path)) {
+        throw new Exception(@
+            "file delete failed\n\n"
+            "PATH:\n"
+            "${path}"
+        );
+    }
+}
+
+// 特殊パスを展開
+function expandSpecialPath(path) {
+    if (path == "") throw new Exception("invalid argument(path)");
+    path = /%data%/.replace(path, global.dataPath);
+    path = /%src%/.replace(path, global.srcPath);
+    return path;
+}
+
+Scripts.execStorage("convert_setting.rtjs");
+
+Scripts.eval(convertMethod + "()");
+
+// 実際にファイルが1つでも処理された場合、終了コードは1
+var exitCode = 0;
+if (preprocessExecuted || compileExecuted) {
+    exitCode = 1;
+}
+System.terminate(exitCode);

@@ -1,0 +1,64 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Debug.notice(
+    "Korvet Non-Commercial License\r\n"
+    "Copyright (C) 2015 Biscrat\r\n"
+    "\r\n"
+    "本ソフトウェア及びその二次的著作物は、以下の条件を全て満たす場合にのみ改変、複製、再頒布することができます。\r\n"
+    "1.再頒布する場合、上記の著作権表示及び本許諾表示をソフトウェアのすべての複製または重要な部分に表記してください。\r\n"
+    "2.非営利目的での、いかなる金銭や対価の支払いにも関与しない場合に限ります。\n"
+    "\r\n"
+    "ソフトウェアは「現状のまま」で、明示であるか暗黙であるかを問わず、何らの保証もなく提供されます。ここでいう保証とは、商品性、特定の目的への適合性、および権利非侵害についての保証も含みますが、それに限定されるものではありません。 作者または著作権者は、契約行為、不法行為、またはそれ以外であろうと、ソフトウェアに起因または関連し、あるいはソフトウェアの使用またはその他の扱いによって生じる一切の請求、損害、その他の義務について何らの責任も負わないものとします。\r\n"
+);
+
+Font.rasterizer = frFreeType;
+System.graphicCacheLimit = gcsAuto;
+System.drawThreadNum = dtnAuto;
+
+if (typeof global.loadPlugin === "undefined") {
+    global.loadPlugin = LMD(storage:string) {
+        checkArgs
+        assert(storage.length > 0)
+        Debug.message("Loading plugin:" + storage);
+        Plugins.link(...);
+    };
+}
+
+
+Scripts.execStorage("common.tjs");
+
+execStorage("ScriptLogger.tjs");
+execStorage("Config.tjs");
+execStorage("GameMenu.tjs");
+execStorage("Game.tjs");
+execStorage("GameMode.tjs");
+
+execStorage("AbstractCommandHandler.tjs");
+execStorage("AbstractDrawableCommandHandler.tjs");
+execStorage("SpriteCommandHandler.tjs");
+execStorage("StageCommandHandler.tjs");
+execStorage("TachieCommandHandler.tjs");
+execStorage("MessageCommandHandler.tjs");
+execStorage("SystemCommandHandler.tjs");
+
+execStorage("NovelMode.tjs");
+
+// load k2compat
+m4_ifelse(DEBUG,1,&--{
+    // 各種互換実装を無効化します
+    @set (K2COMPAT_PURGE_MENU = 1) // MenuItem, Window.menu (menu.dll)
+    @set (K2COMPAT_PURGE_KAGPARSER = 1) // KAGParser (KAGParrser.dll)
+    @set (K2COMPAT_PURGE_FONTSELECT = 1) // Layer.font.doUserSelect
+    @set (K2COMPAT_PURGE_INPUTSTRING = 1) // System.inputString
+    @set (K2COMPAT_PURGE_WINDOWPROP = 1) // Window.innerSunken, Window.showScrollBars
+    @set (K2COMPAT_PURGE_PTDRAWDEVICE = 1) // Window.PassThroughDrawDevice
+    // @set (K2COMPAT_PURGE_PAD = 1) // Pad
+    // @set (K2COMPAT_PURGE_CONSOLE = 1) // コンソール (Debug.console)
+    // @set (K2COMPAT_PURGE_CONTROLLER = 1) // コントローラ (Debug.controller)
+    // @set (K2COMPAT_PURGE_SCRIPTEDITOR = 1) // スクリプトエディタ (Debug.scripted)
+    // @set (K2COMPAT_PURGE_WATCH = 1) // 監視式 (Debug.watchexp)
+    // @set (K2COMPAT_PURGE_HOTKEY = 1) // Shift+F1～F4のホットキー
+    Scripts.execStorage("k2compat.tjs");
+    Krkr2CompatUtils.scriptBase = "";
+}--&)

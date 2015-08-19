@@ -1,0 +1,60 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(DistinctEnumerable, Enumerable)
+{
+    OverrideFunc(getEnumerator)() {
+        return new global.DistinctEnumerator(this);
+    }
+
+    var _source;
+    var _count;
+
+    Constructor(source:Object) {
+        checkArgs
+        typeFunction(source.getEnumerator)
+        this._source = source;
+    }
+}
+
+ClassExtends(DistinctEnumerator, Enumerator)
+{
+    property current { getter { return this._source.current; } }
+
+    OverrideFunc(moveNext) {
+        this._source = this._parent._source.getEnumerator();
+        this._seenElements = %[];
+        this.moveNext = this._moveNextImpl;
+        return this._moveNextImpl();
+    }
+
+    var _parent;
+    var _source;
+    var _seenElements;
+    var _voidSeen = false;
+
+    Constructor(parent:DistinctEnumerable) {
+        checkArgs
+        this._parent = parent;
+    }
+
+    Finalize() {
+        invalidate this._seenElements if this._seenElements !== void;
+    }
+
+    Func(_moveNextImpl)() {
+        while (this._source.moveNext()) {
+            var current = this._source.current;
+            if (current === void) {
+                if (!this._voidSeen) {
+                    this._voidSeen = true;
+                    return true;
+                }
+            } else if (this._seenElements[current] === void) {
+                this._seenElements[current] = true;
+                return true;
+            }
+        }
+        return false;
+    }
+}

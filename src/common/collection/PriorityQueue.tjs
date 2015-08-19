@@ -1,0 +1,116 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(PriorityQueue)
+{
+    property count { getter { return this._values.count; } }
+
+    Func(clone)() {
+        var queue = new global.PriorityQueue();
+        queue._values = this._values.clone();
+        queue._priorities = this._priorities.cloneShallow();
+        return queue;
+    }
+
+    Func(cloneShallow)() {
+        var queue = new global.PriorityQueue();
+        queue._values = this._values.cloneShallow();
+        queue._priorities = this._priorities.cloneShallow();
+        return queue;
+    }
+
+    Func(equals)(target:any+) {
+        checkArgs
+        if (target === null) return false;
+        if (!target isvalid) return false;
+        if (!target instanceof "PriorityQueue") return false;
+        if (target === this) return true;
+        if (!this._priorities.equals(target._priorities)) return false;
+        return this._values.equals(target._values);
+    }
+
+    Func(equalsShallow)(target:any+) {
+        checkArgs
+        if (target === null) return false;
+        if (!target isvalid) return false;
+        if (!target instanceof "PriorityQueue") return false;
+        if (target === this) return true;
+        if (!this._priorities.equals(target._priorities)) return false;
+        return this._values.equalsShallow(target._values);
+    }
+
+    Func(toString)() {
+        var priorityToString = %[
+            PriorityQueue_Highest => "highest",
+            PriorityQueue_High => "high",
+            PriorityQueue_Normal => "normal",
+            PriorityQueue_Low => "low",
+            PriorityQueue_Lowest => "lowest"
+        ];
+
+        if (this._values.count === 0) return "(PriorityQueue){}";
+        var result = "(PriorityQueue){" + global.toString(this._values[-1]) + "[" + priorityToString[this._priorities[-1]] + "]";
+        for (var i = this._values.count - 2; i >= 0; --i) {
+            result += ", " + global.toString(this._values[i]) + "[" + priorityToString[this._priorities[i]] + "]";
+        }
+        return result + "}";
+    }
+
+    Func(isEmpty)() {
+        return this._values.count === 0;
+    }
+
+    Func(enqueue)(value:any+, priority:int = PriorityQueue_Normal) {
+        checkArgs
+        assert(this._values.count === this._priorities.count)
+        // 追加する位置を探す
+        var indexToInsert = 0;
+        for (; indexToInsert < this._priorities.count; ++indexToInsert) {
+            if (priority >= this._priorities[indexToInsert]) break;
+        }
+        // 追加する
+        this._values.insert(indexToInsert, value);
+        this._priorities.insert(indexToInsert, priority);
+    }
+
+    Func(dequeue)() {
+        assert(this._values.count === this._priorities.count)
+        if (this._values.count === 0) return void;
+        this._priorities.pop();
+        return this._values.pop();
+    }
+
+    Func(peek)() {
+        if (this._values.count === 0) return void;
+        return this._values[-1];
+    }
+
+    Func(peekPriority)() {
+        if (this._priorities.count === 0) return void;
+        return this._priorities[-1];
+    }
+
+    Func(clear)() {
+        this._values.clear();
+        this._priorities.clear();
+    }
+
+    Func(dispose)() {
+        this._values.dispose();
+        this._priorities.clear();
+    }
+
+
+
+    var _values = [];
+    var _priorities = [];
+
+    Constructor() {
+    }
+
+    Finalize() {
+        clear();
+        invalidate this._values;
+        invalidate this._priorities;
+    }
+}

@@ -112,6 +112,7 @@ ClassExtends(NovelMode, GameMode)
 
         global.gScriptLogger.setParser(this._parser);
 
+        this._parser.initStorage("sc01.krs");
         this.resumeCommandLoopAsync();
     }
 
@@ -133,7 +134,6 @@ ClassExtends(NovelMode, GameMode)
         this._parser = new global.KorvetParser();
         this._parser.setModule(new global.MacroParserModule(), PriorityQueue_Highest);
         this._parser.setModule(new global.PageBeginEndParserModule(), PriorityQueue_Normal);
-        this._parser.initStorage("test.krs");
     }
 
     Func(_initCommandHandlers)() {
@@ -195,7 +195,7 @@ ClassExtends(NovelMode, GameMode)
 
             // パース中にエラーが発生したら停止
             if (!success(error)) {
-                global.gScriptLogger.onScriptError(expandMessage(ASSERT_SCRIPT_PARSER_ERROR, "MES", error.message));
+                global.gScriptLogger.onScriptError(ASSERT_SCRIPT_PARSER_ERROR, "MES", error.message);
                 break;
             }
 

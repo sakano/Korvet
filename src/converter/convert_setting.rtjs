@@ -1,0 +1,31 @@
+function update_debug() {
+    preprocess(%[ ext : ".tjs|.otjs", to : "%data%debug/",       from : "%src%common/",   recur:true, mode:"debug" ]);
+    preprocess(%[ ext : ".tjs|.otjs", to : "%data%debug/",       from : "%src%game/",     recur:true, mode:"debug" ]);
+    preprocess(%[ ext : ".tjs|.otjs", to : "%data%debug/",       from : "%src%start/",    recur:true, mode:"debug" ]);
+    preprocess(%[ ext : ".tjs|.otjs", to : "%data%debug/",       from : "%src%k2compat/", recur:true, mode:"debug" ]);
+    preprocess(%[ ext : ".tjs|.otjs", to : "%data%debug/tools/", from : "%src%tools/",    recur:true, mode:"debug" ]);
+}
+
+function clean_debug() {
+    clean(%[      ext : ".tjs|.otjs", dir : "%data%debug/", recur:false ]);
+    clean(%[      ext : ".tjs|.otjs", dir : "%data%debug/tools/" ]);
+    update_debug();
+}
+
+function update_release() {
+    preprocess(%[ ext : ".tjs|.otjs", to : "%data%release_intermediate/", from : "%src%common/",   recur:true, mode:"release" ]);
+    preprocess(%[ ext : ".tjs|.otjs", to : "%data%release_intermediate/", from : "%src%game/",     recur:true, mode:"release" ]);
+    preprocess(%[ ext : ".tjs|.otjs", to : "%data%release_intermediate/", from : "%src%start/",    recur:true, mode:"release" ]);
+    compile(%[    ext : ".tjs|.otjs", to : "%data%release/", from : "%data%release_intermediate/", recur:false ]);
+}
+
+function clean_release() {
+    clean(%[      ext : ".tjs|.otjs", dir : "%data%release/" ]);
+    clean(%[      ext : ".tjs|.otjs", dir : "%data%release_intermediate/" ]);
+    update_release();
+}
+
+function recompile() {
+    clean_debug();
+    clean_release();
+}

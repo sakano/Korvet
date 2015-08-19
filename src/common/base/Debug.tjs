@@ -1,0 +1,40 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+m4_ifelse(DEBUG, 1, {
+    Func(logMemoryLeakForDebug)(tag:string, object:any) {
+        checkArgs
+        m4_ifelse(CHECK_MEMORY_LEAK, 1, {
+            if (typeof global.__gLogMemoryLeak === "undefined") global.__gLogMemoryLeak = %[];
+            // 作成したオブジェクトを記録しておく
+            if (global.__gLogMemoryLeak[tag] === void) {
+                global.__gLogMemoryLeak[tag] = [];
+            }
+            global.__gLogMemoryLeak[tag].add(object);
+        })
+    }
+
+    Func(checkMemoryLeakForDebug)() {
+        if (typeof global.__gLogMemoryLeak === "undefined") global.__gLogMemoryLeak = %[];
+        // 記録されたオブジェクトが有効ならエラー
+        FOR_EACH(pair, global.__gLogMemoryLeak) {
+            FOR_EACH(object, pair.value.where(LMD(object) { return object isvalid; })) {
+                global.gLog.fatal(
+                    global.expandMessage(FATAL_UNINVALIDATED_OBJECT_DETECTED, "TYPE", pair.key, "MES", toString(object))
+                );
+            }
+        }
+    }
+
+    Func(cleanMemoryLeakLogForDebug)() {
+        if (typeof global.__gLogMemoryLeak === "undefined") global.__gLogMemoryLeak = %[];
+        FOR_EACH(pair, global.__gLogMemoryLeak) {
+            var array = pair.value;
+            var validObjects = [];
+            FOR_EACH(object, pair.value.where(LMD(object) { return object isvalid; })) {
+                validObjects.add(object);
+            }
+            global.__gLogMemoryLeak[pair.key] = validObjects;
+        }
+    }
+})

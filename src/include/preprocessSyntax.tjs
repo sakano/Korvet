@@ -1,0 +1,98 @@
+m4_define(&--__CLASS_NAME--&, )m4_dnl クラス名
+m4_define(&--__PARENT_CLASS_NAME--&, )m4_dnl 継承しているクラス名
+m4_define(&--__FUNC_NAME--&, )m4_dnl 関数名
+m4_dnl
+m4_dnl
+m4_dnl
+m4_define(&--Class--&,&--m4_dnl
+m4_ifelse($#,0,&--&--Class--&--&,&--m4_dnl
+    m4_define(&--__CLASS_NAME--&, $1)m4_dnl
+    m4_define(&--__PARENT_CLASS_NAME--&)m4_dnl
+    m4_define(&--__FUNC_NAME--&)m4_dnl
+    class $1 --&)--&)m4_dnl
+m4_define(&--ClassExtends--&,&--m4_dnl
+    m4_define(&--__CLASS_NAME--&, $1)m4_dnl
+    m4_define(&--__PARENT_CLASS_NAME--&, $2)m4_dnl
+    m4_define(&--__FUNC_NAME--&,)m4_dnl
+    class $1 extends $2 --&)m4_dnl
+m4_dnl
+m4_dnl
+m4_dnl
+m4_define(&--Constructor--&,&--m4_dnl
+    m4_define(&--__FUNC_NAME--&,&--__CLASS_NAME--&)m4_dnl
+    Func(__CLASS_NAME)($@)--&)m4_dnl
+m4_dnl
+m4_dnl
+m4_dnl
+m4_define(&--Finalize--&,&--m4_dnl
+    m4_define(&--__FUNC_NAME--&,finalize)m4_dnl
+    function finalize ($@)--&)m4_dnl
+m4_dnl
+m4_dnl
+m4_dnl
+m4_define(&--__FUNC_ARG_CHECK--&,m4_dnl
+    &--m4_define(&--__FUNC_ARG_CHECK_COND--&,0)--&m4_dnl
+    &--m4_ifelse($2,void,     &--typeVoid($1)--&            &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,null,     &--typeNull($1)--&            &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,null+,    &--typeNullVoid($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,object,   &--typeObject($1)--&          &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,object+,  &--typeObjectVoid($1)--&      &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,string,   &--typeString($1)--&          &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,string+,  &--typeStringVoid($1)--&      &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,string?,  &--typeStringNullable($1)--&  &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,int,      &--typeInt($1)--&             &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,int+,     &--typeIntVoid($1)--&         &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,real,     &--typeReal($1)--&            &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,real+,    &--typeRealVoid($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,octet,    &--typeOctet($1)--&           &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,octet+,   &--typeOctetVoid($1)--&       &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,Function, &--typeFunction($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,Function+,&--typeFunctionVoid($1)--&    &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,Property, &--typeProperty($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,Property+,&--typePropertyVoid($1)--&    &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,Class,    &--typeClass($1)--&           &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,Class+,   &--typeClassVoid($1)--&       &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,number,   &--typeNumber($1)--&          &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,number+,  &--typeNumberVoid($1)--&      &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,bool,     &--typeBool($1)--&            &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,bool+,    &--typeBoolVoid($1)--&        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,any,      &--typeNotVoid($1)--&         &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse($2,any+,     &----&                        &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse(m4_len($2),0,                              &--m4_define(&--__FUNC_ARG_CHECK_COND--&,1)--&)--&m4_dnl
+    &--m4_ifelse(__FUNC_ARG_CHECK_COND,0,&--m4_ifelse(m4_index($2,?),m4_decr(m4_len($2)),typeCheckNullable($1,"m4_substr($2,0,m4_decr(m4_len($2)))"),typeCheck($1,"$2"))--&)--&m4_dnl
+    &--m4_undefine(&--__FUNC_ARG_CHECK_COND--&)--&)m4_dnl
+m4_define(&--__FUNC_ARG--&,&--m4_regexp($1,&--\([^:]+?\):?\([^ =]+?\)\(.+\)?--&,&--m4_ifelse($1,\1:\2,m4_define(&--checkArgs--&, checkArgs __FUNC_ARG_CHECK(\1, \2)))\1\3--&)--&)m4_dnl
+m4_define(&--__FUNC_ARGS_INTERNAL--&, &--m4_ifelse($#,1,&--__FUNC_ARG($1)--&,&--__FUNC_ARG($1), __FUNC_ARGS_INTERNAL(m4_shift($@))--&)--&)m4_dnl
+m4_define(&--__FUNC_ARGS--&,&--m4_define(&--checkArgs--&)m4_ifelse($1,,,&--(__FUNC_ARGS_INTERNAL($@))--&)--&)m4_dnl
+m4_define(&--__FUNC_ARG_REMOVE_TYPES--&,&--m4_ifelse($1,,,&--(__FUNC_ARGS_INTERNAL($@))--&)--&)m4_dnl
+m4_define(&--checkArgs--&)m4_dnl
+m4_define(&--Func--&,&--m4_dnl
+    m4_define(&--__FUNC_NAME--&,$1)m4_dnl
+    m4_ifelse(RELEASE, 1,m4_dnl
+        &--function $1 __FUNC_ARG_REMOVE_TYPES--&,m4_dnl
+        &--__FuncImpl("__PARENT_CLASS_NAME","__CLASS_NAME","$1","m4___file__",m4___line__);function $1 __FUNC_ARGS--&)--&)m4_dnl
+m4_dnl
+m4_define(&--OverrideFunc--&,&--m4_dnl
+    m4_define(&--__FUNC_NAME--&,$1)m4_dnl
+    m4_ifelse(RELEASE, 1,m4_dnl
+        &--function $1 __FUNC_ARG_REMOVE_TYPES--&,m4_dnl
+        &--__OverrideFuncImpl("__PARENT_CLASS_NAME","__CLASS_NAME","$1","m4___file__",m4___line__);function $1 __FUNC_ARGS--&)--&)m4_dnl
+m4_dnl
+m4_define(&--LMD--&, &--function __FUNC_ARGS($@)--&)m4_dnl
+m4_dnl
+m4_define(&--__InternalAbstractFunc--&,m4_dnl
+    m4_ifelse(RELEASE, 1,m4_dnl
+        &----&,m4_dnl
+        &--function &--__FUNC_NAME ($@)--&{ notImplemented("&--__FUNC_NAME--& is abstract method."); }--&))m4_dnl
+m4_dnl
+m4_define(&--AbstractFunc--&,m4_dnl
+    &--m4_define(&--__FUNC_NAME--&,&--$1--&)--&m4_dnl
+    m4_ifelse(RELEASE, 1,m4_dnl
+        &--&--__InternalAbstractFunc--&--&,m4_dnl
+        &--&--__FuncImpl("__PARENT_CLASS_NAME","__CLASS_NAME","$1","m4___file__",m4___line__);__InternalAbstractFunc--&--&))m4_dnl
+m4_dnl
+m4_dnl
+m4_dnl
+m4_define(FOR_EACH,m4_dnl
+    for (var __enumerable = ((&--m4_shift($@)--&).getEnumerator()), $1; (__enumerable.moveNext() && (($1) = __enumerable.current, true)) || (invalidate __enumerable, false);)m4_dnl
+)m4_dnl

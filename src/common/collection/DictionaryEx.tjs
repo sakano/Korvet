@@ -1,0 +1,189 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+// もとの内容をHiddenMemberとして登録し直す
+global.setHiddenMember(Dictionary, "saveStruct", Dictionary.saveStruct);
+
+// もとのDictionary.clearではHiddenMemberも消されてしまうので上書きする
+setHiddenMember(Dictionary, "clear", LMD {
+    var keys = global.getKeys(this); // getKeysで得られるメンバのみ消去
+    for (var i = 0; i < keys.count; ++i) delete this[keys[i]];
+});
+
+// もとのDictionary.assignではHiddenMemberも消されてしまうので上書きする
+setHiddenMember(Dictionary, "assign", LMD(src:Dictionary, clear:bool = true) {
+    checkArgs
+    if (clear) (global.Dictionary.clear incontextof this)();
+    var keys = global.getKeys(src); // getKeysで得られるメンバのみコピー
+    for (var i = 0; i < keys.count; ++i) this[keys[i]] = src[keys[i]];
+});
+
+// もとのDictionary.assignStructではHiddenMemberも消されてしまうので上書きする
+setHiddenMember(Dictionary, "assignStruct", LMD(src:Dictionary, clear:bool = true) {
+    checkArgs
+    if (clear) (global.Dictionary.clear incontextof this)();
+    var keys = global.getKeys(src); // getKeysで得られるメンバのみコピー
+    for (var i = 0; i < keys.count; ++i) {
+        var key = keys[i];
+        if (src[key] instanceof "Array") {
+            this[key] = [];
+            this[key].assignStruct(src[key]);
+            assert(typeof this[key].isEmpty !== "undefined")
+        } else if (src[key] instanceof "Dictionary") {
+            this[key] = %[];
+            (global.Dictionary.assignStruct incontextof this[key])(src[key]);
+            //this[key].assignStruct(src[key]);
+            assert(typeof this[key].isEmpty !== "undefined")
+        } else {
+            this[key] = src[key];
+        }
+    }
+});
+
+setHiddenMember(Dictionary, "clone", LMD() {
+    var result = %[];
+    var keys = global.getKeys(this);
+    for (var i = 0; i < keys.count; ++i) {
+        result[keys[i]] = global.clone(this[keys[i]]);
+    }
+    return result;
+});
+
+setHiddenMember(Dictionary, "cloneShallow", LMD() {
+    var result = %[];
+    var keys = global.getKeys(this);
+    for (var i = 0; i < keys.count; ++i) {
+        result[keys[i]] = this[keys[i]];
+    }
+    return result;
+});
+
+setHiddenMember(Dictionary, "equals", LMD(target:any+) {
+    checkArgs
+    return global.Dictionary._equalsImpl(target, LMD(a, b) { return global.equals(a, b); });
+});
+
+setHiddenMember(Dictionary, "equalsShallow", LMD(target:any+) {
+    checkArgs
+    return global.Dictionary._equalsImpl(target, LMD(a, b) { return a === b; });
+});
+
+setHiddenMember(Dictionary, "toString", LMD() {
+    var keys = global.getKeys(this);
+    if (keys.count === 0) return "%[]";
+    var result = "%[" + keys[0] + ":" + global.toString(this[keys[0]]);
+    for (var i = 1; i < keys.count; ++i) {
+        result += ", " + keys[i] + ":" + global.toString(this[keys[i]]);
+    }
+    return result + "]";
+});
+
+setHiddenMember(Dictionary, "dispose", LMD() {
+    var keys = global.getKeys(this);
+    for (var i = 0; i < keys.count; ++i) {
+        var key = keys[i];
+        assert(typeof this[key] === "Object")
+        assert(this[key] isvalid)
+        if (typeof this[key] !== "Object") continue;
+        if (!this[key] isvalid) continue;
+        invalidate this[key];
+        delete this[key];
+    }
+});
+
+setHiddenMember(Dictionary, "isEmpty", LMD() {
+    return global.getKeys(this).count === 0;
+});
+
+setHiddenMember(Dictionary, "contains", LMD(target:any+) {
+    var keys = global.getKeys(this);
+    for (var i = 0; i < keys.count; ++i) {
+        if (this[keys[i]] === target) return true;
+    }
+    return false;
+});
+
+setHiddenMember(Dictionary, "getKeys", LMD() {
+    return global.getKeys(this);
+});
+
+setHiddenMember(Dictionary, "getValues", LMD() {
+    var values = [];
+    var keys = global.getKeys(this);
+    for (var i = 0; i < keys.count; ++i) {
+        values.add(this[keys[i]]);
+    }
+    return values;
+});
+
+setHiddenMember(Dictionary, "getEnumerator", LMD() {
+    return new global.DictionaryEnumerator(this);
+});
+
+ClassExtends(DictionaryEnumerator, Enumerator)
+{
+    property current {
+        getter {
+            var key = this._keys[this._keysIndex];
+            return %[ key:key, value:this._source[key] ];
+        }
+    }
+
+    OverrideFunc(moveNext)() {
+        this._keys = global.getKeys(this._source);
+        this.moveNext = this._moveNextImpl;
+        return this._moveNextImpl();
+    }
+
+    var _source;
+    var _keys;
+    var _keysIndex = -1;
+
+    Constructor(source:Dictionary) {
+        checkArgs
+        this._source = source;
+    }
+
+    Func(_moveNextImpl) {
+        return ++this._keysIndex < this._keys.count;
+    }
+}
+
+setStaticMember(Dictionary, "_equalsImpl", LMD(target:any+, comparer:Function) {
+    checkArgs
+    if (target === null) return false;
+    if (!target isvalid) return false;
+    if (!target instanceof "Dictionary") return false;
+    if (target === this) return true;
+    var thisKeys = global.getKeys(this);
+    var targetKeys = global.getKeys(target);
+    if (thisKeys.count !== targetKeys.count) return false;
+    for (var i = 0; i < thisKeys.count; ++i) {
+        var key = thisKeys[i];
+        if (typeof target[key] === "undefined") return false;
+        if (!comparer(this[key], target[key])) return false;
+    }
+    return true;
+});
+
+setStaticMember(Dictionary, "createWithoutMethod", LMD() {
+    checkArgs
+    var dic = %[];
+    delete dic.saveStruct;
+    delete dic.clear;
+    delete dic.assign;
+    delete dic.assignStruct;
+    delete dic.clone;
+    delete dic.cloneShallow;
+    delete dic.equals;
+    delete dic.equalsShallow;
+    delete dic.toString;
+    delete dic.dispose;
+    delete dic.isEmpty;
+    delete dic.contains;
+    delete dic.getKeys;
+    delete dic.getValues;
+    delete dic.getEnumerator;
+    global.Enumerable.removeEnumerableMethod(dic);
+    return dic;
+});

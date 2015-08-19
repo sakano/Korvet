@@ -1,0 +1,63 @@
+m4_dnl
+m4_define(&--ERROR_READ_INI_FILE--&, &--"iniファイルの読み込みに失敗しました\nパス:{PATH}\n行:{LINE}\n行番号:{LINENUM}"--&)m4_dnl
+m4_define(&--ERROR_READ_INI_FILE_SECTION--&, &--"sectionを読み込めません"--&)m4_dnl
+m4_define(&--ERROR_READ_INI_FILE_SECTION_UNSPECIFIED--&, &--"sectionが指定されていません"--&)m4_dnl
+m4_define(&--ERROR_READ_INI_FILE_KEY_NAME_DUPLICATE--&, &--"キー名が重複しています({NAME})"--&)m4_dnl
+m4_dnl
+m4_define(&--WARN_DEFERRED_PENDING_DEFERRED_INVALIDATED--&, &--"Pending中のDeferredが無効化されました"--&)m4_dnl
+m4_define(&--WARN_DEFERRED_INVALID_CALLBACK--&, &--"Deferredから無効な関数が呼び出されました"--&)m4_dnl
+m4_define(&--WARN_DEFERRED_INVALID_PROMISE--&, &--"Promiseオブジェクトが無効化されています"--&)m4_dnl
+m4_dnl
+m4_define(&--WARN_ASYNCCALLER_INVALID_CALLBACK--&, &--"AsyncCallerから無効な関数が呼び出されました"--&)m4_dnl
+m4_dnl
+m4_define(&--FATAL_UNINVALIDATED_OBJECT_DETECTED--&, &--"未解放のオブジェクト({TYPE})が存在します:{MES}"--&)m4_dnl
+m4_dnl
+m4_define(&--EXCEPTION_LINQ_ARRAY_DUPLICATE_KEYS--&, &--"キーが重複しています({KEY})"--&)m4_dnl
+m4_dnl
+m4_define(&--ERROR_IO--&, &--"IOエラーが発生しました({FILE})"--&)m4_dnl
+m4_define(&--ERROR_PARSE--&, &--"パースエラーが発生しました[{FILE}({LNUM})]{LINE}"--&)m4_dnl
+m4_define(&--ERROR_FILE_NOT_FOUND--&, &--"ファイルが見つかりません({FILE})"--&)m4_dnl
+m4_define(&--ERROR_SOUND_FILE_NOT_FOUND--&, &--"サウンドファイルが見つかりません({FILE})"--&)m4_dnl
+m4_define(&--ERROR_SOUND_LABEL_NOT_FOUND--&, &--"指定されたサウンドラベルが見つかりません({LABEL})"--&)m4_dnl
+m4_define(&--ERROR_KORVET_PARSE--&, &--"krsスクリプトの読み込みに失敗しました({MES})[{FILE}({LNUM}:{INDEX})]{LINE}"--&)m4_dnl
+m4_define(&--ERROR_KORVET_PARSER_COMMAND_SYNTAX--&, &--"コマンドの構文が間違っています"--&)m4_dnl
+m4_define(&--ERROR_KORVET_PARSER_COMMAND_END_NOT_FOUND--&, &--"'['に対応する']'が見つかりません"--&)m4_dnl
+m4_define(&--ERROR_KORVET_PARSER_LABEL_NOT_FOUND--&, &--"指定されたラベルが見つかりません({LABEL})"--&)m4_dnl
+m4_dnl
+m4_define(&--ASSERT_INSTANTIATE_ABSTRACT_CLASS--&, &--"抽象クラスはインスタンス化できません"--&)m4_dnl
+m4_define(&--ASSERT_NOT_FOUND_METHOD_TO_OVERRIDE_CAPTION--&, &--"オーバーライド失敗"--&)m4_dnl
+m4_define(&--ASSERT_NOT_FOUND_METHOD_TO_OVERRIDE--&, &--"指定された関数が親クラスに見つからないためオーバーライドできません"--&)m4_dnl
+m4_define(&--ASSERT_PARENT_CLASS_HAS_SAME_NAME_METHOD_CAPTION--&, &--"オーバーライドしています"--&)m4_dnl
+m4_define(&--ASSERT_PARENT_CLASS_HAS_SAME_NAME_METHOD--&, &--"同名の関数が親クラスに存在します"--&)m4_dnl
+m4_define(&--ASSERT_FAILED_HEADER--&, &--"Assertion failed"--&)m4_dnl
+m4_define(&--ASSERT_NOT_IMPLEMENTED_FUNCTION_CALLED--&, &--"未実装の関数が呼び出されました"--&)m4_dnl
+m4_dnl
+m4_define(&--ASSERT_ACTIONSEQUENCE_SETAFTER_CALLED_TWICE--&, &--"setAfterが二回呼ばれました"--&)m4_dnl
+m4_define(&--ASSERT_ACTIONSEQUENCE_SETBEFORE_CALLED_TWICE--&, &--"setBeforeが二回呼ばれました"--&)m4_dnl
+m4_define(&--ASSERT_ACTIONSEQUENCE_HANDLER_NOT_FOUND--&, &--"指定されたアクションハンドラが見つかりません"--&)m4_dnl
+m4_define(&--ASSERT_BEGINLOOPSEQUENCE_EMPTY_CHILD--&, &--"ループ対象のシーケンスが空です"--&)m4_dnl
+m4_define(&--ASSERT_BEGINLOOPSEQUENCE_INVALID_LOOP_COUNT--&, &--"ループ回数には0以上の整数を指定してください"--&)m4_dnl
+m4_define(&--ASSERT_BEGINSKIPSEQUENCE_EMPTY--&, &--"スキップ対象のシーケンスが空です"--&)m4_dnl
+m4_define(&--ASSERT_BEGINCONCURRENTSEQUENCE_EMPTY--&, &--"並列実行対象のシーケンスが空です"--&)m4_dnl
+m4_define(&--ASSERT_BEGINACTIONSEQUENCE_EMPTY--&, &--"アクションシーケンスが空です"--&)m4_dnl
+m4_define(&--ASSERT_BEGINACTIONSEQUENCE_EMPTY--&, &--"アクションシーケンスが空です"--&)m4_dnl
+m4_define(&--ASSERT_FACTORYSEQUENCE_SEQUENCE_NEEDED--&, &--"factoryに指定するメソッドはAbstractSequenceのインスタンスを返してください"--&)m4_dnl
+m4_define(&--ASSERT_WAITSEQUENCE_WRONG_ARGUMENTS--&, &--"waitの指定が不正です"--&)m4_dnl
+m4_define(&--ASSERT_TRANSITIONSEQUENCE_INVALID_CALLBACK--&, &--"callbackには登録済みのTransTickメソッドを指定してください"--&)m4_dnl
+m4_dnl
+m4_dnl // korvetスクリプトの記述ミスを通知する警告メッセージ
+m4_define(&--ASSERT_SCRIPT_HEADER--&, &--"[{FILE}({LINE})]"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_PARSER_ERROR--&, &--"パースエラーが発生しました : {MES}"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_NESTED_MACRO--&, &--"macroの前にendmacroが必要です"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_SINGLE_ENDMACRO--&, &--"endmacroの前にmacroが必要です"--&)m4_dnl
+m4_dnl // 不正な属性
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_DUPLICATED--&, &--"同じ属性({ATTR_NAME})が２回以上指定されています"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_REQUIRED--&, &--"必須属性({ATTR_NAME})が指定されていません"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_UNUSED--&, &--"未使用の属性です({ATTR_NAME}={ATTR_VALUE})"--&)m4_dnl
+m4_dnl // 不正な属性値
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_REQUIRED--&, &--"この属性({ATTR_NAME})の値は省略できません"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_UNUSED--&, &--"この属性({ATTR_NAME})には値を指定しないでください(現在の値:{ATTR_VALUE})"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_ILLEGAL--&, &--"不正な値が指定されています({ATTR_NAME}={ATTR_VALUE})"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_NOT_INTEGER--&, &--"この属性({ATTR_NAME})には整数を指定してください(現在の値:{ATTR_VALUE})"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_NOT_BOOLEAN--&, &--"この属性({ATTR_NAME})には\"true\"または\"false\"を指定してください(現在の値:{ATTR_VALUE})"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_VALUE_OUT_OF_RANGE--&, &--"指定された数値は範囲外です({ATTR_NAME}={ATTR_VALUE})"--&)m4_dnl

@@ -1,0 +1,40 @@
+// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Scripts.execStorage("initialize_tool.tjs");
+
+var srcPath = ToolUtility.getSrcPath();
+var destPath = Storages.getLocalName(srcPath) + "tags";
+
+&--
+System.commandExecute("ctags.exe",
+    " --langdef=tjs" +
+    " --langmap=tjs:.tjs.otjs" +
+    " --regex-tjs=\"/^[ \\t]*Class\\(([a-zA-Z0-9_]+)/\\1/c,class/\"" +
+    " --regex-tjs=\"/^[ \\t]*ClassExtends\\(([a-zA-Z0-9_]+)/\\1/c,class/\"" +
+    " --regex-tjs=\"/^[ \\t]*Func\\(([a-zA-Z0-9_]+)/\\1/f,function/\"" +
+    " --regex-tjs=\"/([a-zA-Z0-9_]+)[ \\t]*=[ \\t]*LMD/\\1/f,function/\"" +
+    " --regex-tjs=\"/^[ \\t]*setStaticMember[ \\t]*\\([^,]+,[ \\t]*\\\"([a-zA-Z0-9_]+)\\\"/\\1/s,static/\"" +
+    " --regex-tjs=\"/^[ \\t]*setHiddenMember[ \\t]*\\([^,]+,[ \\t]*\\\"([a-zA-Z0-9_]+)\\\"/\\1/h,hidden/\"" +
+    " --regex-tjs=\"/^[ \\t]*class[ \\t]+([a-zA-Z0-9_]+)/\\1/c,class/\"" +
+    " --regex-tjs=\"/^[ \\t]*function[ \\t]+([a-zA-Z0-9_]+)/\\1/f,function/\"" +
+    " --regex-tjs=\"/^[ \\t]*property[ \\t]+([a-zA-Z0-9_]+)/\\1/p,property/\"" +
+    " --regex-tjs=\"/^[ \\t]*var[ \\t]+([a-zA-Z0-9_]+)/\\1/v,value/\"" +
+    " --regex-tjs=\"/([a-zA-Z0-9_]+)[ \\t]*=[ \\t]*function/\\1/f,function/\"" +
+    @"  -n -f \"${destPath}\" -R \"${srcPath}*\""
+);
+--&
+        
+function copyTagsFile(path) {
+    Storages.copyFile(destPath, path + "tags", false);
+    // ディレクトリに再帰的に適用
+    var dir = Storages.dirlist(path);
+    for (var i = 0; i < dir.count; ++i) {
+        if (dir[i][0] === ".") { continue; }
+        if (dir[i][dir[i].length - 1] !== "/") { continue; }
+        copyTagsFile(path + dir[i]);
+    }
+}
+
+
+copyTagsFile(srcPath);

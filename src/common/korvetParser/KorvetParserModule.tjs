@@ -1,0 +1,15 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(KorvetParserModule)
+{
+    Func(clear)() {}
+    Func(onInitStorage)(parser:KorvetParser) {}
+    Func(onCommand)(parser:KorvetParser, command:Dictionary) {}
+
+    Constructor() {
+        this.clear();
+    }
+
+    Finalize() {}
+}

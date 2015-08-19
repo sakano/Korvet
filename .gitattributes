@@ -1,1 +1,5 @@
 *.tjs set diff
+*.otjs set diff
+*.rtjs set diff
+*.dtjs set diff
+*.itjs set diff

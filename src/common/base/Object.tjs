@@ -1,0 +1,63 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Func(clone)(object:any+) {
+    checkArgs
+    if (typeof object === "Object" && object !== null) {
+        assert(object isvalid)
+        assert(!object instanceof "Function")
+        assert(!object instanceof "Class")
+        assert(!object instanceof "Property")
+        assert(typeof object.clone !== "undefined")
+        typeFunction(object.clone)
+        return object.clone();
+    }
+    return object;
+}
+
+Func(equals)(target:any+, target2:any+) {
+    checkArgs
+    if (typeof target !== typeof target2) return false;
+    if (typeof target !== "Object") return target === target2;
+    if (target === null) return target2 === null;
+    if (target2 === null) return false;
+    if (!target isvalid) return false;
+    if (!target2 isvalid) return false;
+    if (target instanceof "Function") return target1 === target2;
+    if (target instanceof "Class") return target1 === target2;
+    if (target instanceof "Property") return target1 === target2;
+    assert(typeof target.equals !== "undefined")
+    typeFunction(target.equals)
+    return target.equals(target2);
+}
+
+Func(toString)(object:any+) {
+    checkArgs
+    switch (typeof object) {
+    case "void": return "void";
+    case "Integer": return "(int)" + object;
+    case "Real": return "(real)" + object;
+    case "String": return '"' + object + '"';
+    case "Octet":
+        var returnValue = "(octet)<% ";
+        for (var i = 0; i < object.length; ++i) {
+            returnValue += "%02x ".sprintf(object[i]);
+        }
+        returnValue += "%>";
+        return returnValue;
+    case "Object":
+        if (object === null) return "null";
+        if (!object isvalid) return "invalidated object";
+        if (object instanceof "Function") return "(function)" + object;
+        if (object instanceof "Class") return "(class)" + Scripts.getClassNames(object[0]);
+        if (object instanceof "Property") return "(property)" + object;
+        if (typeof object.toString !== "undefined") {
+            typeFunction(object.toString)
+            return object.toString();
+        }
+        return (string)object;
+    default:
+        assert(false)
+        return "";
+    }
+};

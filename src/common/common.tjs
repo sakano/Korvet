@@ -1,0 +1,127 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+if (typeof global.loadPlugin === "undefined") {
+    global.loadPlugin = LMD(storage:string) {
+        checkArgs
+        assert(storage.length > 0)
+        Debug.message("Loading plugin:" + storage);
+        Plugins.link(...);
+    };
+}
+
+if (typeof global.execStorage === "undefined") {
+    global.execStorage = function(storage:string) {
+        checkArgs
+        assert(storage.length > 0)
+        Debug.message("Loading storage:" + storage);
+        Scripts.execStorage(...);
+    };
+}
+
+// link plugins
+loadPlugin("scriptsEx.dll");
+loadPlugin("layerExDraw.dll");
+loadPlugin("fstat.dll");
+loadPlugin("wuvorbis.dll");
+loadPlugin("menu.dll");
+loadPlugin("windowEx.dll");
+
+// base
+execStorage("Syntax.tjs");
+execStorage("Utils.tjs");
+execStorage("Object.tjs");
+execStorage("Debug.tjs");
+
+
+// error
+execStorage("Error.tjs");
+execStorage("IOError.tjs");
+execStorage("FileNotFoundError.tjs");
+execStorage("ParseError.tjs");
+
+// extension
+execStorage("AsyncTriggerEx.tjs");
+execStorage("ImageEx.tjs");
+execStorage("MathEx.tjs");
+execStorage("ScriptsEx.tjs");
+execStorage("StoragesEx.tjs");
+execStorage("TimerEx.tjs");
+
+// collection
+execStorage("ArrayEx.tjs");
+execStorage("DictionaryEx.tjs");
+execStorage("MultiMap.tjs");
+execStorage("PriorityQueue.tjs");
+
+// Enumerable
+execStorage("Enumerable.tjs");
+execStorage("DistinctEnumerable.tjs");
+execStorage("RangeEnumerable.tjs");
+execStorage("RepeatEnumerable.tjs");
+execStorage("TakeEnumerable.tjs");
+execStorage("TakeWhileEnumerable.tjs");
+execStorage("SkipEnumerable.tjs");
+execStorage("SkipWhileEnumerable.tjs");
+execStorage("WhereEnumerable.tjs");
+execStorage("SelectEnumerable.tjs");
+execStorage("SelectManyEnumerable.tjs");
+
+// library
+execStorage("Event.tjs");
+execStorage("Promise.tjs");
+execStorage("Deferred.tjs");
+execStorage("AsyncInvalidater.tjs");
+execStorage("ISerializable.tjs");
+
+// Sequence
+execStorage("SequenceHolder.tjs");
+execStorage("AbstractSequence.tjs");
+execStorage("BeginLoopSequence.tjs");
+execStorage("BeginSkipSequence.tjs");
+execStorage("BeginConcurrentSequence.tjs");
+execStorage("BasicSequences.tjs");
+execStorage("TransitionSequence.tjs");
+execStorage("ActionSequence.tjs");
+execStorage("SequenceRunner.tjs");
+execStorage("AbstractActionHandler.tjs");
+execStorage("EasingActionHandler.tjs");
+execStorage("SquareWaveActionHandler.tjs");
+execStorage("TriangleActionHandler.tjs");
+
+// KorvetParser
+execStorage("MessageCommandConverter.tjs");
+execStorage("SpriteCommandConverter.tjs");
+execStorage("StageCommandConverter.tjs");
+execStorage("KorvetConverter.tjs");
+execStorage("KorvetParserModule.tjs");
+execStorage("PageBeginEndParserModule.tjs");
+execStorage("MacroParserModule.tjs");
+execStorage("KorvetParser.tjs");
+
+// graphic
+execStorage("Drawing2DMatrix.tjs");
+execStorage("HierarchicalMatrix.tjs");
+execStorage("Image.tjs");
+execStorage("LayeredImage.tjs");
+execStorage("TextureAtlasComposer.tjs");
+execStorage("Sprite.tjs");
+execStorage("LayeredSprite.tjs");
+execStorage("ScaleLevelImage.tjs");
+execStorage("TextDrawer.tjs");
+
+// sound
+execStorage("Sound.tjs");
+
+// ui
+execStorage("ObservableLayer.tjs");
+execStorage("MouseGesture.tjs");
+execStorage("ObservableWindow.tjs");
+execStorage("ResizableWindow.tjs");
+
+// utility
+execStorage("Logger.tjs");
+execStorage("AsyncCaller.tjs");
+
+var gLog = new Logger();
+var gAsyncCaller = new AsyncCaller();

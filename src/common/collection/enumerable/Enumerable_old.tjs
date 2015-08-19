@@ -1,0 +1,540 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(Enumerable) {
+    Func(range)(start:int, count:int) {
+        checkArgs
+        assert(count >= 0)
+        return new RangeEnumerable(start, count);
+    }
+
+    Func(repeat)(element:any+, count:int) {
+        checkArgs
+        assert(count >= 0)
+        return new ElementRepeatEnumerable(element, count);
+    }
+
+    Func(generate)(initial:any+, condition:Function, iterate:Function, resultSelector:Function) {
+        checkArgs
+        return new GenerateEnumerable(...);
+    }
+
+    Constructor() { notImplemented(); }
+}
+
+Class(IEnumerable)
+{
+    property current { getter { notImplemented(); } }
+    AbstractFunc(moveNext)()
+}
+
+ClassExtends(AbstractEnumerable, IEnumerable)
+{
+    Func(select)() { return new global.SelectEnumerable(this, *); }
+    Func(selectMany)() { return new global.SelectManyEnumerable(this, *); }
+    Func(where)() { return new global.WhereEnumerable(this, *); }
+    Func(take)() { return new global.TakeEnumerable(this, *); }
+    Func(takeWhile) { return new global.TakeWhileEnumerable(this, *); }
+    Func(takeUntil) { return new global.TakeUntilEnumerable(this, *); }
+    Func(skip)() { return new global.SkipEnumerable(this, *); }
+    Func(skipWhile) { return new global.SkipWhileEnumerable(this, *); }
+    Func(skipUntil) { return new global.SkipUntilEnumerable(this, *); }
+    Func(distinct)() { return new global.DistinctEnumerable(this); }
+    Func(repeat)() { return new global.RepeatEnumerable(this, *); }
+    Func(startWith)() { return new global.StartWithEnumerable(this, *); }
+
+    Func(foreach)(callback:Function, *) {
+        checkArgs
+        while (this.moveNext()) {
+            var result = callback(this.current, *);
+            if (result !== void) return result;
+        }
+    }
+
+    Func(toArray)() {
+        var array = [];
+        while  (this.moveNext()) { array.add(this.current); }
+        return array;
+    }
+
+    Func(toDictionary)(keySelector:Function, elementSelector:Function+, *) {
+        checkArgs
+        if (elementSelector === void) elementSelector = LMD(elm) { return elm; };
+        var result = %[];
+        while (this.moveNext()) {
+            var key = keySelector(this.current, *);
+            if (result[key] !== void) {
+                throw new global.Exception(expandMessage(EXCEPTION_LINQ_ARRAY_DUPLICATE_KEYS, "KEY", key));
+            }
+            result[key] = elementSelector(this.current, *);
+        }
+        return result;
+    }
+
+    Func(toMultiMap)(keySelector:Function, elementSelector:Function+, *) {
+        checkArgs
+        if (elementSelector === void) elementSelector = LMD(elm) { return elm; };
+        var result = new global.MultiMap();
+        while (this.moveNext()) {
+            var key = keySelector(this.current, *);
+            var value = elementSelector(this.current, *);
+            result.put(key, value);
+        }
+        return result;
+    }
+
+    Func(count)(predicate:Function+, *) {
+        checkArgs
+        var counter = 0;
+        if (predicate === void) {
+            while (this.moveNext()) ++counter;
+        } else {
+            while (this.moveNext()) {
+                if (predicate(this.current, *)) ++counter;
+            }
+        }
+        return counter;
+    }
+
+    Func(any)(predicate:Function+, *) {
+        checkArgs
+        if (predicate === void) return this.moveNext();
+        while (this.moveNext()) {
+            if (predicate(this.current, *)) return true;
+        }
+        return false;
+    }
+
+    Func(all)(predicate:Function, *) {
+        checkArgs
+        while (this.moveNext()) {
+            if (!predicate(this.current, *)) return false;
+        }
+        return true;
+    }
+
+    Func(isEmpty)() {
+        return this.moveNext();
+    }
+
+    Func(first)(defaultValue:any+, predicate:Fnction+, *) {
+        checkArgs
+        if (predicate === void) {
+            if (this.moveNext()) return this.current;
+            else return defaultValue;
+        }
+        while (this.moveNext()) {
+            if (predicate(this.current, *)) return this.current;
+        }
+        return defaultValue;
+    }
+
+    Func(last)(defaultValue:any+, predicate:Function+, *) {
+        checkArgs
+        if (predicate === void) { predicate = LMD { return true; }; }
+        var lastValue = defaultValue;
+        while (this.moveNext()) {
+            if (predicate(this.current, *)) {
+                lastValue = this.current;
+            }
+        }
+        return lastValue;
+    }
+
+    Func(elementAt)(defaultValue:any+, index:int) {
+        checkArgs
+        for (var i = 0; i <= index; ++i) {
+            if (!this.moveNext()) return defaultValue;
+        }
+        return this.current;
+    }
+}
+
+ClassExtends(ArrayEnumerable, AbstractEnumerable)
+{
+    property current { getter { return this._array[this._index]; } }
+
+    OverrideFunc(moveNext)() { return ++this._index < this._array.count; }
+
+    var _array;
+    var _index = -1;
+
+    Constructor(array:Array) {
+        checkArgs
+        this._array = array.cloneShallow();
+    }
+}
+
+ClassExtends(RangeEnumerable, AbstractEnumerable)
+{
+    property current { getter { return this._value; } }
+
+    OverrideFunc(moveNext)() { return ++this._value <= this._max; }
+
+    var _value;
+    var _max;
+
+    Constructor(start:int, count:int) {
+        checkArgs
+        assert(count >= 0)
+        this._value = start - 1;
+        this._max = start + count - 1;
+    }
+}
+
+ClassExtends(ElementRepeatEnumerable, AbstractEnumerable)
+{
+    property current { getter { return this._element; } }
+
+    OverrideFunc(moveNext)() { return ++this._index < this._count; }
+
+    var _element;
+    var _count;
+    var _index = -1;
+
+    Constructor(element:any+, count:int) {
+        checkArgs
+        assert(count >= 0)
+        this._element = element;
+        this._count = count;
+    }
+}
+
+ClassExtends(GenerateEnumerable, AbstractEnumerable)
+{
+    property current { getter { return this._result; } }
+
+    OverrideFunc(moveNext)() {
+        if (this._generated) return false;
+        if (!this._condition(this._current)) {
+            this._generated = true;
+            return false;
+        }
+        this._result = this._resultSelector(this._current);
+        this._current = this._iterate(this._current);
+    }
+
+    var _result;
+    var _current;
+    var _condition;
+    var _iterate;
+    var _resultSelector;
+    var _generated = false;
+
+    Constructor(initial:any+, condition:Function, iterate:Function, resultSelector:Function) {
+        checkArgs
+        this._current = initial;
+        this._condition = condition;
+        this._iterate = iterate;
+        this._resultSelector = resultSelector;
+    }
+}
+
+ClassExtends(ChainedEnumerable, AbstractEnumerable)
+{
+    property current { getter { return this._iterator.current; } }
+
+    var _iterator;
+
+    Constructor(iterator:IEnumerable) {
+        checkArgs
+        this._iterator = iterator;
+    }
+}
+
+ClassExtends(SelectEnumerable, ChainedEnumerable)
+{
+    property current { getter { return this._current; } }
+
+    OverrideFunc(moveNext)() {
+        if (!this._iterator.moveNext()) { return false; }
+        this._current = this._selector(this._iterator.current);
+        return true;
+    }
+
+    var _selector;
+    var _current;
+
+    Constructor(iterator:IEnumerable, selector:Function) {
+        checkArgs
+        super.ChainedEnumerable(iterator);
+        this._selector = selector;
+    }
+}
+
+ClassExtends(SelectManyEnumerable, ChainedEnumerable)
+{
+    property current { getter { return this._current[this._currentIndex]; } }
+
+    OverrideFunc(moveNext)() {
+        ++this._currentIndex;
+        if (this._currentIndex < this._current.count) return true;
+        while (this._iterator.moveNext()) {
+            var selected = this._selector(this._iterator.current);
+            typeCheck(selected, "Array")
+            if (selected.count === 0) continue;
+            this._currentIndex = 0;
+            this._current.clear();
+            this._current.push(selected*);
+            return true;
+        }
+        return false;
+    }
+
+    var _selector;
+    var _current = [];
+    var _currentIndex = 0;
+
+    Constructor(iterator:IEnumerable, selector:Function) {
+        checkArgs
+        super.ChainedEnumerable(iterator);
+        this._selector = selector;
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate this._current;
+    }
+}
+
+ClassExtends(WhereEnumerable, ChainedEnumerable)
+{
+    OverrideFunc(moveNext)() {
+        while (this._iterator.moveNext()) {
+            if (this._predicate(this._iterator.current)) return true;
+        }
+        return false;
+    }
+
+    var _predicate;
+
+    Constructor(iterator:IEnumerable, predicate:Function) {
+        checkArgs
+        super.ChainedEnumerable(iterator);
+        this._predicate = predicate;
+    }
+}
+
+ClassExtends(TakeEnumerable, ChainedEnumerable)
+{
+    OverrideFunc(moveNext)() { return ++this._index < this._count && this._iterator.moveNext(); }
+
+    var _count;
+    var _index = -1;
+
+    Constructor(iterator:IEnumerable, count:int) {
+        checkArgs
+        super.ChainedEnumerable(iterator);
+        this._count = count;
+    }
+}
+
+ClassExtends(TakeWhileEnumerable, ChainedEnumerable)
+{
+    OverrideFunc(moveNext)() {
+        if (this._taken || !this._iterator.moveNext()) return false;
+        if (this._predicate(this._iterator.current)) return true;
+        this._taken = true;
+        return false;
+    }
+
+    var _predicate;
+    var _taken = false;
+
+    Constructor(iterator:IEnumerable, predicate:Function) {
+        checkArgs
+        super.ChainedEnumerable(iterator);
+        this._predicate = predicate;
+    }
+}
+
+ClassExtends(TakeUntilEnumerable, ChainedEnumerable)
+{
+    OverrideFunc(moveNext)() {
+        if (this._taken || !this._iterator.moveNext()) return false;
+        if (!this._predicate(this._iterator.current)) return true;
+        this._taken = true;
+        return false;
+    }
+
+    var _predicate;
+    var _taken = false;
+
+    Constructor(iterator:IEnumerable, predicate:Function) {
+        checkArgs
+        super.ChainedEnumerable(iterator);
+        this._predicate = predicate;
+    }
+}
+
+ClassExtends(SkipEnumerable, ChainedEnumerable)
+{
+    OverrideFunc(moveNext)() {
+        if (!this._skipped) {
+            this._skipped = true;
+            for (var i = this._count; i > 0; --i) {
+                if (!this._iterator.moveNext()) return false;
+            }
+        }
+        return this._iterator.moveNext();
+    }
+
+    var _count;
+    var _skipped = false;
+
+    Constructor(iterator:IEnumerable, count:int) {
+        checkArgs
+        super.ChainedEnumerable(iterator);
+        this._count = count;
+    }
+}
+
+ClassExtends(SkipWhileEnumerable, ChainedEnumerable)
+{
+    OverrideFunc(moveNext)() {
+        if (this._skipped) {
+            return this._iterator.moveNext();
+        }
+        this._skipped = true;
+        while (this._iterator.moveNext()) {
+            if (!this._predicate(this._iterator.current)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    var _predicate;
+    var _skipped = false;
+
+    Constructor(iterator:IEnumerable, predicate:Function) {
+        checkArgs
+        super.ChainedEnumerable(iterator);
+        this._predicate = predicate;
+    }
+}
+
+ClassExtends(SkipUntilEnumerable, ChainedEnumerable)
+{
+    OverrideFunc(moveNext)() {
+        if (this._skipped) {
+            return this._iterator.moveNext();
+        }
+        this._skipped = true;
+        while (this._iterator.moveNext()) {
+            if (this._predicate(this._iterator.current)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    var _predicate;
+    var _skipped = false;
+
+    Constructor(iterator:IEnumerable, predicate:Function) {
+        checkArgs
+        super.ChainedEnumerable(iterator);
+        this._predicate = predicate;
+    }
+}
+
+ClassExtends(DistinctEnumerable, ChainedEnumerable)
+{
+    OverrideFunc(moveNext)() {
+        while (this._iterator.moveNext()) {
+            if (this._map[this._iterator.current] === void) {
+                this._map[this._iterator.current] = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    var _map = %[];
+
+    Constructor(iterator:IEnumerable) {
+        checkArgs
+        super.ChainedEnumerable(iterator);
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate _map;
+    }
+}
+
+ClassExtends(RepeatEnumerable, ChainedEnumerable)
+{
+    property current { getter { return this._current; } }
+
+    OverrideFunc(moveNext)() {
+        if (this._iterator.moveNext()) {
+            this._current = this._iterator.current;
+            this._elements.add(this._current);
+            ++this._elementsIndex;
+            return true;
+        }
+        while (this._elementsIndex === this._elements.count) {
+            this._elementsIndex = 0;
+            ++this._currentLoopCount;
+            if (this._currentLoopCount >= this._loopCount) {
+                return false;
+            }
+        }
+        this._current = this._elements[this._elementsIndex];
+        ++this._elementsIndex;
+        return true;
+    }
+
+    var _current;
+    var _elements = [];
+    var _elementsIndex = 0;
+    var _loopCount;
+    var _currentLoopCount = 0;
+
+    Constructor(iterator:IEnumerable, count:int) {
+        checkArgs
+        assert(count > 0)
+        super.ChainedEnumerable(iterator);
+        this._loopCount = count;
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate this._elements;
+    }
+}
+
+ClassExtends(StartWithEnumerable, ChainedEnumerable)
+{
+    property current { getter { return this._current; } }
+
+    OverrideFunc(moveNext)() {
+        ++this._elementsIndex;
+        if (this._elementsIndex < this._elements.count) {
+            this._current = this._elements[this._elementsIndex];
+            return true;
+        }
+        if (this._iterator.moveNext()) {
+            this._current = this._iterator.current;
+            return true;
+        }
+        return false;
+    }
+
+    var _current;
+    var _elements;
+    var _elementsIndex = -1;
+
+    Constructor(iterator:IEnumerable, elements*) {
+        checkArgs
+        super.ChainedEnumerable(iterator);
+        this._elements = elements;
+    }
+
+    Finalize() {
+        super.finalize();
+        invalidate _map;
+    }
+}

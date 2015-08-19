@@ -4,6 +4,10 @@ taskkill /f /im "tvpwin32_p.exe" >NUL 2>&1
 taskkill /f /im "tvpwin32_d.exe" >NUL 2>&1
 taskkill /f /im "tvpwin32_dbg.exe" >NUL 2>&1
 
-call compile_debug.bat
+call src/_convert.bat "update_debug"
 
-tvpwin32.exe "%~dp0start" -debug="yes" -debugwin="yes" -warnrundelobj="no"
+if ERRORLEVEL 1 (
+    call src/create_ctags.bat
+)
+
+tvpwin32.exe "%~dp0data/debug" -debug="yes" -debugwin="yes" -warnrundelobj="no"

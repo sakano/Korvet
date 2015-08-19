@@ -1,0 +1,57 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(PageBeginEndParserModule, KorvetParserModule)
+{
+    OverrideFunc(clear)() {
+        this._inPage = false;
+    }
+
+    OverrideFunc(onInitStorage)(parser:KorvetParser) {
+        checkArgs
+        this._inPage = false;
+    }
+
+    OverrideFunc(onCommand)(parser:KorvetParser, command:Dictionary) {
+        checkArgs
+        if (this._inPage) {
+            if (command.name !== "__emptyline") return;
+            this._inPage = false;
+            var command = _createEndPageCommand(parser);
+            parser.addHeadCommand(command);
+            return %[ mode : KorvetParserModuleMode_Loop ];
+        }
+
+        if (command.name !== "__ch") return;
+        this._inPage = true;
+        var command = _createBeginPageCommand(parser);
+        parser.addHeadCommand(command);
+        return %[ mode : KorvetParserModuleMode_Loop ];
+    }
+
+
+
+    var _inPage = false;
+
+    Constructor() {
+        super.KorvetParserModule();
+    }
+
+    Finalize() {
+        super.finalize();
+    }
+
+    Func(_createBeginPageCommand)(parser:KorvetParser) {
+        checkArgs
+        var command = %[];
+        parser.makeCommandTemplate(command, "__beginpage");
+        return command;
+    }
+
+    Func(_createEndPageCommand)(parser:KorvetParser) {
+        checkArgs
+        var command = %[];
+        parser.makeCommandTemplate(command, "__endpage");
+        return command;
+    }
+}

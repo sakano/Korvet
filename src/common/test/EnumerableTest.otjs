@@ -1,0 +1,219 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+{
+    function checkEnumerableResult(enumerable, results*) {
+        {
+            var count = 0;
+            FOR_EACH(value, enumerable) {
+                assertAlways(value === results[count])
+                ++count;
+            }
+            assertAlways(results.count === count)
+        }
+
+        {
+            var count = 0;
+            var e = enumerable.getEnumerator();
+            while (e.moveNext()) {
+                assertAlways(e.current  === results[count])
+                ++count;
+            }
+            assertAlways(results.count === count)
+            invalidate e;
+        }
+
+        {
+            var counter = [0];
+            enumerable.foreach(LMD(value, results, counter) {
+                assertAlways(value === results[counter[0]++])
+            }, results, counter);
+            assertAlways(counter[0] === results.count)
+        }
+
+        assertAlways(enumerable.toArray().equals(results))
+        assertAlways(enumerable.count() === results.count)
+    }
+
+    
+    {   // ArrayEnumerator
+        function testArrayEnumerator(target:Array, testCount:int = 3) {
+            var clone = target.clone();
+            for (var testIndex = 0; testIndex < testCount; ++testIndex) {
+                var enumerator = target.clone().getEnumerator();
+                var count = 0;
+                
+                while (enumerator.moveNext()) {
+                    var value = enumerator.current;
+                    assertAlways(value === clone[count])
+                    ++count;
+                }
+                assertAlways(!enumerator.moveNext())
+                assertAlways(target.equalsShallow(clone))
+                assertAlways(clone.count === count)
+            }
+        }
+        testArrayEnumerator([]);
+        testArrayEnumerator([1,2,3]);
+        testArrayEnumerator(["test", void, "test2"]);
+        testArrayEnumerator([void, void]);
+    }
+    {   // FOR_EACH
+        var index = 0;
+        FOR_EACH(value, [0,1,2,3]) {
+            assertAlways(&--value === [0,1,2,3][index]--&)
+            ++index;
+        }
+
+        index = 0;
+        FOR_EACH(value, [void, void]) {
+            assertAlways(value === void)
+            ++index;
+        }
+        assertAlways(index === 2)
+
+        index = 0;
+        FOR_EACH(value, []) {
+            assertAlways(false)
+        }
+    }
+    {   // toArray
+        assertAlways(&--[].toArray() instanceof "Array"--&);
+        assertAlways(&--[].toArray().isEmpty()--&);
+        assertAlways(&--[1].toArray().equals([1])--&);
+        assertAlways(&--[1,2,3].toArray().equals([1,2,3])--&);
+        assertAlways(&--[void].toArray().equals([void])--&);
+    }
+    {   // range
+        assertAlways(&--Enumerable.range(0,3).toArray().equals([0,1,2])--&)
+        checkEnumerableResult(Enumerable.range(0,0));
+        checkEnumerableResult(Enumerable.range(0,1), 0);
+        checkEnumerableResult(Enumerable.range(100,1), 100);
+        checkEnumerableResult(Enumerable.range(-30,5), -30, -29, -28, -27, -26);
+        checkEnumerableResult(Enumerable.range(30,2), 30, 31);
+        
+        var query = Enumerable.range(0,4);
+        assertAlways(&--query.toArray().equals([0,1,2,3])--&)
+        assertAlways(&--query.toArray().equals([0,1,2,3])--&)
+        assertAlways(&--query.toArray().equals([0,1,2,3])--&)
+    }
+    {   // repeat
+        assertAlways(&--Enumerable.repeat(0,3).toArray().equals([0,0,0])--&)
+        checkEnumerableResult(Enumerable.repeat(0,0));
+        checkEnumerableResult(Enumerable.repeat(0,1), 0);
+        checkEnumerableResult(Enumerable.repeat(100,1), 100);
+        checkEnumerableResult(Enumerable.repeat(-30,5), -30, -30, -30, -30, -30);
+        checkEnumerableResult(Enumerable.repeat(30,2), 30, 30);
+        checkEnumerableResult(Enumerable.repeat(void,2), void, void);
+        checkEnumerableResult(Enumerable.repeat(null,4), null, null, null, null);
+        checkEnumerableResult(Enumerable.repeat("str",1), "str");
+
+        var query = Enumerable.repeat(1,4);
+        assertAlways(&--query.toArray().equals([1,1,1,1])--&)
+        assertAlways(&--query.toArray().equals([1,1,1,1])--&)
+        assertAlways(&--query.toArray().equals([1,1,1,1])--&)
+    }
+    {   // distinct
+        assertAlways(&--[1,3,2,3].distinct().toArray().equals([1,3,2])--&)
+        checkEnumerableResult([].distinct());
+        checkEnumerableResult([1,1,1].distinct(), 1);
+        checkEnumerableResult([1,2,3,2,1,2,3,4].distinct(), 1,2,3,4);
+        checkEnumerableResult([void, "test", void, "test", null, "test2", null].distinct(), void, "test", null, "test2");
+
+        var query = [1,1,2,1].distinct();
+        assertAlways(&--query.toArray().equals([1,2])--&)
+        assertAlways(&--query.toArray().equals([1,2])--&)
+        assertAlways(&--query.toArray().equals([1,2])--&)
+    }
+    {   // take
+        assertAlways(&--[1,3,2,3].take(2).toArray().equals([1,3])--&)
+        checkEnumerableResult([].take(0));
+        checkEnumerableResult([1,2,3].take(0));
+        checkEnumerableResult([1,2,3].take(1), 1);
+        checkEnumerableResult([1,2,3].take(10), 1,2,3);
+        checkEnumerableResult([void,null,"str"].take(10), void,null,"str");
+        
+        var query = [1,void,3,null,5,6].take(3);
+        assertAlways(&--query.toArray().equals([1,void,3])--&)
+        assertAlways(&--query.toArray().equals([1,void,3])--&)
+        assertAlways(&--query.toArray().equals([1,void,3])--&)
+    }
+    {   // where
+        assertAlways(&--[1,3,2,3].where(LMD(value){ return value <= 2; }).toArray().equals([1,2])--&)
+        checkEnumerableResult([].where(LMD() { assertAlways(false) }));
+        checkEnumerableResult([1,2,3].where(LMD() { return true; }), 1,2,3);
+        checkEnumerableResult([1,2,3].where(LMD() { return false; }));
+        checkEnumerableResult([-100, -50, 0, 100, 200, -1, 300].where(LMD(value) { return value <= 0; }), -100, -50, 0, -1);
+        checkEnumerableResult([1,2,3,"str",void,null, "test", "",].where(LMD(value) { return typeof value === "String"; }), "str", "test", "");
+
+        var query = [1,void,3,5,6].where(LMD(value) { return value < 4; });
+        assertAlways(&--query.toArray().equals([1,void,3])--&)
+        assertAlways(&--query.toArray().equals([1,void,3])--&)
+        assertAlways(&--query.toArray().equals([1,void,3])--&)
+
+        var context = %[ called:0 ];
+        var predicate = LMD() { ++this.called; return true; } incontextof context;
+        var query = [1,2,3].where(predicate);
+        assertAlways(context.called === 0)
+        assertAlways(query.toArray().count === 3)
+        assertAlways(context.called === 3)
+        assertAlways(query.count() === 3)
+        assertAlways(context.called === 6)
+        invalidate context;
+        invalidate predicate;
+        invalidate query;
+    }
+    {   // select
+        assertAlways(&--[0,1,2,3,4,5,6].select(LMD(value) { return value * value; }).toArray().equals([0,1,4,9,16,25,36])--&)
+        checkEnumerableResult([].select(LMD() {assertAlways(fals)}));
+        checkEnumerableResult([0,1,2,3].select(LMD(value) { return value; }), 0,1,2,3);
+        checkEnumerableResult([void, null, ].select(LMD(value) { return typeof value; }), "void", "Object", "void");
+
+        var context = %[ called:0 ];
+        var selector = LMD(value) { ++this.called; return -value; } incontextof context;
+        var query = [1,2,3].select(selector);
+        assertAlways(context.called === 0)
+        assertAlways(query.toArray().equals([-1,-2,-3]))
+        assertAlways(context.called === 3)
+        assertAlways(query.count() === 3)
+        assertAlways(context.called === 6)
+        invalidate context;
+        invalidate selector;
+        invalidate query;
+    }
+    {
+        var expected = 0;
+        for (var i = 1; i <= 50; ++i) { expected += i*2; }
+
+        // where
+        var total = 0;
+        FOR_EACH(even_value, Enumerable.range(1,100).where(LMD(v) { return v % 2 === 0; })) {
+            total += even_value;
+        }
+        assertAlways(total === expected)
+
+        // select
+        var total = Enumerable.range(1, 50).select(LMD(v) { return v * 2; }).aggregate(0, LMD(total, current) { return total + current; });
+        assertAlways(total === expected)
+
+        // selectMany
+        checkEnumerableResult(["str1", "str2", "str3"].selectMany(LMD(v) { return [v, (int)v[3]]; }), "str1",1,"str2",2,"str3",3);
+
+        // take
+        checkEnumerableResult(Enumerable.repeat(3,10).take(2), 3,3);
+
+        // takeWhile
+        checkEnumerableResult([1,2,3,void,"str"].takeWhile(LMD(v) { return typeof v === "Integer"; }), 1,2,3);
+
+        // skip
+        checkEnumerableResult([1,2,3,void,"str"].skip(2), 3,void,"str");
+
+        // skipWhile
+        checkEnumerableResult([1,2,3,void,"str"].skipWhile(LMD(v) { return typeof v === "Integer"; }), void,"str");
+
+        // distinct
+        checkEnumerableResult([1,2,3,4,5,void,1,2,3,6,void,null].distinct(), 1,2,3,4,5,void,6,null);
+    }
+
+    invalidate checkEnumerableResult;
+}

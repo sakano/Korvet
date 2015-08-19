@@ -1,0 +1,365 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+{
+    Class(TestClass) {
+        var value;
+        var cloneCalled = 0;
+        var equalsCalled = 0;
+        var toStringCalled = 0;
+
+        Constructor(value:any+) {
+            checkArgs
+            this.value = value;
+        }
+
+        Func(clone)() {
+            ++cloneCalled;
+            var obj = new global.TestClass();
+            obj.value = this.value;
+            return obj;
+        }
+
+        Func(equals)(target:any+) {
+            checkArgs
+            ++equalsCalled;
+            if (target === null) return false;
+            if (!target isvalid) return false;
+            if (!target instanceof "TestClass") return false;
+            if (target === this) return true;
+            return global.equals(this.value, target.value);
+        }
+
+        Func(toString)() {
+            ++toStringCalled;
+            return "(TestClass) value=" + global.toString(value);
+        }
+    }
+
+    {   // Dictionary.clone
+        var dic = %[ key:"value", key2:"value2" ];
+        var clonedDic = dic.clone();
+        assertAlways(dic !== clonedDic)
+        assertAlways(dic.getKeys().count === 2)
+        assertAlways(clonedDic.getKeys().count === 2)
+        assertAlways(dic.key === "value")
+        assertAlways(dic.key2 === "value2")
+        assertAlways(clonedDic.key === "value")
+        assertAlways(clonedDic.key2 === "value2")
+        invalidate dic;
+        invalidate clonedDic;
+
+        var dic = %[ key:new TestClass(1), key2:new TestClass(2) ];
+        var clonedDic = dic.clone();
+        assertAlways(dic !== clonedDic)
+        assertAlways(dic.getKeys().count === 2)
+        assertAlways(clonedDic.getKeys().count === 2)
+        assertAlways(dic.key !== clonedDic.key)
+        assertAlways(dic.key2 !== clonedDic.key2)
+        assertAlways(dic.key.cloneCalled === 1)
+        assertAlways(dic.key2.cloneCalled === 1)
+        assertAlways(clonedDic.key.cloneCalled === 0)
+        assertAlways(clonedDic.key2.cloneCalled === 0)
+        assertAlways(dic.key.equals(dic.key))
+        assertAlways(dic.key2.equals(dic.key2))
+        dic.dispose();
+        invalidate dic;
+        clonedDic.dispose();
+        invalidate clonedDic;
+    }
+    {   // Dictionary.cloneShallow
+        var dic = %[ key:"value", key2:"value2" ];
+        var clonedDic = dic.cloneShallow();
+        assertAlways(dic !== clonedDic)
+        assertAlways(dic.getKeys().count === 2)
+        assertAlways(clonedDic.getKeys().count === 2)
+        assertAlways(dic.key === "value")
+        assertAlways(dic.key2 === "value2")
+        assertAlways(clonedDic.key === "value")
+        assertAlways(clonedDic.key2 === "value2")
+        invalidate dic;
+        invalidate clonedDic;
+
+        var dic = %[ key:new TestClass(1), key2:new TestClass(2) ];
+        var clonedDic = dic.cloneShallow();
+        assertAlways(dic !== clonedDic)
+        assertAlways(dic.getKeys().count === 2)
+        assertAlways(clonedDic.getKeys().count === 2)
+        assertAlways(dic.key === clonedDic.key)
+        assertAlways(dic.key2 === clonedDic.key2)
+        assertAlways(dic.key.cloneCalled === 0)
+        assertAlways(dic.key2.cloneCalled === 0)
+        dic.dispose();
+        invalidate dic;
+        invalidate clonedDic;
+    }
+    {   // Dictionary.equals
+        assertAlways(%[].equals(%[]))
+        assertAlways(%[key:1].equals(%[key:1]))
+        assertAlways(!%[key:1].equals(%[key:"1"]))
+        assertAlways(!%[key:"1"].equals(%[key:1]))
+        assertAlways(!%[key:1].equals(%[key:void]))
+        assertAlways(!%[key:void].equals(%[key:1]))
+        assertAlways(!%[key:1].equals(%[key2:1]))
+        assertAlways(!%[key2:1].equals(%[key:1]))
+        assertAlways(!%[key:void].equals(%[key2:void]))
+        assertAlways(!%[key2:void].equals(%[key:void]))
+        assertAlways(!%[key:1].equals(%[key:2]))
+        assertAlways(!%[key:2].equals(%[key:1]))
+        assertAlways(&--!%[key:1, key2:2].equals(%[key:1])--&)
+        assertAlways(&--%[key:1, key2:2].equals(%[key:1, key2:2])--&)
+        assertAlways(&--!%[key:1, key2:2].equals(%[key:1, key2:2, key3:3])--&)
+        assertAlways(&--!%[key:1, key2:void].equals(%[key:1, key3:void])--&)
+        assertAlways(!%[].equals(void))
+        assertAlways(!%[].equals(null))
+        assertAlways(!%[].equals([]))
+
+        var dic = %[ key:new TestClass(1), key2:new TestClass(2) ];
+        var dic2 = %[ key:new TestClass(1), key2:new TestClass(2) ];
+        assertAlways(dic.equals(dic))
+        assertAlways(dic.key.equalsCalled === 0)
+        assertAlways(dic.key2.equalsCalled === 0)
+        assertAlways(dic.equals(dic2))
+        assertAlways(dic.key.equalsCalled === 1)
+        assertAlways(dic.key2.equalsCalled === 1)
+        assertAlways(dic2.key.equalsCalled === 0)
+        assertAlways(dic2.key2.equalsCalled === 0)
+        dic.dispose();
+        invalidate dic;
+        dic2.dispose();
+        invalidate dic2;
+    }
+    {   // Dictionary.equalsShallow
+        assertAlways(%[].equalsShallow(%[]))
+        assertAlways(%[key:1].equalsShallow(%[key:1]))
+        assertAlways(!%[key:1].equalsShallow(%[key:"1"]))
+        assertAlways(!%[key:"1"].equalsShallow(%[key:1]))
+        assertAlways(!%[key:1].equalsShallow(%[key:void]))
+        assertAlways(!%[key:void].equalsShallow(%[key:1]))
+        assertAlways(!%[key:1].equalsShallow(%[key2:1]))
+        assertAlways(!%[key2:1].equalsShallow(%[key:1]))
+        assertAlways(!%[key:void].equalsShallow(%[key2:void]))
+        assertAlways(!%[key2:void].equalsShallow(%[key:void]))
+        assertAlways(!%[key:1].equalsShallow(%[key:2]))
+        assertAlways(!%[key:2].equalsShallow(%[key:1]))
+        assertAlways(&--!%[key:1, key2:2].equalsShallow(%[key:1])--&)
+        assertAlways(&--%[key:1, key2:2].equalsShallow(%[key:1, key2:2])--&)
+        assertAlways(&--!%[key:1, key2:2].equalsShallow(%[key:1, key2:2, key3:3])--&)
+        assertAlways(&--!%[key:1, key2:void].equalsShallow(%[key:1, key3:void])--&)
+        assertAlways(!%[].equalsShallow(void))
+        assertAlways(!%[].equalsShallow(null))
+        assertAlways(!%[].equalsShallow([]))
+
+        var dic = %[ key:new TestClass(1), key2:new TestClass(2) ];
+        var dic2 = %[ key:new TestClass(1), key2:new TestClass(2) ];
+        assertAlways(dic.equalsShallow(dic))
+        assertAlways(dic.key.equalsCalled === 0)
+        assertAlways(dic.key2.equalsCalled === 0)
+        assertAlways(!dic.equalsShallow(dic2))
+        assertAlways(dic.key.equalsCalled === 0)
+        assertAlways(dic.key2.equalsCalled === 0)
+        assertAlways(dic2.key.equalsCalled === 0)
+        assertAlways(dic2.key2.equalsCalled === 0)
+        dic2.dispose();
+        dic2.key = dic.key;
+        assertAlways(!dic.equalsShallow(dic2))
+        dic2.key2 = dic.key2;
+        assertAlways(dic.equalsShallow(dic2))
+        assertAlways(dic.key.equalsCalled === 0)
+        assertAlways(dic.key2.equalsCalled === 0)
+        dic.dispose();
+        invalidate dic;
+        invalidate dic2;
+    }
+    {   // Dictionary.toString
+        assertAlways(%[].toString() === "%[]")
+        assertAlways(%[key:void].toString() === "%[key:void]")
+        assertAlways(&--%[key:null, key2:1].toString() === "%[key2:(int)1, key:null]"--&)
+
+        var dic = %[ key:new TestClass(1), key2:new TestClass(2)];
+        assertAlways(&--dic.toString() === "%[key2:(TestClass) value=(int)2, key:(TestClass) value=(int)1]"--&)
+        assertAlways(dic.key.toStringCalled === 1)
+        assertAlways(dic.key2.toStringCalled === 1)
+        dic.dispose();
+        invalidate dic;
+    }
+    {   // Dictionary.dispose
+        var dic = %[ key:[], key2:[], key3:[] ];
+        var clonedDic = dic.cloneShallow();
+        assertAlways(dic.dispose() === void)
+        assertAlways(dic.getKeys().count === 0)
+        assertAlways(!clonedDic.key isvalid)
+        assertAlways(!clonedDic.key2 isvalid)
+        assertAlways(!clonedDic.key3 isvalid)
+        invalidate dic;
+        invalidate clonedDic;
+    }
+    {   // Dictionary.isEmpty
+        assertAlways(%[].isEmpty())
+        assertAlways(!%[key:void].isEmpty())
+        assertAlways(!%[key:1].isEmpty())
+        assertAlways(&--!%[key:void, key2:null].isEmpty()--&)
+
+        var dic = %[];
+        assertAlways(dic.isEmpty());
+        dic.key = void;
+        assertAlways(!dic.isEmpty());
+        delete dic.key;
+        assertAlways(dic.isEmpty());
+        invalidate dic;
+    }
+    {   // Dictionary.contains
+        assertAlways(!%[].contains(1))
+        assertAlways(!%[].contains(void))
+        assertAlways(%[key:1].contains(1))
+        assertAlways(&--%[key:1, key2:2].contains(1)--&)
+        assertAlways(&--%[key:1, key2:2].contains(2)--&)
+        assertAlways(&--!%[key:1, key2:2].contains(3)--&)
+        assertAlways(&--!%[key:1, key2:2].contains(void)--&)
+        assertAlways(&--%[key:1, key2:2, key3:void].contains(void)--&)
+        assertAlways(&--%[key:1, key2:null, key3:void].contains(null)--&)
+        assertAlways(&--!%[key:[]].contains([])--&)
+        assertAlways(&--!%[key:%[key:1]].contains(1)--&)
+        assertAlways(&--%[key:%[key:1], key2:1].contains(1)--&)
+    }
+    {   // Dictionary.getKeys
+        var checkKeys = LMD(dic, keys*) {
+            var dicKeys = dic.getKeys();
+            assertAlways(dicKeys instanceof "Array")
+            if (dicKeys.count !== keys.count) return false;
+            FOR_EACH(key, dicKeys) {
+                if (!keys.contains(key)) return false;
+            }
+            return true;
+        };
+        assertAlways(%[].getKeys().count === 0)
+        assertAlways(checkKeys(%[]))
+        assertAlways(&--!checkKeys(%[], void)--&)
+        assertAlways(&--checkKeys(%[key:void], "key")--&)
+        assertAlways(&--!checkKeys(%[key:1, key2:2], "key")--&)
+        assertAlways(&--checkKeys(%[key:1, key2:2], "key", "key2")--&)
+        assertAlways(&--!checkKeys(%[key:1, key2:2], "key", "key2", "key3")--&)
+        invalidate checkKeys;
+
+        var dic = %[];
+        assertAlways(dic.getKeys().count === 0)
+        dic.key = "test";
+        var keys = dic.getKeys();
+        assertAlways(keys.count === 1)
+        assertAlways(keys[0] === "key")
+        dic.key2 = "";
+        keys = dic.getKeys();
+        assertAlways(keys.count === 2)
+        assertAlways(keys.contains("key"))
+        assertAlways(keys.contains("key2"))
+        delete dic.key;
+        keys = dic.getKeys();
+        assertAlways(keys.count === 1)
+        assertAlways(keys[0] === "key2")
+        delete dic.key2;
+        assertAlways(dic.getKeys().count === 0)
+        invalidate keys;
+        invalidate dic;
+    }
+    {   // Dictionary.getValues
+        var checkValues = LMD(dic, values*) {
+            var dicValues = dic.getValues();
+            assertAlways(dicValues instanceof "Array")
+            if (dicValues.count !== values.count) return false;
+            FOR_EACH(value, dicValues) {
+                if (!values.contains(value)) return false;
+            }
+            return true;
+        };
+        assertAlways(%[].getValues().count === 0)
+        assertAlways(checkValues(%[]))
+        assertAlways(!checkValues(%[key:"test"]))
+        assertAlways(&--checkValues(%[key:"test"], "test")--&)
+        assertAlways(&--!checkValues(%[key:"test"], "test", "test2")--&)
+        assertAlways(&--checkValues(%[key:"test", key2:"test2"], "test", "test2")--&)
+        assertAlways(&--!checkValues(%[key:"test", key2:"test2", key3:void], "test", "test2")--&)
+        assertAlways(&--checkValues(%[key:"test", key2:"test2", key3:void], "test", "test2", void)--&)
+        invalidate checkValues;
+
+        var dic = %[];
+        assertAlways(dic.getValues().count == 0)
+        dic.key = "test";
+        var values = dic.getValues();
+        assertAlways(values.count === 1)
+        assertAlways(values[0] === "test")
+        dic.key2 = "test2";
+        values = dic.getValues();
+        assertAlways(values.count === 2)
+        assertAlways(values.contains("test"))
+        assertAlways(values.contains("test2"))
+        delete dic.key;
+        values = dic.getValues();
+        assertAlways(values.count === 1)
+        assertAlways(values[0] === "test2")
+        delete dic.key2;
+        assertAlways(dic.getValues().count === 0)
+        invalidate values;
+        invalidate dic;
+    }
+    {   // Dictionary.getEnumerator
+        var dic = %[key:"value", key2:void, key3:123];
+        var clonedDic = dic.clone();
+        for (var loopIndex = 0; loopIndex < 3; ++loopIndex) {
+            var e = dic.getEnumerator();
+            assertAlways(e instanceof "DictionaryEnumerator")
+            var keys = [];
+            for (var i = 0; i < 3; ++i) {
+                assertAlways(e.moveNext() === true)
+                var pair = e.current;
+                assertAlways(pair instanceof "Dictionary")
+                assertAlways(dic[pair.key] === pair.value)
+                assertAlways(!keys.contains(pair.key))
+                keys.add(pair.key);
+            }
+            invalidate keys;
+            for (var i = 0; i < 100; ++i) {
+                assertAlways(e.moveNext() === false)
+            }
+            invalidate e;
+            assertAlways(dic.equals(clonedDic))
+        }
+        invalidate dic;
+        invalidate clonedDic;
+
+        var e = %[].getEnumerator();
+        assertAlways(e instanceof "DictionaryEnumerator")
+        for (var i = 0; i < 100; ++i) {
+            assertAlways(e.moveNext() === false)
+        }
+        invalidate e;
+
+        var called = [];
+        FOR_EACH(pair, %[key:"test", key2:123]) {
+            assertAlways(pair instanceof "Dictionary")
+            called.add("key:" + pair.key);
+            called.add("value:" + pair.value);
+        }
+        assertAlways(called.count === 4)
+        assertAlways(called.contains("key:key"))
+        assertAlways(called.contains("key:key2"))
+        assertAlways(called.contains("value:test"))
+        assertAlways(called.contains("value:123"))
+        invalidate called;
+
+        var called = [];
+        FOR_EACH(pair, %[ key:[1,2], key2:[3,4,5] ]) {
+            FOR_EACH(value, pair.value) {
+                called.add(pair.key + ":" + value);
+            }
+        }
+        assertAlways(called.count === 5)
+        assertAlways(called.contains("key:1"))
+        assertAlways(called.contains("key:2"))
+        assertAlways(called.contains("key2:3"))
+        assertAlways(called.contains("key2:4"))
+        assertAlways(called.contains("key2:5"))
+        invalidate called;
+    }
+
+    invalidate TestClass;
+}

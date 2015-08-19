@@ -1,0 +1,15 @@
+// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Storages.addAutoPath("../");
+Scripts.execStorage("../initialize.tjs");
+
+if (typeof System.commandExecute === "undefined") {
+    Plugins.link("shellexecute.dll");
+}
+
+Class(ToolUtility) {
+    Func(getSrcPath)() {
+        return Storages.getLocalName("../../../src/");
+    }
+}

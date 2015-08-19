@@ -253,4 +253,14 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
         checkArgs
         this._textWaitTime = (int)value;
     }
+
+    OverrideFunc(onCommandConvert)(command:Dictionary) {
+    }
+
+    Func(serializeCurrentMessage)() {
+        return [];
+    }
+    OverrideFunc(serializeCurrentState)() {
+        return %[];
+    }
 }

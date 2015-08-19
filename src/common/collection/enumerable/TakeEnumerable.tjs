@@ -1,0 +1,48 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(TakeEnumerable, Enumerable)
+{
+    OverrideFunc(getEnumerator)() {
+        return new global.TakeEnumerator(this);
+    }
+
+    var _source;
+    var _count;
+
+    Constructor(source:Object, count:int) {
+        checkArgs
+        typeFunction(source.getEnumerator)
+        assert(count >= 0)
+        this._source = source;
+        this._count = count;
+    }
+}
+
+ClassExtends(TakeEnumerator, Enumerator)
+{
+    property current { getter { return this._source.current; } }
+
+    OverrideFunc(moveNext) {
+        this._source = this._parent._source.getEnumerator();
+        this._count = this._parent._count;
+        this.moveNext = this._moveNextImpl;
+        return this._moveNextImpl();
+    }
+
+    var _parent;
+    var _source;
+    var _count;
+    var _takenCount = 0;
+
+    Constructor(parent:TakeEnumerable) {
+        checkArgs
+        this._parent = parent;
+    }
+
+    Func(_moveNextImpl)() {
+        if (this._takenCount >= this._count) return false;
+        ++this._takenCount;
+        return this._source.moveNext();
+    }
+}

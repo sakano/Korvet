@@ -1,0 +1,33 @@
+// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Scripts.execStorage("initialize_tool.tjs");
+Scripts.execStorage("psdLoader.tjs");
+Scripts.execStorage("psdConverter.tjs");
+
+if (typeof global.PSD === "undefined") {
+    Plugins.link("psd.dll");
+}
+
+if (typeof global.Layer.getCropRectZero === "undefined") {
+    Plugins.link("layerExSave.dll");
+}
+
+ClassExtends(MyWindow, Window)
+{
+    Constructor(parent:Window? = null, width:int = 150, height:int = 60) {
+        checkArgs
+        super.Window(parent);
+        borderStyle = bsSingle;
+        setInnerSize(width, height);
+    }
+
+    OverrideFunc(onFileDrop)(files:Array) {
+        checkArgs
+        var converter = new PSDConverter();
+        converter.convert(files[0]);
+    }
+}
+
+var mainWindow = new MyWindow();
+mainWindow.visible = true;

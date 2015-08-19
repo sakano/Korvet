@@ -1,0 +1,47 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(SelectEnumerable, Enumerable)
+{
+    OverrideFunc(getEnumerator)() {
+        return new global.SelectEnumerator(this);
+    }
+
+    var _source;
+    var _selector;
+
+    Constructor(source:Object, selector:Function) {
+        checkArgs
+        typeFunction(source.getEnumerator)
+        this._source = source;
+        this._selector = selector;
+    }
+}
+
+ClassExtends(SelectEnumerator, Enumerator)
+{
+    property current { getter { return this._value; } }
+
+    OverrideFunc(moveNext) {
+        this._source = this._parent._source.getEnumerator();
+        this._selector = this._parent._selector;
+        this.moveNext = this._moveNextImpl;
+        return this._moveNextImpl();
+    }
+
+    var _parent;
+    var _source;
+    var _selector;
+    var _value;
+
+    Constructor(parent:SelectEnumerable) {
+        checkArgs
+        this._parent = parent;
+    }
+
+    Func(_moveNextImpl)() {
+        if (!this._source.moveNext()) return false;
+        this._value = this._selector(this._source.current);
+        return true;
+    }
+}

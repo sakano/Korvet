@@ -1,0 +1,51 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(TakeWhileEnumerable, Enumerable)
+{
+    OverrideFunc(getEnumerator)() {
+        return new global.TakeWhileEnumerator(this);
+    }
+
+    var _source;
+    var _count;
+    var _predicate;
+
+    Constructor(source:Object, predicate:Function) {
+        checkArgs
+        typeFunction(source.getEnumerator)
+        this._source = source;
+        this._predicate = predicate;
+    }
+}
+
+ClassExtends(TakeWhileEnumerator, Enumerator)
+{
+    property current { getter { return this._source.current; } }
+
+    OverrideFunc(moveNext) {
+        this._source = this._parent._source.getEnumerator();
+        this._predicate = this._parent._predicate;
+        this.moveNext = this._moveNextImpl;
+        return this._moveNextImpl();
+    }
+
+    var _parent;
+    var _source;
+    var _predicate;
+    var _taken = false;
+
+    Constructor(parent:TakeWhileEnumerable) {
+        checkArgs
+        this._parent = parent;
+    }
+
+    Func(_moveNextImpl)() {
+        if (this._taken) return false;
+        if (!this._source.moveNext() || !this._predicate(this._source.current)) {
+            this._taken = true;
+            return false;
+        }
+        return true;
+    }
+}

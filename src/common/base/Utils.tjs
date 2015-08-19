@@ -1,0 +1,63 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+// shortcuts
+assert(typeof global.dm === "undefined")
+global.dm = Debug.message;
+assert(typeof global.getKeys === "undefined")
+global.getKeys = Scripts.getObjectKeys;
+
+/**
+ * Replace old strings between braces to new strings.
+ * @param string message The string contains strings between braces to be replaced.
+ * @param strign lists* The old strings and new strings in turn.
+ * @return string The message expanded.
+ */
+Func(expandMessage)(message:string, lists*) {
+    checkArgs
+    assert(lists.count % 2 === 0)
+    for (var i = lists.count-2; i >= 0; i -= 2) {
+        message = message.replace(@"/\\{&lists[i];\\}/g"!, lists[i+1]);
+    }
+    return message;
+}
+
+/**
+ * Create string with Regexp.
+ * @param object reg The RegExp object.
+ * @param string targetString The string to match a regular expression.
+ * @param string patternString The string where the placeholders like $1 will be replaced by matched string.
+*/
+global.createStringWithRegExp = LMD(reg:RegExp, targetString:string, patternString:string) {
+    checkArgs
+    var start = reg.start;
+    reg.exec(targetString);
+    while(1) {
+        var newString = patternString.replace(r, (f incontextof %[reg:reg]));
+        if (newString === patternString) { break; }
+        patternString = newString;
+    }
+    reg.start = start;
+    return patternString;
+} incontextof %[
+    r:/\$[0-9]+/,
+    f:LMD(matches) {
+        var num = +matches[0].substr(1);
+        return reg.matches[num];
+    }
+];
+
+Func(setStaticMember)(classObject:Class, memberName:string, member:any) {
+    checkArgs
+    global.Scripts.propSet(classObject, memberName, member, pfStaticMember | pfMemberEnsure);
+}
+
+Func(setHiddenMember)(classObject:Class, memberName:string, member:any) {
+    checkArgs
+    global.Scripts.propSet(classObject, memberName, member, pfHiddenMember | pfMemberEnsure);
+}
+
+Func(success)(object:any) {
+    checkArgs
+    return object === SUCCESS;
+}

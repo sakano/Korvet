@@ -1,0 +1,207 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(MultiMap)
+{
+    Func(clone)() {
+        var map = new global.MultiMap();
+        var keys = global.getKeys(this._data);
+        for (var i = keys.count - 1; i >= 0; --i) {
+            map._data[keys[i]] = this._data[keys[i]].clone();
+        }
+        return map;
+    }
+
+    Func(cloneShallow)() {
+        var map = new global.MultiMap();
+        var keys = global.getKeys(this._data);
+        for (var i = keys.count - 1; i >= 0; --i) {
+            map._data[keys[i]] = this._data[keys[i]].cloneShallow();
+        }
+        return map;
+    }
+
+    Func(equals)(target:any+) {
+        checkArgs
+        return global.MultiMap._equalsImpl(target, LMD(a, b) { return a.equals(b); });
+    }
+
+    Func(equalsShallow)(target:any+) {
+        checkArgs
+        return global.MultiMap._equalsImpl(target, LMD(a, b) { return a.equalsShallow(b); });
+    }
+
+    Func(toString)() {
+        var keys = global.getKeys(this._data);
+        if (keys.count === 0) return "(MultiMap){}";
+        var result = "(MultiMap){" + keys[0] + ":" + this._data[keys[0]].toString();
+        for (var i = 1; i < keys.count; ++i) {
+            result += ", " + keys[i] + ":" + this._data[keys[i]].toString();
+        }
+        return result + "}";
+    }
+
+    Func(isEmpty)() {
+        return (Dictionary.isEmpty incontextof this._data)();
+    }
+
+    Func(put)(key:string, value:any+) {
+        checkArgs
+        assert(key.length > 0)
+        if (this._data[key] === void) this._data[key] = [];
+        return this._data[key].add(value);
+    }
+
+    Func(contains)(key:string, value:any+) {
+        checkArgs
+        assert(key.length > 0)
+        return this._data[key] !== void && this._data[key].find(value) >= 0;
+    }
+
+    Func(containsKey)(key:string) {
+        checkArgs
+        assert(key.length > 0)
+        return this._data[key] !== void;
+    }
+
+    Func(containsValue)(value:any+) {
+        checkArgs
+        var keys = global.getKeys(this._data);
+        for (var i = keys.count - 1; i >= 0; --i) {
+            if (this._data[keys[i]].find(value) >= 0) return true;
+        }
+        return false;
+    }
+
+    Func(get)(key:string) {
+        checkArgs
+        assert(key.length > 0)
+        if (this._data[key] === void) return [];
+        return this._data[key].cloneShallow();
+    }
+
+    Func(getKeys)() {
+        return global.getKeys(this._data);
+    }
+
+    Func(getValues)() {
+        var keys = global.getKeys(this._data);
+        var values = [];
+        for (var i = keys.count - 1; i >= 0; --i) {
+            values.push(this._data[keys[i]]*);
+        }
+        return values;
+    }
+
+    Func(remove)(key:string, value:any+) {
+        checkArgs
+        assert(key.length > 0)
+        if (this._data[key] === void) return false;
+        var removed = this._data[key].remove(value);
+        if (removed && this._data[key].count === 0) { this._deleteKey(key); }
+        return removed;
+    }
+
+    Func(removeKey)(key:string) {
+        checkArgs
+        assert(key.length > 0)
+        if (this._data[key] === void) return 0;
+        var removedCount = this._data[key].count;
+        this._deleteKey(key);
+        return removedCount;
+    }
+
+    Func(removeValue)(value:any+) {
+        checkArgs
+        var keys = global.getKeys(this._data);
+        var removedTotal = 0;
+        for (var i = keys.count - 1; i >= 0; --i) {
+            var removedCount = this._data[keys[i]].remove(value);
+            removedTotal += removedCount;
+            if (removedCount > 0 && this._data[keys[i]].count === 0) { this._deleteKey(keys[i]); }
+        }
+        return removedTotal;
+    }
+
+    Func(clear)() {
+        (Dictionary.dispose incontextof this._data)();
+    }
+
+    Func(dispose)() {
+        var keys = global.getKeys(this._data);
+        for (var i = keys.count - 1; i >= 0; --i) {
+            this._data[keys[i]].dispose();
+        }
+        (Dictionary.dispose incontextof this._data)();
+    }
+
+    Func(getEnumerator)() {
+        return new global.MultiMapEnumerator(this);
+    }
+
+
+
+    // Dictionaryのメソッド名と同じキーも使えるようにメソッド無しの辞書を使う
+    var _data = global.Dictionary.createWithoutMethod();
+
+    Constructor() {
+    }
+
+    Finalize() {
+        //this.clear();
+        invalidate this._data;
+    }
+
+    Func(_deleteKey)(key:string) {
+        checkArgs
+        assert(key.length > 0)
+        invalidate this._data[key];
+        delete this._data[key];
+    }
+}
+
+setStaticMember(global.MultiMap, "_equalsImpl", LMD(target:any+, comparer:Function) {
+    checkArgs
+    if (target === null) return false;
+    if (!target isvalid) return false;
+    if (!target instanceof "MultiMap") return false;
+    if (target === this) return true;
+    var keys = global.getKeys(this._data);
+    var targetKeys = global.getKeys(target._data);
+    if (keys.count !== targetKeys.count) return false;
+    for (var i = keys.count - 1; i >= 0; --i) {
+        var key = keys[i];
+        if (target._data[key] === void) return false;
+        if (!comparer(target._data[key], this._data[key])) return false;
+    }
+    return true;
+});
+
+ClassExtends(MultiMapEnumerator, Enumerator)
+{
+    property current {
+        getter {
+            var key = this._keys[this._keyIndex];
+            return %[ key:key, values:this._source.get(key) ];
+        }
+    }
+
+    OverrideFunc(moveNext)() {
+        this._keys = this._source.getKeys();
+        this.moveNext = this._moveNextImpl;
+        return this._moveNextImpl();
+    }
+
+    var _source;
+    var _keys;
+    var _keyIndex = -1;
+
+    Constructor(source:MultiMap) {
+        checkArgs
+        this._source = source;
+    }
+
+    Func(_moveNextImpl) {
+        return ++this._keyIndex < this._keys.count;
+    }
+}

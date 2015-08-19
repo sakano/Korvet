@@ -1,0 +1,980 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+{   // MultiMap.put, MultiMap.get, MultiMap.remove
+    var map = new MultiMap();
+    assertAlways(&--map.put("key", 123) === 0--&)
+    assertAlways(&--map.get("key").equals([ 123 ])--&)
+    assertAlways(&--map.put("key", 0) === 1--&)
+    assertAlways(&--map.get("key").equals([ 123, 0 ])--&)
+    assertAlways(&--map.put("key2", void) === 0--&)
+    assertAlways(&--map.put("key2", null) === 1--&)
+    assertAlways(&--map.put("key2", "test") === 2--&)
+    assertAlways(&--map.get("key").equals([ 123, 0 ])--&)
+    assertAlways(&--map.get("key2").equals([ void, null, "test" ])--&)
+    assertAlways(&--map.get("key3").equals([])--&)
+
+    var key = map.get("key");
+    assertAlways(&--key !== map.get("key")--&)
+    assertAlways(&--map.get("k") !== map.get("k")--&)
+    assertAlways(&--key.equals([123,0])--&)
+    assertAlways(&--map.put("key", 0.0) === 2--&)
+    assertAlways(&--map.get("key").equals([123,0,0.0])--&)
+    assertAlways(&--key.equals([123,0])--&)
+    assertAlways(&--map.get("key") !== key--&)
+    assertAlways(&--map.put("key3", key) === 0--&)
+    assertAlways(&--map.get("key3").equals([ key ])--&)
+    assertAlways(&--map.get("key3").equalsShallow([ key ])--&)
+    assertAlways(&--map.get("key3")[0] === key--&)
+    invalidate map;
+    invalidate key;
+}
+{   // MultiMap.remove
+    var map = new MultiMap();
+    assertAlways(&--map.put("key", void) === 0--&)
+    assertAlways(&--map.put("key", null) === 1--&)
+    assertAlways(&--map.put("key", 111) === 2--&)
+    assertAlways(&--map.put("key", 111) === 3--&)
+    assertAlways(&--map.put("key", "test") === 4--&)
+    assertAlways(&--map.get("key").equals([void,null,111,111,"test"])--&)
+    assertAlways(&--map.remove("key","test") === 1--&)
+    assertAlways(&--map.get("key").equals([void,null,111,111])--&)
+    assertAlways(&--map.put("key2", 111) === 0--&)
+    assertAlways(&--map.get("key2").equals([111])--&)
+    assertAlways(&--map.remove("key2", 111) === 1--&)
+    assertAlways(&--map.get("key2").equals([])--&)
+    assertAlways(&--map.remove("key2",111) === 0--&)
+    assertAlways(&--map.get("key").equals([void,null,111,111])--&)
+    assertAlways(&--map.get("key2").equals([])--&)
+    assertAlways(&--map.remove("key",111) === 2--&)
+    assertAlways(&--map.get("key").equals([void,null])--&)
+    assertAlways(&--map.remove("key",111) === 0--&)
+    assertAlways(&--map.get("key").equals([void,null])--&)
+    assertAlways(&--map.remove("key",void) === 1--&)
+    assertAlways(&--map.get("key").equals([null])--&)
+    assertAlways(&--map.remove("key",null) === 1--&)
+    assertAlways(&--map.get("key").equals([])--&)
+    assertAlways(&--map.isEmpty()--&)
+
+    assertAlways(&--map.remove("key",void) === 0--&)
+    assertAlways(&--map.remove("key",null) === 0--&)
+    assertAlways(&--map.remove("key",111) === 0--&)
+    assertAlways(&--map.put("key",123) === 0--&)
+    assertAlways(&--map.get("key").equals([123])--&)
+    assertAlways(&--map.remove("key",123) === 1--&)
+    assertAlways(&--map.get("key").equals([])--&)
+
+    assertAlways(&--map.put("key",123) === 0--&)
+    assertAlways(&--map.put("key2",123) === 0--&)
+    assertAlways(&--map.put("key3",123) === 0--&)
+    assertAlways(&--map.put("key",234) === 1--&)
+    assertAlways(&--map.put("key2",234) === 1--&)
+    assertAlways(&--map.put("key3",234) === 1--&)
+    assertAlways(&--map.remove("key",234) === 1--&)
+    assertAlways(&--map.get("key").equals([123])--&)
+    assertAlways(&--map.remove("key","234") === 0--&)
+    assertAlways(&--map.remove("key",void) === 0--&)
+    assertAlways(&--map.remove("key",123.0) === 0--&)
+    assertAlways(&--map.remove("key",123) === 1--&)
+    assertAlways(&--map.get("key").isEmpty()--&)
+    assertAlways(&--map.get("key2").equals([123,234])--&)
+    assertAlways(&--map.get("key3").equals([123,234])--&)
+    assertAlways(&--map.remove("key3",123) === 1--&)
+    assertAlways(&--map.get("key").isEmpty()--&)
+    assertAlways(&--map.get("key2").equals([123,234])--&)
+    assertAlways(&--map.get("key3").equals([234])--&)
+    invalidate map;
+}
+{   // MultiMap.getKeys
+    var map = new MultiMap();
+    assertAlways(&--map.getKeys() instanceof "Array"--&)
+    assertAlways(&--map.getKeys().isEmpty()--&)
+    assertAlways(&--map.getKeys() !== map.getKeys()--&)
+    assertAlways(&--map.put("key", 123) === 0--&)
+    assertAlways(&--map.getKeys().count === 1--&)
+    assertAlways(&--map.getKeys()[0] === "key"--&)
+    assertAlways(&--map.put("key", 234) === 1--&)
+    assertAlways(&--map.getKeys().equals(["key"])--&)
+    assertAlways(&--map.put("key2", 123) === 0--&)
+    assertAlways(&--map.getKeys().count === 2--&)
+    assertAlways(&--map.getKeys().contains("key")--&)
+    assertAlways(&--map.getKeys().contains("key2")--&)
+    assertAlways(&--map.remove("key", 123) === 1--&)
+    assertAlways(&--map.getKeys().count === 2--&)
+    assertAlways(&--map.getKeys().contains("key")--&)
+    assertAlways(&--map.getKeys().contains("key2")--&)
+    assertAlways(&--map.remove("key", 234) === 1--&)
+    assertAlways(&--map.getKeys().count === 1--&)
+    assertAlways(&--map.getKeys()[0] === "key2"--&)
+    assertAlways(&--map.remove("key2", void) === 0--&)
+    assertAlways(&--map.getKeys().count === 1--&)
+    assertAlways(&--map.getKeys()[0] === "key2"--&)
+    assertAlways(&--map.remove("key2", 123) === 1--&)
+    assertAlways(&--map.getKeys().isEmpty()--&)
+
+    assertAlways(&--map.put("key3", 234) === 0--&)
+    assertAlways(&--map.put("key3", 234) === 1--&)
+    assertAlways(&--map.getKeys().count === 1--&)
+    assertAlways(&--map.getKeys()[0] === "key3"--&)
+    assertAlways(&--map.remove("key3", 234) === 2--&)
+    assertAlways(&--map.getKeys().count === 0--&)
+
+    assertAlways(&--map.put("key", 234) === 0--&)
+    assertAlways(&--map.put("key2", 234) === 0--&)
+    assertAlways(&--map.put("key3", 234) === 0--&)
+    assertAlways(&--map.getKeys().count === 3--&)
+    assertAlways(&--map.getKeys().contains("key")--&)
+    assertAlways(&--map.getKeys().contains("key2")--&)
+    assertAlways(&--map.getKeys().contains("key3")--&)
+    assertAlways(&--map.removeValue(234) === 3--&)
+    assertAlways(&--map.getKeys().count === 0--&)
+
+    assertAlways(&--map.put("key", 1) === 0--&)
+    assertAlways(&--map.put("key", 2) === 1--&)
+    assertAlways(&--map.put("key", 3) === 2--&)
+    assertAlways(&--map.getKeys().equals(["key"])--&)
+    assertAlways(&--map.removeKey("key") === 3--&)
+    assertAlways(&--map.getKeys().isEmpty()--&)
+    
+    invalidate map;
+}
+{   // MultiMap.getValues
+    var map = new MultiMap();
+    assertAlways(&--map.getValues() instanceof "Array"--&)
+    assertAlways(&--map.getValues().isEmpty()--&)
+    assertAlways(&--map.getValues() !== map.getValues()--&)
+    assertAlways(&--map.put("key", 123) === 0--&)
+    assertAlways(&--map.getValues().count === 1--&)
+    assertAlways(&--map.getValues()[0] === 123--&)
+    assertAlways(&--map.put("key2", 234) === 0--&)
+    assertAlways(&--map.getValues().count === 2--&)
+    assertAlways(&--map.getValues().contains(123)--&)
+    assertAlways(&--map.getValues().contains(234)--&)
+    assertAlways(&--map.put("key3", void) === 0--&)
+    assertAlways(&--map.getValues().count === 3--&)
+    assertAlways(&--map.getValues().contains(123)--&)
+    assertAlways(&--map.getValues().contains(234)--&)
+    assertAlways(&--map.getValues().contains(void)--&)
+    assertAlways(&--map.put("key2", 2) === 1--&)
+    assertAlways(&--map.getValues().count === 4--&)
+    assertAlways(&--map.getValues().contains(123)--&)
+    assertAlways(&--map.getValues().contains(234)--&)
+    assertAlways(&--map.getValues().contains(void)--&)
+    assertAlways(&--map.getValues().contains(2)--&)
+    assertAlways(&--map.removeKey("key2") === 2--&)
+    assertAlways(&--map.getValues().count === 2--&)
+    assertAlways(&--map.getValues().contains(123)--&)
+    assertAlways(&--map.getValues().contains(void)--&)
+    assertAlways(&--map.removeValue(void) === 1--&)
+    assertAlways(&--map.getValues().count === 1--&)
+    assertAlways(&--map.getValues().contains(123)--&)
+    assertAlways(&--map.put("key", 123) === 1--&)
+    assertAlways(&--map.getValues().equals([123,123])--&)
+    assertAlways(&--map.clear() === void--&)
+    assertAlways(&--map.getValues().isEmpty()--&)
+    invalidate map;
+}
+{   // MultiMap.removeKey
+    var map = new MultiMap();
+    assertAlways(&--map.put("key", null) === 0--&)
+    assertAlways(&--map.removeKey("key") === 1--&)
+    assertAlways(&--map.getKeys().isEmpty()--&)
+    assertAlways(&--map.put("key", 1) === 0--&)
+    assertAlways(&--map.put("key", 2) === 1--&)
+    assertAlways(&--map.put("key", 3) === 2--&)
+    assertAlways(&--map.put("key2", 21) === 0--&)
+    assertAlways(&--map.put("key3", 31) === 0--&)
+    assertAlways(&--map.put("key3", 32) === 1--&)
+    assertAlways(&--map.get("key").equals([1,2,3])--&)
+    assertAlways(&--map.removeKey("key") === 3--&)
+    assertAlways(&--map.getKeys().count === 2--&)
+    assertAlways(&--map.getKeys().contains("key2")--&)
+    assertAlways(&--map.getKeys().contains("key3")--&)
+    assertAlways(&--map.get("key").isEmpty()--&)
+    assertAlways(&--map.get("key2").equals([21])--&)
+    assertAlways(&--map.get("key3").equals([31,32])--&)
+    assertAlways(&--map.removeKey("key2") === 1--&)
+    assertAlways(&--map.getKeys().equals(["key3"])--&)
+    assertAlways(&--map.get("key").isEmpty()--&)
+    assertAlways(&--map.get("key2").isEmpty()--&)
+    assertAlways(&--map.get("key3").equals([31,32])--&)
+    assertAlways(&--map.removeKey("key3") === 2--&)
+    assertAlways(&--map.isEmpty()--&)
+    assertAlways(&--map.removeKey("key3") === 0--&)
+    assertAlways(&--map.isEmpty()--&)
+    invalidate map;
+}
+{   // MultiMap.removeValue
+    var map = new MultiMap();
+    assertAlways(&--map.put("key", 1) === 0--&)
+    assertAlways(&--map.removeValue(1) === 1--&)
+    assertAlways(&--map.getKeys().count === 0--&)
+    assertAlways(&--map.isEmpty()--&)
+    assertAlways(&--map.put("key", 1) === 0--&)
+    assertAlways(&--map.put("key", 2) === 1--&)
+    assertAlways(&--map.put("key", 3) === 2--&)
+    assertAlways(&--map.put("key2", 1) === 0--&)
+    assertAlways(&--map.put("key2", 2) === 1--&)
+    assertAlways(&--map.put("key3", 1) === 0--&)
+    assertAlways(&--map.removeValue(2) === 2--&)
+    assertAlways(&--map.getKeys().count === 3--&)
+    assertAlways(&--map.get("key").equals([1,3])--&)
+    assertAlways(&--map.get("key2").equals([1])--&)
+    assertAlways(&--map.get("key3").equals([1])--&)
+    assertAlways(&--map.removeValue(1) === 3--&)
+    assertAlways(&--map.getKeys().equals(["key"])--&)
+    assertAlways(&--map.get("key").equals([3])--&)
+    assertAlways(&--map.removeValue(3) === 1--&)
+    assertAlways(&--map.isEmpty()--&)
+    assertAlways(&--map.removeValue(1) === 0--&)
+    assertAlways(&--map.isEmpty()--&)
+    assertAlways(&--map.removeValue(void) === 0--&)
+    assertAlways(&--map.removeValue(null) === 0--&)
+    assertAlways(&--map.isEmpty()--&)
+    assertAlways(&--map.put("key", 1) === 0--&)
+    assertAlways(&--map.removeValue(1.0) === 0--&)
+    assertAlways(&--map.getKeys().equals(["key"])--&)
+    assertAlways(&--map.get("key").equals([1])--&)
+    assertAlways(&--map.removeValue(1) === 1--&)
+    assertAlways(&--map.isEmpty()--&)
+    invalidate map;
+}
+{   // MultiMap.contains
+    var map = new MultiMap();
+    assertAlways(&--!map.contains("key", 1)--&)
+    assertAlways(&--map.put("key", 1) === 0--&)
+    assertAlways(&--map.contains("key", 1)--&)
+    assertAlways(&--!map.contains("key", 1.0)--&)
+    assertAlways(&--!map.contains("key", 2)--&)
+    assertAlways(&--!map.contains("key2", 2)--&)
+    assertAlways(&--!map.contains("key2", 1)--&)
+    assertAlways(&--map.put("key2", 2) === 0--&)
+    assertAlways(&--map.contains("key", 1)--&)
+    assertAlways(&--map.contains("key2", 2)--&)
+    assertAlways(&--!map.contains("key", 2)--&)
+    assertAlways(&--!map.contains("key2", 1)--&)
+    assertAlways(&--map.put("key",2) === 1--&)
+    assertAlways(&--map.contains("key", 1)--&)
+    assertAlways(&--map.contains("key", 2)--&)
+    assertAlways(&--map.contains("key2", 2)--&)
+    assertAlways(&--!map.contains("key", 2.0)--&)
+    assertAlways(&--!map.contains("key2", 1)--&)
+    assertAlways(&--map.remove("key", 1) === 1--&)
+    assertAlways(&--!map.contains("key", 1)--&)
+    assertAlways(&--map.removeKey("key2") === 1--&)
+    assertAlways(&--!map.contains("key2", 2)--&)
+    assertAlways(&--map.removeValue(2) === 1--&)
+    assertAlways(&--!map.contains("key", 2)--&)
+
+    assertAlways(&--!map.contains("key", void)--&)
+    assertAlways(&--!map.contains("key", null)--&)
+    assertAlways(&--map.put("key", void) === 0--&)
+    assertAlways(&--map.contains("key", void)--&)
+    assertAlways(&--map.put("key", null) === 1--&)
+    assertAlways(&--map.contains("key", null)--&)
+    assertAlways(&--map.clear() === void--&)
+    assertAlways(&--!map.contains("key", void)--&)
+    assertAlways(&--!map.contains("key", null)--&)
+    invalidate map;
+}
+{   // MultiMap.containsKey
+    var map = new MultiMap();
+    assertAlways(&--!map.containsKey("key")--&)
+    assertAlways(&--!map.containsKey("key2")--&)
+    assertAlways(&--map.put("key", void) === 0--&)
+    assertAlways(&--map.containsKey("key")--&)
+    assertAlways(&--!map.containsKey("key2")--&)
+    assertAlways(&--map.put("key2", null) === 0--&)
+    assertAlways(&--map.containsKey("key")--&)
+    assertAlways(&--map.containsKey("key2")--&)
+    assertAlways(&--!map.containsKey("key3")--&)
+    assertAlways(&--map.remove("key", void) === 1--&)
+    assertAlways(&--!map.containsKey("key")--&)
+    assertAlways(&--map.containsKey("key2")--&)
+    assertAlways(&--map.put("key2", 123) === 1--&)
+    assertAlways(&--!map.containsKey("key")--&)
+    assertAlways(&--map.containsKey("key2")--&)
+    assertAlways(&--map.removeValue(null) === 1--&)
+    assertAlways(&--!map.containsKey("key")--&)
+    assertAlways(&--map.containsKey("key2")--&)
+    assertAlways(&--map.removeKey("key2") === 1--&)
+    assertAlways(&--!map.containsKey("key")--&)
+    assertAlways(&--!map.containsKey("key2")--&)
+    invalidate map;
+}
+{   // MultiMap.containsValue
+    var map = new MultiMap();
+    assertAlways(&--!map.containsValue("value")--&)
+    assertAlways(&--map.put("key", "value") === 0--&)
+    assertAlways(&--map.containsValue("value")--&)
+    assertAlways(&--!map.containsValue("value2")--&)
+    assertAlways(&--map.put("key", "value2") === 1--&)
+    assertAlways(&--map.containsValue("value")--&)
+    assertAlways(&--map.containsValue("value2")--&)
+    assertAlways(&--map.put("key2", 2) === 0--&)
+    assertAlways(&--map.containsValue("value")--&)
+    assertAlways(&--map.containsValue("value2")--&)
+    assertAlways(&--map.containsValue(2)--&)
+    assertAlways(&--map.put("key2", "value") === 1--&)
+    assertAlways(&--map.containsValue("value")--&)
+    assertAlways(&--map.containsValue("value2")--&)
+    assertAlways(&--map.containsValue(2)--&)
+    assertAlways(&--map.remove("key", "value") === 1--&)
+    assertAlways(&--map.containsValue("value")--&)
+    assertAlways(&--map.containsValue("value2")--&)
+    assertAlways(&--map.containsValue(2)--&)
+    assertAlways(&--map.remove("key2", "value") === 1--&)
+    assertAlways(&--!map.containsValue("value")--&)
+    assertAlways(&--map.containsValue("value2")--&)
+    assertAlways(&--map.containsValue(2)--&)
+    assertAlways(&--map.removeValue("value2") === 1--&)
+    assertAlways(&--!map.containsValue("value")--&)
+    assertAlways(&--!map.containsValue("value2")--&)
+    assertAlways(&--map.containsValue(2)--&)
+    assertAlways(&--map.removeKey("key2") === 1--&)
+    assertAlways(&--!map.containsValue("value")--&)
+    assertAlways(&--!map.containsValue("value2")--&)
+    assertAlways(&--!map.containsValue(2)--&)
+    assertAlways(&--!map.containsValue(2.0)--&)
+    assertAlways(&--!map.containsValue(void)--&)
+    assertAlways(&--!map.containsValue(null)--&)
+    assertAlways(&--map.put("key", void) === 0--&)
+    assertAlways(&--!map.containsValue(0)--&)
+    assertAlways(&--map.containsValue(void)--&)
+    assertAlways(&--!map.containsValue(null)--&)
+    assertAlways(&--map.put("key", null) === 1--&)
+    assertAlways(&--map.containsValue(void)--&)
+    assertAlways(&--map.containsValue(null)--&)
+    assertAlways(&--map.clear() === void--&)
+    assertAlways(&--!map.containsValue(void)--&)
+    assertAlways(&--!map.containsValue(null)--&)
+    invalidate map;
+}
+{   // MultiMap.isEmpty
+    var map = new MultiMap();
+    assertAlways(&--map.isEmpty()--&)
+    assertAlways(&--map.put("key", "value") === 0--&)
+    assertAlways(&--!map.isEmpty()--&)
+    assertAlways(&--map.put("key2", 1) === 0--&)
+    assertAlways(&--!map.isEmpty()--&)
+    assertAlways(&--map.remove("key2", 1) === 1--&)
+    assertAlways(&--!map.isEmpty()--&)
+    assertAlways(&--map.remove("key", "value") === 1--&)
+    assertAlways(&--map.isEmpty()--&)
+    assertAlways(&--map.put("key", "value") === 0--&)
+    assertAlways(&--!map.isEmpty()--&)
+    assertAlways(&--map.removeKey("key") === 1--&)
+    assertAlways(&--map.isEmpty()--&)
+    assertAlways(&--map.put("key", "value") === 0--&)
+    assertAlways(&--!map.isEmpty()--&)
+    assertAlways(&--map.removeValue("value") === 1--&)
+    assertAlways(&--map.isEmpty()--&)
+    assertAlways(&--map.put("key", "value") === 0--&)
+    assertAlways(&--!map.isEmpty()--&)
+    assertAlways(&--map.clear() === void--&)
+    assertAlways(&--map.isEmpty()--&)
+    assertAlways(&--map.put("key", []) === 0--&)
+    assertAlways(&--!map.isEmpty()--&)
+    assertAlways(&--map.dispose() === void--&)
+    assertAlways(&--map.isEmpty()--&)
+    invalidate map;
+}
+{   // MultiMap.toString
+    var map = new MultiMap();
+    assertAlways(&--map.toString() === "(MultiMap){}"--&)
+    assertAlways(&--map.put("key", 1) === 0--&)
+    assertAlways(&--map.toString() === "(MultiMap){key:[(int)1]}"--&)
+    assertAlways(&--map.put("key", 2) === 1--&)
+    assertAlways(&--map.toString() === "(MultiMap){key:[(int)1, (int)2]}"--&)
+    assertAlways(&--map.put("key2", 10) === 0--&)
+    assertAlways(&--map.toString() === "(MultiMap){key2:[(int)10], key:[(int)1, (int)2]}"--&)
+    assertAlways(&--map.removeKey("key") === 2--&)
+    assertAlways(&--map.toString() === "(MultiMap){key2:[(int)10]}"--&)
+    invalidate map;
+}
+{   // MultiMap.equals
+    var map = new MultiMap();
+    var map2 = new MultiMap();
+    assertAlways(&--!map.equals()--&)
+    assertAlways(&--!map.equals(void)--&)
+    assertAlways(&--!map.equals(null)--&)
+    assertAlways(&--!map.equals([])--&)
+    assertAlways(&--!map.equals(%[])--&)
+    assertAlways(&--map.equals(map)--&)
+    assertAlways(&--map.equals(map2)--&)
+    assertAlways(&--map2.equals(map)--&)
+    assertAlways(&--map.put("key", 1) === 0--&)
+    assertAlways(&--!map.equals(map2)--&)
+    assertAlways(&--!map2.equals(map)--&)
+    assertAlways(&--map2.put("key", 1) === 0--&)
+    assertAlways(&--map.equals(map2)--&)
+    assertAlways(&--map2.equals(map)--&)
+    assertAlways(&--map.put("key", 2.0) === 1--&)
+    assertAlways(&--!map.equals(map2)--&)
+    assertAlways(&--!map2.equals(map)--&)
+    assertAlways(&--map2.put("key", 2) === 1--&)
+    assertAlways(&--!map.equals(map2)--&)
+    assertAlways(&--!map2.equals(map)--&)
+    assertAlways(&--map2.remove("key", 2) === 1--&)
+    assertAlways(&--map2.put("key", 2.0) === 1--&)
+    assertAlways(&--map.equals(map2)--&)
+    assertAlways(&--map2.equals(map)--&)
+    assertAlways(&--map.put("key2", [1,2,3]) === 0--&)
+    assertAlways(&--map2.put("key2", [1,2,3]) === 0--&)
+    assertAlways(&--map.equals(map2)--&)
+    assertAlways(&--map2.equals(map)--&)
+    assertAlways(&--map.put("key3", [1,2,3,4]) === 0--&)
+    assertAlways(&--map2.put("key3", [1,2,3]) === 0--&)
+    assertAlways(&--!map.equals(map2)--&)
+    assertAlways(&--!map2.equals(map)--&)
+    assertAlways(&--map.removeKey("key3") === 1--&)
+    assertAlways(&--map2.removeKey("key3") === 1--&)
+    assertAlways(&--map.equals(map2)--&)
+    assertAlways(&--map2.equals(map)--&)
+    var array = [100];
+    assertAlways(&--map.put("key3", array) === 0--&)
+    assertAlways(&--map2.put("key3", array) === 0--&)
+    assertAlways(&--map.equals(map2)--&)
+    assertAlways(&--map2.equals(map)--&)
+    assertAlways(&--map.put("key4", %[key:1,key2:[1,2]]) === 0--&)
+    assertAlways(&--map2.put("key4", %[key:1,key2:[1,2]]) === 0--&)
+    assertAlways(&--map.equals(map2)--&)
+    assertAlways(&--map2.equals(map)--&)
+    assertAlways(&--map.put("key4", %[key:1,key2:[1,2]]) === 1--&)
+    assertAlways(&--map2.put("key4", %[key:1,key2:[1,2],key3:void]) === 1--&)
+    assertAlways(&--!map.equals(map2)--&)
+    assertAlways(&--!map2.equals(map)--&)
+    assertAlways(&--map.removeKey("key4") === 2--&)
+    assertAlways(&--map2.removeKey("key4") === 2--&)
+    assertAlways(&--map.equals(map2)--&)
+    assertAlways(&--map2.equals(map)--&)
+    assertAlways(&--map.put("key5", void) === 0--&)
+    assertAlways(&--!map.equals(map2)--&)
+    assertAlways(&--!map2.equals(map)--&)
+    assertAlways(&--map.put("key6", void) === 0--&)
+    assertAlways(&--!map.equals(map2)--&)
+    assertAlways(&--!map2.equals(map)--&)
+    invalidate map;
+    invalidate map2;
+    invalidate array;
+}
+{   // MultiMap.equalsShallow
+    var map = new MultiMap();
+    var map2 = new MultiMap();
+    assertAlways(&--!map.equalsShallow()--&)
+    assertAlways(&--!map.equalsShallow(void)--&)
+    assertAlways(&--!map.equalsShallow(null)--&)
+    assertAlways(&--!map.equalsShallow([])--&)
+    assertAlways(&--!map.equalsShallow(%[])--&)
+    assertAlways(&--map.equalsShallow(map)--&)
+    assertAlways(&--map.equalsShallow(map2)--&)
+    assertAlways(&--map2.equalsShallow(map)--&)
+    assertAlways(&--map.put("key", 1) === 0--&)
+    assertAlways(&--!map.equalsShallow(map2)--&)
+    assertAlways(&--!map2.equalsShallow(map)--&)
+    assertAlways(&--map2.put("key", 1) === 0--&)
+    assertAlways(&--map.equalsShallow(map2)--&)
+    assertAlways(&--map2.equalsShallow(map)--&)
+    assertAlways(&--map.put("key", 2.0) === 1--&)
+    assertAlways(&--!map.equalsShallow(map2)--&)
+    assertAlways(&--!map2.equalsShallow(map)--&)
+    assertAlways(&--map2.put("key", 2) === 1--&)
+    assertAlways(&--!map.equalsShallow(map2)--&)
+    assertAlways(&--!map2.equalsShallow(map)--&)
+    assertAlways(&--map2.remove("key", 2) === 1--&)
+    assertAlways(&--map2.put("key", 2.0) === 1--&)
+    assertAlways(&--map.equalsShallow(map2)--&)
+    assertAlways(&--map2.equalsShallow(map)--&)
+    assertAlways(&--map.put("key2", [1,2,3]) === 0--&)
+    assertAlways(&--map2.put("key2", [1,2,3]) === 0--&)
+    assertAlways(&--!map.equalsShallow(map2)--&)
+    assertAlways(&--!map2.equalsShallow(map)--&)
+    assertAlways(&--map.put("key3", [1,2,3,4]) === 0--&)
+    assertAlways(&--map2.put("key3", [1,2,3]) === 0--&)
+    assertAlways(&--!map.equalsShallow(map2)--&)
+    assertAlways(&--!map2.equalsShallow(map)--&)
+    assertAlways(&--map.removeKey("key3") === 1--&)
+    assertAlways(&--map2.removeKey("key3") === 1--&)
+    assertAlways(&--!map.equalsShallow(map2)--&)
+    assertAlways(&--!map2.equalsShallow(map)--&)
+    assertAlways(&--map.removeKey("key2") === 1--&)
+    assertAlways(&--map2.removeKey("key2") === 1--&)
+    assertAlways(&--map.equalsShallow(map2)--&)
+    assertAlways(&--map2.equalsShallow(map)--&)
+    var array = [100];
+    assertAlways(&--map.put("key3", array) === 0--&)
+    assertAlways(&--map2.put("key3", array) === 0--&)
+    assertAlways(&--map.equalsShallow(map2)--&)
+    assertAlways(&--map2.equalsShallow(map)--&)
+    assertAlways(&--map.put("key4", %[key:1,key2:[1,2]]) === 0--&)
+    assertAlways(&--map2.put("key4", %[key:1,key2:[1,2]]) === 0--&)
+    assertAlways(&--!map.equalsShallow(map2)--&)
+    assertAlways(&--!map2.equalsShallow(map)--&)
+    assertAlways(&--map.removeKey("key4") === 1--&)
+    assertAlways(&--map2.removeKey("key4") === 1--&)
+    assertAlways(&--map.equalsShallow(map2)--&)
+    assertAlways(&--map2.equalsShallow(map)--&)
+    assertAlways(&--map.put("key5", void) === 0--&)
+    assertAlways(&--!map.equalsShallow(map2)--&)
+    assertAlways(&--!map2.equalsShallow(map)--&)
+    assertAlways(&--map.put("key6", void) === 0--&)
+    assertAlways(&--!map.equalsShallow(map2)--&)
+    assertAlways(&--!map2.equalsShallow(map)--&)
+    invalidate map;
+    invalidate map2;
+    invalidate array;
+}
+{   // MultiMap.clear
+    var map = new MultiMap();
+    var array = [];
+    assertAlways(map.clear() === void)
+    map.put("key", 1);
+    assertAlways(map.clear() === void)
+    assertAlways(map.isEmpty())
+    assertAlways(map.getKeys().count === 0)
+    map.put("key", 1);
+    map.put("key", 2);
+    map.put("key", 3);
+    map.put("key2", 1);
+    map.put("key2", void);
+    map.put("key3", null);
+    map.put("key4", "test");
+    map.put("key4", array);
+    assertAlways(map.clear() === void)
+    assertAlways(map.isEmpty())
+    assertAlways(map.getKeys().count === 0)
+    assertAlways(array isvalid)
+    invalidate map;
+    invalidate array;
+}
+{   // MultiMap.dispose
+    var map = new MultiMap();
+    assertAlways(map.dispose() === void)
+    var array = [], array2 = [], array3 = [];
+    var dic = %[], dic2 = %[];
+    map.put("key", array);
+    assertAlways(map.dispose() === void)
+    assertAlways(map.isEmpty());
+    assertAlways(!array isvalid)
+    map.put("key", array2);
+    map.put("key", dic);
+    map.put("key2", array3);
+    map.put("key3", dic2);
+    assertAlways(map.dispose() === void)
+    assertAlways(map.isEmpty());
+    assertAlways(!array2 isvalid)
+    assertAlways(!array3 isvalid)
+    assertAlways(!dic isvalid)
+    assertAlways(!dic2 isvalid)
+    invalidate map;
+}
+{   // MultiMap.clone
+    var map = new MultiMap();
+    var map2 = map.clone();
+    assertAlways(map !== map2)
+    assertAlways(map.equals(map2))
+    map.put("key", "value");
+    assertAlways(!map.equals(map2))
+    map2.put("key", "value");
+    assertAlways(map.equals(map2))
+    map.put("key2", []);
+    map2.put("key2", []);
+    assertAlways(map.equals(map2))
+    assertAlways(!map.equalsShallow(map2))
+    map2 = map.clone();
+    assertAlways(map.equals(map2))
+    assertAlways(!map.equalsShallow(map2))
+    assertAlways(map.get("key2")[0] !== map2.get("key2")[0])
+    map.put("key3", %[ array:[], dic:%[] ]);
+    map2 = map.clone();
+    assertAlways(map.equals(map2))
+    assertAlways(!map.equalsShallow(map2))
+    assertAlways(map.get("key3")[0] !== map2.get("key3")[0])
+    assertAlways(map.get("key3")[0].array !== map2.get("key3")[0].array)
+    assertAlways(map.get("key3")[0].dic !== map2.get("key3")[0].dic)
+    invalidate map;
+    invalidate map2;
+}
+{   // MultiMap.cloneShallow
+    var map = new MultiMap();
+    var map2 = map.cloneShallow();
+    assertAlways(map !== map2)
+    assertAlways(map.equals(map2))
+    map.put("key", "value");
+    assertAlways(!map.equals(map2))
+    map2.put("key", "value");
+    assertAlways(map.equals(map2))
+    map.put("key2", []);
+    map2.put("key2", []);
+    assertAlways(map.equals(map2))
+    assertAlways(!map.equalsShallow(map2))
+    map2 = map.cloneShallow();
+    assertAlways(map.equals(map2))
+    assertAlways(map.equalsShallow(map2))
+    assertAlways(map.get("key2")[0] === map2.get("key2")[0])
+    map.put("key3", %[ array:[], dic:%[] ]);
+    map2 = map.cloneShallow();
+    assertAlways(map.equals(map2))
+    assertAlways(map.equalsShallow(map2))
+    assertAlways(map.get("key3")[0] === map2.get("key3")[0])
+    assertAlways(map.get("key3")[0].array === map2.get("key3")[0].array)
+    assertAlways(map.get("key3")[0].dic === map2.get("key3")[0].dic)
+    invalidate map;
+    invalidate map2;
+}
+{   // MultiMap.getEnumerator
+    var map = new MultiMap();
+    var e = map.getEnumerator();
+    assertAlways(e instanceof "MultiMapEnumerator")
+    for (var i = 0; i < 100; ++i) {
+        assertAlways(!e.moveNext())
+    }
+    invalidate e;
+
+    map.put("key", 123);
+    map.put("key", 234);
+    for (var loopIndex = 0; loopIndex < 3; ++loopIndex) {
+        var e = map.getEnumerator();
+        assertAlways(e.moveNext())
+        assertAlways(e.current instanceof "Dictionary")
+        assertAlways(e.current.key === "key")
+        assertAlways(e.current.values.equals([123,234]))
+        for (var i = 0; i < 100; ++i) {
+            assertAlways(!e.moveNext())
+        }
+        invalidate e;
+    }
+
+    map.clear();
+    FOR_EACH(pair, map) {
+        assertAlways(false);
+    }
+
+    map.put("key", "value");
+    var called = 0;
+    FOR_EACH(pair, map) {
+        assertAlways(pair instanceof "Dictionary")
+        ++called;
+        assertAlways(pair.key === "key")
+        assertAlways(pair.values.equals(["value"]))
+    }
+    assertAlways(called === 1)
+
+    var map2 = new MultiMap();
+    called = 0;
+    map.put("key", "value2");
+    map.put("key2", 2);
+    map.put("key2", void);
+    map.put("key3", null);
+    FOR_EACH(pair, map) {
+        assertAlways(pair instanceof "Dictionary")
+        var key = pair.key;
+        FOR_EACH(value, pair.values) {
+            ++called;
+            map2.put(key, value);
+        }
+    }
+    assertAlways(called === 5)
+    assertAlways(map.equals(map2))
+
+    map.clear();
+    FOR_EACH(pair, map) {
+        assertAlways(false);
+    }
+    invalidate map;
+}
+{
+    var map = new MultiMap();
+    assertAlways(map.put("key", "data") === 0)
+    assertAlways(map.put("key", "data2") === 1)
+    assertAlways(map.put("key2", "data3") === 0)
+    assertAlways(map.put("key2", "data4") === 1)
+    var clonedMultimap = map.clone();
+    assertAlways(clonedMultimap instanceof "MultiMap")
+    assertAlways(clonedMultimap.equals(map))
+
+    var data = map.get("key");
+    assertAlways(data.count === 2)
+    assertAlways(data[0] === "data")
+    assertAlways(data[1] === "data2")
+    var data = map.get("key2");
+    assertAlways(data.count === 2)
+    assertAlways(data[0] === "data3")
+    assertAlways(data[1] === "data4")
+
+    var data = map.getKeys();
+    assertAlways(data.count === 2)
+    data.remove("key");
+    assertAlways(data.count === 1)
+    data.remove("key2");
+    assertAlways(data.count === 0)
+
+    var data = map.getValues();
+    assertAlways(data.count === 4)
+    data.remove("data");
+    assertAlways(data.count === 3)
+    data.remove("data2");
+    assertAlways(data.count === 2)
+    data.remove("data3");
+    assertAlways(data.count === 1)
+    data.remove("data4");
+    assertAlways(data.count === 0)
+
+    assertAlways(map.contains("key", "data") === true)
+    assertAlways(map.contains("key2", "data") === false)
+
+    assertAlways(map.containsKey("key") === true)
+    assertAlways(map.containsKey("key3") === false)
+
+    assertAlways(map.containsValue("data") === true)
+    assertAlways(map.containsValue("data5") === false)
+
+    assertAlways(map.removeValue("data4") === 1)
+    assertAlways(map.removeValue("data5") === 0)
+
+    assertAlways(map.isEmpty() === false)
+
+    var data = map.get("key2");
+    assertAlways(data.count === 1)
+    assertAlways(data[0]  === "data3")
+
+    assertAlways(map.removeKey("key") === 2)
+    assertAlways(map.removeKey("key4") === 0)
+
+    var data = map.get("key");
+    assertAlways(data.count === 0)
+
+    assertAlways(map.remove("key3", "data") === false)
+    assertAlways(map.remove("key2", "data3") === true)
+
+    var data = map.get("key2");
+    assertAlways(data.count === 0)
+
+    assertAlways(map.isEmpty() === true)
+
+
+    assertAlways(clonedMultimap.getKeys().count === 2)
+    assertAlways(clonedMultimap.getValues().count === 4)
+
+    invalidate map;
+    invalidate clonedMultimap;
+}
+{
+    var map = new MultiMap();
+    var checkEmpty = LMD(map) {
+        assertAlways(map.get("key").count === 0)
+        assertAlways(map.remove("key", "value") === false)
+        assertAlways(map.removeKey("key") === 0)
+        assertAlways(map.removeValue("key") === 0)
+        assertAlways(map.contains("key", "value") === false)
+        assertAlways(map.containsKey("key") === false)
+        assertAlways(map.containsValue("key") === false)
+        assertAlways(map.getKeys().count === 0)
+        assertAlways(map.getValues().count === 0)
+        assertAlways(map.isEmpty() === true)
+        assertAlways(!map.getEnumerator().moveNext())
+    };
+    checkEmpty(map);
+    var cloned = map.clone();
+    checkEmpty(cloned);
+    invalidate cloned;
+
+    assertAlways(map.put("key", "value") === 0)
+    assertAlways(map.put("key", "value") === 1)
+    assertAlways(map.put("key", "value2") === 2)
+    assertAlways(map.put("key2", "key2Value") === 0)
+    assertAlways(map.put("key2", "key2Value2") === 1)
+    assertAlways(map.put("key3", "key3Value") === 0)
+    var check = LMD(map) {
+        assertAlways(map.getValues().count === 6)
+        assertAlways(map.getKeys().count === 3)
+        assertAlways(map.containsKey("key") === true)
+        assertAlways(map.containsKey("key3") === true)
+        assertAlways(map.containsKey("key5") === false)
+        assertAlways(map.containsKey("key2") === true)
+        assertAlways(map.containsKey("key4") === false)
+        assertAlways(map.containsValue("value") === true)
+        assertAlways(map.containsValue("key2Value2") === true)
+        assertAlways(map.containsValue("key3Value") === true)
+        assertAlways(map.containsValue("key2Value") === true)
+        assertAlways(map.containsValue("key3Value2") === false)
+        assertAlways(map.containsValue("value2") === true)
+        assertAlways(map.contains("key", "value2") === true)
+        assertAlways(map.contains("key3", "key3Value") === true)
+        assertAlways(map.contains("key2", "key2Value2") === true)
+        assertAlways(map.contains("key3", "key2Value") === false)
+        assertAlways(map.contains("key3", "value") === false)
+        assertAlways(map.contains("key", "value3") === false)
+        assertAlways(map.contains("key2", "key2Value") === true)
+        assertAlways(map.contains("key", "value") === true)
+        assertAlways(map.contains("value", "key") === false)
+        assertAlways(map.isEmpty() === false)
+    };
+    check(map);
+    var cloned = map.clone();
+    check(cloned);
+    invalidate cloned;
+
+    assertAlways(map.remove("key", "key2Value") === false)
+    check(map);
+
+    assertAlways(map.remove("notExistKey", "value") === false)
+    check(map);
+
+    assertAlways(map.removeKey("notExistKey") === 0)
+    check(map);
+
+    assertAlways(map.removeValue("notExistValue") === 0)
+    check(map);
+
+    assertAlways(map.get("notExistKey").count === 0)
+    check(map);
+
+    map.get("key").clear();
+    check(map);
+
+    map.get("key3").push("value", "value2");
+    check(map);
+
+    map.getKeys().clear();
+    check(map);
+
+    map.getValues().clear();
+    check(map);
+
+    var cloned = map.clone();
+    cloned.clear();
+    check(map);
+    invalidate cloned;
+
+    var cloned = map.clone();
+    cloned.removeKey("key");
+    check(map);
+    invalidate cloned;
+
+    assertAlways(map.remove("key2", "key2Value") === true)
+    assertAlways(map.getKeys().count === 3)
+    assertAlways(map.getValues().count === 5)
+    assertAlways(map.containsValue("key2Value") === false)
+    assertAlways(map.contains("key2", "key2Value") === false)
+    assertAlways(map.contains("key2", "key2Value2") === true)
+    assertAlways(map.containsKey("key2") === true)
+    assertAlways(map.isEmpty() === false)
+
+    assertAlways(map.remove("key2", "key2Value2") === true)
+    assertAlways(map.getKeys().count === 2)
+    assertAlways(map.getValues().count === 4)
+    assertAlways(map.containsValue("key2Value") === false)
+    assertAlways(map.contains("key2", "key2Value2") === false)
+    assertAlways(map.containsKey("key2") === false)
+    assertAlways(map.isEmpty() === false)
+
+    assertAlways(map.put("key2", "key2Value") === 0)
+    assertAlways(map.put("key2", "key2Value2") === 1)
+    assertAlways(map.getKeys().count === 3)
+    assertAlways(map.getValues().count === 6)
+    assertAlways(map.containsKey("key2") === true)
+    assertAlways(map.isEmpty() === false)
+
+    assertAlways(map.removeKey("key2") === 2)
+    assertAlways(map.getKeys().count === 2)
+    assertAlways(map.getValues().count === 4)
+    assertAlways(map.containsKey("key2") === false)
+    assertAlways(map.get("key2").count === 0)
+    assertAlways(map.removeKey("key2") === 0)
+    assertAlways(map.removeValue("key3Value") === 1)
+    assertAlways(map.getKeys().count === 1)
+    assertAlways(map.getValues().count === 3)
+    assertAlways(map.get("key3").count === 0)
+    assertAlways(map.containsKey("key3") === false)
+    assertAlways(map.isEmpty() === false)
+
+    assertAlways(map.get("key").count === 3)
+    assertAlways(map.removeValue("value") === 2)
+    assertAlways(map.get("key").count === 1)
+    assertAlways(map.get("key")[0] === "value2")
+    assertAlways(map.getKeys().count === 1)
+    assertAlways(map.getValues().count === 1)
+    assertAlways(map.getValues()[0] === "value2")
+    assertAlways(map.isEmpty() === false)
+
+    map.clear();
+    checkEmpty(map);
+
+    assertAlways(map.put("key", "value") === 0)
+    assertAlways(map.put("key", "value") === 1)
+    assertAlways(map.put("key", "value2") === 2)
+    assertAlways(map.put("key2", "key2Value") === 0)
+    assertAlways(map.put("key2", "key2Value2") === 1)
+    assertAlways(map.put("key3", "key3Value") === 0)
+    check(map);
+    map.clear();
+
+    var checkWithSingleKey = LMD(m, key, values) {
+        for (var i = 0; i < values.count; ++i) {
+            assertAlways(m.put(key, values[i]) === i)
+            assertAlways(m.get(key).count === i+1)
+            assertAlways(m.get(key)[i] === values[i])
+            assertAlways(m.containsKey(key) === true)
+            assertAlways(m.containsValue(values[i]) === true)
+            assertAlways(m.containsValue(key) === false)
+            assertAlways(m.getKeys().count === 1)
+            assertAlways(m.getKeys()[0] === key)
+            assertAlways(m.isEmpty() === false)
+
+            var currentValues = m.getValues();
+            assertAlways(currentValues.count === i+1)
+            var orgValues = values.clone();
+            for (var j = 0; j <= i; ++j) {
+                assertAlways(orgValues.remove(currentValues[j]) === 1)
+            }
+            assertAlways(orgValues.count === (values.count - i - 1))
+
+            for (var j = 0; j <= i; ++j) {
+                assertAlways(m.get(key)[j] === values[j])
+                assertAlways(m.contains(key, values[j]) === true)
+                assertAlways(m.containsValue(values[j]) === true)
+            }
+
+            for (var j = i+1; j < values.count; ++j) {
+                assertAlways(m.contains(key, values[j]) === false)
+                assertAlways(m.containsValue(values[j]) === false)
+            }
+
+            for (var j = 0; j < values.count; ++j) {
+                assertAlways(m.contains((string)values[j], key) === false)
+                assertAlways(m.contains((string)values[i], values[j]) === false)
+                assertAlways(m.contains((string)values[j], values[i]) === false)
+                assertAlways(m.containsKey((string)values[j]) === false)
+            }
+
+            FOR_EACH(pair, m) {
+                assertAlways(key === pair.key)
+                assertAlways(pair.values.count === i+1)
+            }
+        }
+        invalidate m;
+    };
+
+    checkWithSingleKey(new MultiMap(), "test", ["value", "testValue", "てすと"]);
+    checkWithSingleKey((new MultiMap()).clone(), "test", ["value", "testValue", "てすと"]);
+    checkWithSingleKey((new MultiMap()).clone().clone(), "test", ["value", "testValue", "てすと"]);
+    checkWithSingleKey(new MultiMap(), "test", ["0", "1", "2", "3"]);
+    checkWithSingleKey(new MultiMap(), "test", [0, 1, 2, 3]);
+    checkWithSingleKey(new MultiMap(),  "100", [0, 1, 2, 3]);
+    checkWithSingleKey(new MultiMap(),  "100", ["val", "val2", "val3", "val4"]);
+
+    invalidate map;
+}
+{
+    var map = new MultiMap();
+    assertAlways(map.toString() === "(MultiMap){}")
+    map.put("key", "value");
+    assertAlways(map.toString() === '(MultiMap){key:["value"]}')
+    map.put("key2", "value2");
+    assertAlways(map.toString() === &--'(MultiMap){key2:["value2"], key:["value"]}'--&)
+    map.put("key2", "value3");
+    assertAlways(map.toString() === &--'(MultiMap){key2:["value2", "value3"], key:["value"]}'--&)
+    map.clear();
+    assertAlways(map.toString() === "(MultiMap){}")
+}

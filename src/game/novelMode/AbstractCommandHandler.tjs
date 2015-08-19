@@ -4,6 +4,8 @@ FILE_INCLUDE_GUARD
 Class(AbstractCommandHandler)
 {
     AbstractFunc(onCommand)(command:Dictionary)
+    AbstractFunc(onCommandConvert)(command:Dictionary)
+    AbstractFunc(serializeCurrentState)()
 
 
 
