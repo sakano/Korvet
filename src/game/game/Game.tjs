@@ -45,6 +45,9 @@ Class(Game)
         this._window.visible = true;
 
         bindWindowEvent(ObservableWindowEventType_Close, this._dispose);
+
+        this._mode.loadScript("sc01.krs");
+        this._mode.resumeCommandLoopAsync();
     }
 
     Finalize() {

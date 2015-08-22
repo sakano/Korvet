@@ -19,6 +19,24 @@ ClassExtends(NovelMode, GameMode)
         }
     }
 
+    Func(loadScript)(path:string+, label:string+) {
+        checkArgs
+        if (path !== void) {
+            var error = this._parser.initStorage(path);
+            if (!success(error)) {
+                return error;
+            }
+        }
+
+        if (label !== void) {
+            var error = this._parser.goToLabel(label);
+            if (!success(error)) {
+                return error;
+            }
+        }
+        return SUCCESS;
+    }
+
     Func(resumeCommandLoopAsync)() {
         global.gAsyncCaller.callOnce(this._resumeCommandLoop);
     }
@@ -106,9 +124,6 @@ ClassExtends(NovelMode, GameMode)
         this._initCommandHandlers();
 
         global.gScriptLogger.setParser(this._parser);
-
-        this._parser.initStorage("sc01.krs");
-        this.resumeCommandLoopAsync();
     }
 
     Finalize() {

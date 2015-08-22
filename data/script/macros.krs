@@ -27,3 +27,5 @@
 @amacro _name=後 size=後
 @amacro _name=前 size=前
 @amacro _name=最前 size=最前
+
+@next file=sc01.krs label=start

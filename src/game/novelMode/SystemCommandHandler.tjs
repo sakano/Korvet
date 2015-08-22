@@ -26,6 +26,7 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
         update      : _updateCommandImpl,
         waittrans   : _waitTransCommandImpl,
         waitaction  : _waitActionCommandImpl,
+        next        : _nextCommandImpl,
     ];
 
     var _transInfo;
@@ -107,6 +108,17 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
                     .call(this._mode.resumeCommandLoopAsync)
             ]
         ];
+    }
+
+    Func(_nextCommandImpl)(command:Dictionary) {
+        checkArgs
+        var file = command.attributeValues.file;
+        var label = command.attributeValues.label;
+        var error = this._mode.loadScript(file, label);
+        if (!success(error)) {
+            global.gScriptLogger.onScriptError(error.message);
+            return %[ interrupt:true ];
+        }
     }
 
     OverrideFunc(onCommandConvert)(command:Dictionary) {
