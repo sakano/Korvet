@@ -39,13 +39,13 @@ Class(Config)
         setValue(valueType, value, ConfigMode_Default);
     }
 
-    Func(setValue)(valueType:string, value:any+, mode:string+ = this._currentMode) {
+    Func(setValue)(valueType:string, value:any+, mode:string = this._currentMode) {
         checkArgs
         this._config[mode][valueType] = value;
         this._notifyUpdate(valueType, value, mode);
     }
 
-    Func(getValue)(valueType:string, mode:string+ = this._currentMode) {
+    Func(getValue)(valueType:string, mode:string = this._currentMode) {
         checkArgs
         var config = this._config[mode];
         while (typeof config[valueType] === "undefined") {

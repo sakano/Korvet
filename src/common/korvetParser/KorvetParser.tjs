@@ -26,7 +26,7 @@ Class(KorvetParser)
             var line = this._trimIndentation(this._lines[i]);
             if (line[0] !== "*") continue;
             var name = line.substr(1);
-            this._labels[name] = this._currentLineNumber;
+            this._labels[name] = i;
         }
 
         // moduleに通知

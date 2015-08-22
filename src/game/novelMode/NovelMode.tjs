@@ -64,14 +64,9 @@ ClassExtends(NovelMode, GameMode)
         --this._actionCount;
         assert(this._actionCount >= 0)
         if (this._actionCount <= 0) {
-            onAllActionEnd();
+            this._actionCount = 0;
+            this._trigger("allActionCompleted");
         }
-    }
-
-    Func(onAllActionEnd)() {
-        assert(this._actionCount == 0)
-        this._actionCount = 0;
-        this._trigger("allActionCompleted");
     }
 
 
