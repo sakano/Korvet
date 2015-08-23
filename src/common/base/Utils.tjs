@@ -8,21 +8,6 @@ assert(typeof global.getKeys === "undefined")
 global.getKeys = Scripts.getObjectKeys;
 
 /**
- * Replace old strings between braces to new strings.
- * @param string message The string contains strings between braces to be replaced.
- * @param strign lists* The old strings and new strings in turn.
- * @return string The message expanded.
- */
-Func(expandMessage)(message:string, lists*) {
-    checkArgs
-    assert(lists.count % 2 === 0)
-    for (var i = lists.count-2; i >= 0; i -= 2) {
-        message = message.replace(@"/\\{&lists[i];\\}/g"!, lists[i+1]);
-    }
-    return message;
-}
-
-/**
  * Create string with Regexp.
  * @param object reg The RegExp object.
  * @param string targetString The string to match a regular expression.

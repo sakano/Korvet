@@ -1,4 +1,6 @@
 m4_dnl
+m4_define(&--MESSAGE_PLUGIN_LINK_FAILED--&, &--"{NAME}の読み込みに失敗しました。\n{MES}"--&)m4_dnl
+m4_dnl
 m4_define(&--ERROR_READ_INI_FILE--&, &--"iniファイルの読み込みに失敗しました\nパス:{PATH}\n行:{LINE}\n行番号:{LINENUM}"--&)m4_dnl
 m4_define(&--ERROR_READ_INI_FILE_SECTION--&, &--"sectionを読み込めません"--&)m4_dnl
 m4_define(&--ERROR_READ_INI_FILE_SECTION_UNSPECIFIED--&, &--"sectionが指定されていません"--&)m4_dnl
@@ -24,6 +26,7 @@ m4_define(&--ERROR_KORVET_PARSER_COMMAND_SYNTAX--&, &--"コマンドの構文が
 m4_define(&--ERROR_KORVET_PARSER_COMMAND_END_NOT_FOUND--&, &--"'['に対応する']'が見つかりません"--&)m4_dnl
 m4_define(&--ERROR_KORVET_PARSER_LABEL_NOT_FOUND--&, &--"指定されたラベルが見つかりません({LABEL})"--&)m4_dnl
 m4_dnl
+m4_define(&--ASSERT_SAME_PLUGIN_LINKED--&, &--"同じプラグインが複数回リンクされました({NAME})"--&)m4_dnl
 m4_define(&--ASSERT_INSTANTIATE_ABSTRACT_CLASS--&, &--"抽象クラスはインスタンス化できません"--&)m4_dnl
 m4_define(&--ASSERT_NOT_FOUND_METHOD_TO_OVERRIDE_CAPTION--&, &--"オーバーライド失敗"--&)m4_dnl
 m4_define(&--ASSERT_NOT_FOUND_METHOD_TO_OVERRIDE--&, &--"指定された関数が親クラスに見つからないためオーバーライドできません"--&)m4_dnl

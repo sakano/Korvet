@@ -1,15 +1,6 @@
 ﻿// Copyright (C) 2015 Biscrat
 FILE_INCLUDE_GUARD
 
-if (typeof global.loadPlugin === "undefined") {
-    global.loadPlugin = LMD(storage:string) {
-        checkArgs
-        assert(storage.length > 0)
-        Debug.message("Loading plugin:" + storage);
-        Plugins.link(...);
-    };
-}
-
 if (typeof global.execStorage === "undefined") {
     global.execStorage = function(storage:string) {
         checkArgs
@@ -19,20 +10,56 @@ if (typeof global.execStorage === "undefined") {
     };
 }
 
+// syntax
+execStorage("Syntax.tjs");
+
+/**
+ * Replace old strings between braces to new strings.
+ * @param string message The string contains strings between braces to be replaced.
+ * @param strign lists* The old strings and new strings in turn.
+ * @return string The message expanded.
+ */
+Func(expandMessage)(message:string, lists*) {
+    checkArgs
+    assert(lists.count % 2 === 0)
+    for (var i = lists.count-2; i >= 0; i -= 2) {
+        message = message.replace(@"/\\{&lists[i];\\}/g"!, lists[i+1]);
+    }
+    return message;
+}
+
+// Plugins.linkを書き換え
+m4_ifelse(DEBUG,1,
+    Plugins.link = function(name) {
+        // デバッグ時は同じdllをリンクしようとしたら例外発生
+        if (global.Plugins.getList().find(name) >= 0) {
+            throw new global.Exception(expandMessage(ASSERT_SAME_PLUGIN_LINKED, "NAME", name));
+        }
+        org(...);
+    } incontextof %[ org:Plugins.link ];
+    ,
+    Plugins.link = function(name) {
+        // リリース時はリンクに失敗したらメッセージを表示
+        try { org(...); }
+        catch(e) {
+            global.System.inform(expandMessage(MESSAGE_PLUGIN_LINK_FAILED, "NAME", name, "MES", e.message));
+            global.System.terminate();
+        }
+    } incontextof %[ org:Plugins.link ];
+)
+
 // link plugins
-loadPlugin("scriptsEx.dll");
-loadPlugin("layerExDraw.dll");
-loadPlugin("fstat.dll");
-loadPlugin("wuvorbis.dll");
-loadPlugin("menu.dll");
-loadPlugin("windowEx.dll");
+Plugins.link("scriptsEx.dll");
+Plugins.link("layerExDraw.dll");
+Plugins.link("fstat.dll");
+Plugins.link("wuvorbis.dll");
+Plugins.link("menu.dll");
+Plugins.link("windowEx.dll");
 
 // base
-execStorage("Syntax.tjs");
 execStorage("Utils.tjs");
 execStorage("Object.tjs");
 execStorage("Debug.tjs");
-
 
 // error
 execStorage("Error.tjs");

@@ -16,16 +16,6 @@ Font.rasterizer = frFreeType;
 System.graphicCacheLimit = gcsAuto;
 System.drawThreadNum = dtnAuto;
 
-if (typeof global.loadPlugin === "undefined") {
-    global.loadPlugin = LMD(storage:string) {
-        checkArgs
-        assert(storage.length > 0)
-        Debug.message("Loading plugin:" + storage);
-        Plugins.link(...);
-    };
-}
-
-
 Scripts.execStorage("common.tjs");
 
 execStorage("ScriptLogger.tjs");
