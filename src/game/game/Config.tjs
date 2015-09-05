@@ -31,12 +31,12 @@ Class(Config)
         }
     }
 
-    Func(newValue)(valueType:string, value:any+, setCallback:Function) {
+    Func(newValue)(valueType:string, defaultValue:any+, setterCallback:Function) {
         checkArgs
-        typeVoid(this._setCallbacks[valueType])
+        typeVoid(this._setterCallbacks[valueType])
         typeVoid(this._config[ConfigMode_Default][valueType])
-        this._setCallbacks[valueType] = setCallback;
-        setValue(valueType, value, ConfigMode_Default);
+        this._setterCallbacks[valueType] = setterCallback;
+        setValue(valueType, defaultValue, ConfigMode_Default);
     }
 
     Func(setValue)(valueType:string, value:any+, mode:string = this._currentMode) {
@@ -68,7 +68,7 @@ Class(Config)
         ]
     ];
 
-    var _setCallbacks = %[];
+    var _setterCallbacks = %[];
 
     Constructor() {
         global.includeObservable(this);
@@ -78,11 +78,11 @@ Class(Config)
         global.finalizeObservable(this);
         this._config.dispose();
         invalidate this._config;
-        invalidate this._setCallbacks;
+        invalidate this._setterCallbacks;
     }
 
     Func(_notifyUpdate)(valueType:string, value:any+, mode:string) {
-        this._setCallbacks[valueType](value, valueType);
+        this._setterCallbacks[valueType](value, valueType);
         if (mode === this._currentMode) {
             this._triggerEvent(ConfigEventType_ValueUpdate, valueType, value);
         }
