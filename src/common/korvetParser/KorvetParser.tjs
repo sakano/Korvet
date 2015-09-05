@@ -156,6 +156,11 @@ Class(KorvetParser)
 
     Func(goToLabel)(label:string) {
         checkArgs
+        if (this._currentStorage === "") {
+            return new global.KorvetParserError(this._currentStorage, this._currentLineNumber,
+                this._currentLogicalLine, this._currentLogicalLineIndex,
+                expandMessage(ERROR_KORVET_PARSER_FILE_NOT_LOADED));
+        }
         var lineNumber = this._labels[label];
         if (lineNumber === void) {
             return new global.KorvetParserError(this._currentStorage, this._currentLineNumber,
