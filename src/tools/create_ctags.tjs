@@ -20,6 +20,8 @@ System.commandExecute("ctags.exe",
     " --regex-tjs=\"/^[ \\t]*function[ \\t]+([a-zA-Z0-9_]+)/\\1/f,function/\"" +
     " --regex-tjs=\"/^[ \\t]*property[ \\t]+([a-zA-Z0-9_]+)/\\1/p,property/\"" +
     " --regex-tjs=\"/^[ \\t]*var[ \\t]+([a-zA-Z0-9_]+)/\\1/v,value/\"" +
+    " --regex-tjs=\"/^[ \\t]*m4_define\\((&\\-\\-)?([a-zA-Z0-9_]+)/\\2/d,define/\"" +
+    " --regex-tjs=\"/^[ \\t]*m4_pushdef\\((&\\-\\-)?([a-zA-Z0-9_]+)/\\2/d,define/\"" +
     " --regex-tjs=\"/([a-zA-Z0-9_]+)[ \\t]*=[ \\t]*function/\\1/f,function/\"" +
     @"  -n -f \"${destPath}\" -R \"${srcPath}*\""
 );
