@@ -101,7 +101,8 @@ ClassExtends(NovelMode, GameMode)
     var _backLayer;
     var _actionCount = 0;
 
-    Constructor(game, currentTick) {
+    Constructor(game:Game, currentTick:int) {
+        checkArgs
         super.GameMode(game);
 
         this.bindMapWindowEvent(%[

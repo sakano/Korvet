@@ -5,7 +5,8 @@ Class(GameMode)
 {
     var _game;
 
-    Constructor(game) {
+    Constructor(game:Game) {
+        checkArgs
         _game = game;
     }
 
