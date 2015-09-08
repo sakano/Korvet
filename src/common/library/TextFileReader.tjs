@@ -1,0 +1,59 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+Class(TextFileReader)
+{
+    var _path;
+    var _utf8;
+
+    Constructor(path:string, utf8:bool = false) {
+        checkArgs
+        assert(path.length > 0)
+        this._path = path;
+        this._utf8 = utf8;
+    }
+
+    Func(getLines)() {
+        var lines = [];
+        var parser = new global.LineParser();
+        parser.initStorage(this._path, this._utf8);
+        while (true) {
+            var line = parser.getNextLine();
+            if (line === void) {
+                break;
+            }
+            lines.add(line);
+        }
+        return lines;
+    }
+
+    Func(getEnumerator)() {
+        return new global.TextFileReaderEnumerator(this._path, this._utf8);
+    }
+}
+
+ClassExtends(TextFileReaderEnumerator, Enumerator)
+{
+    property current {
+        getter {
+            return this._currentLine;
+        }
+    }
+
+    OverrideFunc(moveNext) {
+        this._currentLine = this._parser.getNextLine();
+        return this._currentLine !== void;
+    }
+
+    var _parser;
+    var _currentLine;
+
+    Constructor(path:string, utf8:bool = false) {
+        checkArgs
+        assert(path.length > 0)
+        this._parser = new global.LineParser();
+        this._parser.initStorage(path, utf8);
+    }
+}
+
+Enumerable.addEnumerableMethod(global.TextFileReader);

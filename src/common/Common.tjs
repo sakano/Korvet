@@ -98,6 +98,7 @@ execStorage("SelectManyEnumerable.tjs");
 execStorage("Event.tjs");
 execStorage("Promise.tjs");
 execStorage("Deferred.tjs");
+execStorage("TextFileReader.tjs");
 execStorage("AsyncInvalidater.tjs");
 execStorage("ISerializable.tjs");
 
