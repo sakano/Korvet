@@ -37,6 +37,11 @@ class        DebugConsoleCompatDialog extends DebugPadCompatDialog {
 		setupEvalComboBox();
 		var r = super.onInit(...);
 		_focusEval = true;
+
+		if (Storages.isExistentStorage(_executedHistoryFile)) {
+			_executedHistory = Scripts.evalStorage(_executedHistoryFile);
+			setComboBoxTexts(_evalID, _executedHistory);
+		}
 		return r;
 	}
 
@@ -167,6 +172,8 @@ class        DebugConsoleCompatDialog extends DebugPadCompatDialog {
 	}
 
 	var _historyMaxCount = 100; // [XXX]履歴上限
+	var _executedHistory = [];
+	var _executedHistoryFile = System.dataPath + "debug_console.bin";
 
 	function _updateStatusText() {}
 	function onExecute {
@@ -197,7 +204,12 @@ class        DebugConsoleCompatDialog extends DebugPadCompatDialog {
 			var idx = addComboBoxText(id, eval);
 			sendItemMessage(id, CB_SETCURSEL, idx, 0);
 			setItemText(id, "");
+
+			_executedHistory.push(eval);
+			while (_executedHistory.count >= _historyMaxCount) {
+				_executedHistory.unshift();
+			}
+			_executedHistory.saveStruct(_executedHistoryFile, "b");
 		}
 	}
-
 }
