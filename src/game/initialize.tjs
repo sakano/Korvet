@@ -33,6 +33,7 @@ execStorage("MessageCommandHandler.tjs");
 execStorage("SystemCommandHandler.tjs");
 
 execStorage("NovelMode.tjs");
+execStorage("NovelModeCompiler.tjs");
 
 // load k2compat
 m4_ifelse(DEBUG,1,&--{

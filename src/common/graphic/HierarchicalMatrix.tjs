@@ -55,7 +55,7 @@ Class(HierarchicalMatrix)
         this._updateMatrix = true;
     }
 
-    Func(reset) {
+    Func(resetMatrix) {
         this.x = 0;
         this.y = 0;
         this.originX = 0;

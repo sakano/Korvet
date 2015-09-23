@@ -118,10 +118,6 @@ execStorage("SquareWaveActionHandler.tjs");
 execStorage("TriangleActionHandler.tjs");
 
 // KorvetParser
-execStorage("MessageCommandConverter.tjs");
-execStorage("SpriteCommandConverter.tjs");
-execStorage("StageCommandConverter.tjs");
-execStorage("KorvetConverter.tjs");
 execStorage("KorvetParserModule.tjs");
 execStorage("PageBeginEndParserModule.tjs");
 execStorage("MacroParserModule.tjs");

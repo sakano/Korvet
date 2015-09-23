@@ -213,9 +213,9 @@ Scripts.execStorage("convert_setting.rtjs");
 
 Scripts.eval(convertMethod + "()");
 
-// 実際にファイルが1つでも処理された場合、終了コードは1
+// 実際にファイルが1つでも処理された場合、終了コードは-1
 var exitCode = 0;
 if (preprocessExecuted || compileExecuted) {
-    exitCode = 1;
+    exitCode = -1;
 }
-System.terminate(exitCode);
+System.exit(exitCode);

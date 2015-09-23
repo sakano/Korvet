@@ -4,12 +4,15 @@ FILE_INCLUDE_GUARD
 Class(AbstractCommandHandler)
 {
     AbstractFunc(onCommand)(command:Dictionary)
-    AbstractFunc(onCommandConvert)(command:Dictionary)
-    AbstractFunc(serializeCurrentState)()
+    AbstractFunc(reset)()
+    AbstractFunc(serialize)()
+    AbstractFunc(deserialize)(dic:Dictionary)
 
 
 
     var _mode;
+
+    property _noDraw { getter { return this._mode.noDraw; } }
 
     Constructor(mode:NovelMode) {
         checkArgs

@@ -35,14 +35,14 @@ FILE_INCLUDE_GUARD
         assertAlways(enumerable.count() === results.count)
     }
 
-    
+
     {   // ArrayEnumerator
         function testArrayEnumerator(target:Array, testCount:int = 3) {
             var clone = target.clone();
             for (var testIndex = 0; testIndex < testCount; ++testIndex) {
                 var enumerator = target.clone().getEnumerator();
                 var count = 0;
-                
+
                 while (enumerator.moveNext()) {
                     var value = enumerator.current;
                     assertAlways(value === clone[count])
@@ -91,7 +91,7 @@ FILE_INCLUDE_GUARD
         checkEnumerableResult(Enumerable.range(100,1), 100);
         checkEnumerableResult(Enumerable.range(-30,5), -30, -29, -28, -27, -26);
         checkEnumerableResult(Enumerable.range(30,2), 30, 31);
-        
+
         var query = Enumerable.range(0,4);
         assertAlways(&--query.toArray().equals([0,1,2,3])--&)
         assertAlways(&--query.toArray().equals([0,1,2,3])--&)
@@ -132,7 +132,7 @@ FILE_INCLUDE_GUARD
         checkEnumerableResult([1,2,3].take(1), 1);
         checkEnumerableResult([1,2,3].take(10), 1,2,3);
         checkEnumerableResult([void,null,"str"].take(10), void,null,"str");
-        
+
         var query = [1,void,3,null,5,6].take(3);
         assertAlways(&--query.toArray().equals([1,void,3])--&)
         assertAlways(&--query.toArray().equals([1,void,3])--&)

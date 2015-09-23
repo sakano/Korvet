@@ -13,6 +13,36 @@ ClassExtends(StageCommandHandler, SpriteCommandHandler)
         }
     }
 
+    OverrideFunc(reset)() {
+        super.reset();
+        this._place = "";
+        this._time = "";
+        this._size = "";
+        this._fileChanged = false;
+    }
+
+    OverrideFunc(serialize)() {
+        var dic = super.serialize();
+        with (dic) {
+            .place = this._place;
+            .time = this._time;
+            .size = this._size;
+        }
+        return dic;
+    }
+
+    OverrideFunc(deserialize)(dic:Dictionary) {
+        checkArgs
+        super.deserialize(...);
+        with (dic) {
+            this._place = .place;
+            this._time = .time;
+            this._size = .size;
+            this._fileChanged = true;
+        }
+        this._fileChanged = true;
+    }
+
 
 
     var _place = "";

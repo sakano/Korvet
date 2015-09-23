@@ -73,7 +73,7 @@ FILE_INCLUDE_GUARD
         assertAlways(dic.key2 === 12)
         assertAlways(dic.key3 === 3)
         assertAlways(dic.key4 === 4)
-        
+
         var dic2 = %[ key:222 ];
         dic.assignStruct(%[ key : dic2 ]);
         assertAlways(dic.getKeys().count === 1)

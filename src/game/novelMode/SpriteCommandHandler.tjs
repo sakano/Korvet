@@ -6,7 +6,6 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
     m4_define(&--SPRITE_PROPERTY--&,
         property $1 {
             setter(value) {
-                typeNumber(value)
                 if (this._inTransition) {
                     this._spriteBack.$1 = value;
                 } else {
@@ -28,16 +27,14 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
     SPRITE_PROPERTY(angle)
     SPRITE_PROPERTY(offsetX)
     SPRITE_PROPERTY(offsetY)
-    property alignment {
+    SPRITE_PROPERTY(alignment)
+    property visible {
         setter(value) {
-            if (this._inTransition) {
-                this._spriteBack.alignment = value;
-            } else {
-                this._spriteFore.alignment = value;
-            }
+            typeBool(value)
+            this._visible = value;
         }
         getter {
-            return this._inTransition ? this._spriteBack.alignment : this._spriteFore.alignment;
+            return this._visible;
         }
     }
 
@@ -119,6 +116,53 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
         }
 
         return result;
+    }
+
+    OverrideFunc(reset)() {
+        this._spriteFore.clear();
+        this._spriteBack.clear();
+        this._visible = false;
+    }
+
+    OverrideFunc(serialize)() {
+        var dic = %[];
+        with (dic) {
+            .x = x;
+            .y = y;
+            .originX = originX;
+            .originY = originY;
+            .scaleX = scaleX;
+            .scaleY = scaleY;
+            .shearX = shearX;
+            .shearY = shearY;
+            .angle = angle;
+            .offsetX = offsetX;
+            .offsetY = offsetY;
+            .alignment = alignment;
+            .visible = visible;
+        }
+        return dic;
+    }
+
+    OverrideFunc(deserialize)(dic:Dictionary) {
+        checkArgs
+        assert(!this._inTransition)
+        reset();
+        with (dic) {
+            this.x = .x;
+            this.y = .y;
+            this.originX = .originX;
+            this.originY = .originY;
+            this.scaleX = .scaleX;
+            this.scaleY = .scaleY;
+            this.shearX = .shearX;
+            this.shearY = .shearY;
+            this.angle = .angle;
+            this.offsetX = .offsetX;
+            this.offsetY = .offsetY;
+            this.alignment = .alignment;
+            this.visible = .visible;
+        }
     }
 
 
@@ -326,12 +370,5 @@ ClassExtends(SpriteCommandHandler, AbstractDrawableCommandHandler)
                 option: option
             ]
         ];
-    }
-
-    OverrideFunc(onCommandConvert)(command:Dictionary) {
-    }
-
-    OverrideFunc(serializeCurrentState)() {
-        return %[];
     }
 }

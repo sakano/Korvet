@@ -43,7 +43,7 @@ FILE_INCLUDE_GUARD
         assertAlways(clone(<% 11 22 33 %>) === <% 11 22 33 %>)
         assertAlways(clone(void) === void)
         assertAlways(clone(null) === null)
-        
+
         var obj = new TestClass(100);
         var clonedObj = clone(obj);
         assertAlways(obj.cloneCalled === 1)
@@ -117,7 +117,7 @@ FILE_INCLUDE_GUARD
         obj2.value = 123;
         assertAlways(equals(obj, obj2) === true)
         assertAlways(obj.equalsCalled === 4)
-        
+
         obj.value = new TestClass();
         obj2.value = new TestClass();
         assertAlways(equals(obj, obj2) === true)

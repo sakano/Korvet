@@ -3,8 +3,21 @@ FILE_INCLUDE_GUARD
 
 Class(KorvetParser)
 {
-    property currentStorage { getter { return this._currentStorage; } }
-    property currentLineNumber { getter { return this._currentLineNumber; } }
+    property currentStorage {
+        getter {
+            typeString(this._currentStorage)
+            assert(this._currentStorage.length > 0)
+            return this._currentStorage;
+        }
+    }
+
+    property currentLineNumber {
+        getter {
+            typeInt(this._currentLineNumber)
+            assert(this._currentLineNumber >= 0)
+            return this._currentLineNumber;
+        }
+    }
 
     Func(initStorage)(path:string, utf8:bool = false) {
         checkArgs
@@ -44,7 +57,7 @@ Class(KorvetParser)
 
     Func(setModule)(module:KorvetParserModule, priority:int) {
         checkArgs
-        // priorityに従ってmodule追加位置を左岸す
+        // priorityに従ってmodule追加位置を探す
         var indexToInsert = this._modulesPriority.count - 1;
         for (; indexToInsert > 0; --indexToInsert) {
             if (this._modulesPriority[indexToInsert] > priority) break;
@@ -193,7 +206,7 @@ Class(KorvetParser)
         }
     }
 
-    Func(clone)() {}
+    Func(clone)() { notImplemented(); }
 
     Constructor() {
         this.clear();

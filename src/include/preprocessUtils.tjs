@@ -1,10 +1,10 @@
 m4_define(&--assert--&, &--m4_ifelse(DEBUG, 1,m4_dnl
-    &--if (!($1)) { __assertImpl("__escape_string($1)", "__CLASS_NAME", "__FUNC_NAME", "m4___file__", m4___line__, m4_ifelse($2,,"",$2)); }--&)--&)m4_dnl
+    &--if (!($1)) { __assertImpl("__escape_string($1)", "__CLASS_NAME", "__FUNC_NAME", m4_patsubst("m4___file__",\\,\\\\), m4___line__, m4_ifelse($2,,"",$2)); }--&)--&)m4_dnl
 m4_dnl
 m4_dnl
 m4_dnl
 m4_define(&--assertAlways--&,m4_dnl
-    &--if (!($1)) { __assertImpl("__escape_string($1)", "__CLASS_NAME", "__FUNC_NAME", "m4___file__", m4___line__, m4_ifelse($2,,"",$2)); }--&)m4_dnl
+    &--if (!($1)) { __assertImpl("__escape_string($1)", "__CLASS_NAME", "__FUNC_NAME", m4_patsubst("m4___file__",\\,\\\\), m4___line__, m4_ifelse($2,,"",$2)); }--&)m4_dnl
 m4_dnl
 m4_dnl
 m4_dnl
@@ -18,19 +18,19 @@ m4_dnl
 m4_dnl
 m4_dnl
 m4_define(&--notImplemented--&, &--m4_ifelse(DEBUG, 1,m4_dnl
-    &--{__notImplementedImpl($1, "__CLASS_NAME", "__FUNC_NAME", "m4___file__", m4___line__);}--&)--&)m4_dnl
+    &--{__notImplementedImpl($1, "__CLASS_NAME", "__FUNC_NAME", m4_patsubst("m4___file__",\\,\\\\), m4___line__);}--&)--&)m4_dnl
 m4_dnl
 m4_define(&--doNothing--&)m4_dnl
 m4_dnl
 m4_dnl
 m4_dnl
 m4_define(&--FILE_INCLUDE_GUARD--&, m4_ifelse(DEBUG, 1,&--&--m4_dnl
-    if (typeof global["__file_include_guard_flags_" + Storages.extractStorageName("m4___file__")] !== "undefined") {m4_dnl
+    if (typeof global["__file_include_guard_flags_" + Storages.extractStorageName(m4_patsubst("m4___file__",\\,\\\\))] !== "undefined") {m4_dnl
         throw new global.Exception(m4_dnl
             @"The file has been executed twice.\n"m4_dnl
-            "  File: ${Storages.extractStorageName('m4___file__')}(m4___line__)");m4_dnl
+            "  File: ${Storages.extractStorageName(m4_patsubst('m4___file__',\\,\\\\))}(m4___line__)");m4_dnl
     }m4_dnl
-    global["__file_include_guard_flags_" + Storages.extractStorageName("m4___file__")] = true;m4_dnl
+    global["__file_include_guard_flags_" + Storages.extractStorageName(m4_patsubst("m4___file__",\\,\\\\))] = true;m4_dnl
 --&--&))m4_dnl
 m4_dnl
 m4_dnl

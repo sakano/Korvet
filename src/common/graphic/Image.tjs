@@ -34,21 +34,27 @@ ClassExtends(Image, HierarchicalMatrix)
     Func(load)(filename:string) {
         checkArgs
         this._filename = filename;
+
         if (this._bitmap === null) {
             this._bitmap = new Bitmap(filename);
         } else {
             this._bitmap.load(filename);
         }
+
         this._redraw = true;
-        this.reset();
+
+        this.resetMatrix();
     }
 
     Func(clearBitmap)() {
-        if (this._bitmap === null) return;
-        invalidate this._bitmap;
-        this._bitmap = null;
+        this.resetMatrix();
+
         this._filename = "";
-        this.reset();
+        if (this._bitmap !== null) {
+            invalidate this._bitmap;
+            this._bitmap = null;
+        }
+        this._redraw = false;
     }
 
     Func(draw)(dest, force:bool = false) {

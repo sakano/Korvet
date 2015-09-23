@@ -1,6 +1,14 @@
 m4_dnl
 m4_define(&--MESSAGE_PLUGIN_LINK_FAILED--&, &--"{NAME}の読み込みに失敗しました。\n{MES}"--&)m4_dnl
 m4_dnl
+m4_define(&--INFO_NOVEL_MODE_LOAD_SCRIPT--&, &--"スクリプトを読み込みます({PATH})"--&)m4_dnl
+m4_define(&--INFO_NOVEL_MODE_LABEL_JUMP--&, &--"ラベルジャンプします({LABEL})"--&)m4_dnl
+m4_define(&--INFO_NOVEL_MODE_PAGE_SKIP--&, &--"ページスキップします({COUNT})"--&)m4_dnl
+m4_define(&--INFO_NOVEL_MODE_BEGIN_COMPILE--&, &--"スクリプトを変換します({SRC} -> {DEST})"--&)m4_dnl
+m4_dnl
+m4_define(&--ERROR_NOVEL_MODE_END_OF_SCRIPT_WHILE_PAGE_SKIP--&, &--"ページスキップ中にスクリプトが終了しました({PATH}({LABEL}):{COUNT})"--&)m4_dnl
+m4_define(&--ERROR_NOVEL_MODE_INVALID_PAGE--&, &--"指定されたページが存在しません({PATH}:{COUNT})"--&)m4_dnl
+m4_dnl
 m4_define(&--ERROR_READ_INI_FILE--&, &--"iniファイルの読み込みに失敗しました\nパス:{PATH}\n行:{LINE}\n行番号:{LINENUM}"--&)m4_dnl
 m4_define(&--ERROR_READ_INI_FILE_SECTION--&, &--"sectionを読み込めません"--&)m4_dnl
 m4_define(&--ERROR_READ_INI_FILE_SECTION_UNSPECIFIED--&, &--"sectionが指定されていません"--&)m4_dnl

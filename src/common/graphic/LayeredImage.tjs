@@ -50,7 +50,7 @@ ClassExtends(LayeredImage, HierarchicalMatrix)
         this._redraw = true;
         this._recompose = true;
 
-        this.reset();
+        this.resetMatrix();
     }
 
     Func(setDiff)(diffNames*) {
@@ -103,17 +103,22 @@ ClassExtends(LayeredImage, HierarchicalMatrix)
     }
 
     Func(clearBitmap)() {
+        this.resetMatrix();
+
         this._filename = "";
         this._layerNumbers = "";
+        this._diffNames.clear();
 
-        invalidate this._fileData;
-        this._fileData = void;
+        if (this._fileData !== void) {
+            invalidate this._fileData;
+            this._fileData = void;
+        }
 
         this._layerInfos.clear();
 
-        this._composedBitmap.setSize(32, 32);
-
-        this.reset();
+        this._composedBitmap.setSize(1, 1);
+        this._redraw = false;
+        this._recompose = false;
     }
 
     Func(draw)(dest, force:bool = false) {
@@ -142,8 +147,8 @@ ClassExtends(LayeredImage, HierarchicalMatrix)
     var _layerInfos = [];
     var _bitmap = new Bitmap();
     var _composedBitmap = new Bitmap();
-    var _redraw = true;
-    var _recompose = true;
+    var _redraw = false;
+    var _recompose = false;
 
     Constructor() {
         super.HierarchicalMatrix();
@@ -152,6 +157,7 @@ ClassExtends(LayeredImage, HierarchicalMatrix)
     Finalize() {
         this.clearBitmap();
         invalidate this._diffNames;
+        invalidate this._fileData if this._fileData !== void;
         invalidate this._layerInfos;
         invalidate this._bitmap;
         invalidate this._composedBitmap;
@@ -181,5 +187,6 @@ ClassExtends(LayeredImage, HierarchicalMatrix)
                 new Rect(layerInfo.textureX, layerInfo.textureY, layerInfo.textureX + layerInfo.width, layerInfo.textureY + layerInfo.height),
                 null, layerInfo.type, dfAlpha, layerInfo.opacity);
         }
+        srcBitmap.setSize(1, 1);
     }
 }

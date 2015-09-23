@@ -14,8 +14,15 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
 
     OverrideFunc(onCommand)(command:Dictionary) {
         var method = this._commandMethods[command.name];
-        if (method === void) return void;
+        if (method === void) return;
         return method(command);
+    }
+
+    OverrideFunc(reset)() {
+        assert(this._transInfo === void)
+        assert(!this._inTransition)
+        this._transInfo = void;
+        this._inTransition = false;
     }
 
 
@@ -57,16 +64,23 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
     }
 
     Func(_endPageCommandImpl)() {
+        doNothing();
     }
 
     Func(_waitTransCommandImpl)() {
         if (!this._inTransition) return;
+
+        if (this._noDraw) {
+            this._mode.skipTransition();
+            return;
+        }
+
         return %[
             interrupt : true,
             sequences : [
                 global.SequenceRunner.sequence()
                     .wait("transCompleted", "click")
-                    .call(this._trigger, "skipTrans")
+                    .call(this._mode.skipTransition)
                     .call(this._mode.resumeCommandLoopAsync)
             ]
         ];
@@ -85,7 +99,8 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
             global.SequenceRunner.sequence()
                 .beginSkip("skipTrans")
                     .transition(this._foreLayer, this._backLayer, info.type, info.option)
-                    .call(global.gAsyncCaller.call, this._onTransitionCompleted)
+                    //.call(global.gAsyncCaller.call, this._onTransitionCompleted)
+                    .call(this._onTransitionCompleted)
                 .endSkip()
         ]];
     }
@@ -99,12 +114,18 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
 
     Func(_waitActionCommandImpl)() {
         if (!this._mode.inAction) return;
+
+        if (this._noDraw) {
+            this._mode.skipAction();
+            return;
+        }
+
         return %[
             interrupt : true,
             sequences : [
                 global.SequenceRunner.sequence()
                     .wait("allActionCompleted", "click")
-                    .call(this._trigger, "skipAction")
+                    .call(this._mode.skipAction)
                     .call(this._mode.resumeCommandLoopAsync)
             ]
         ];
@@ -119,12 +140,5 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
             global.gScriptLogger.onScriptError(error.message);
             return %[ interrupt:true ];
         }
-    }
-
-    OverrideFunc(onCommandConvert)(command:Dictionary) {
-    }
-
-    OverrideFunc(serializeCurrentState)() {
-        return %[];
     }
 }

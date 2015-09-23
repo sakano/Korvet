@@ -91,6 +91,20 @@ Class(Sprite)
         this._image.draw(this._targetLayer, force);
     }
 
+    Func(clear)() {
+        this._offsetMatrix.resetMatrix();
+
+        this._offsetX = 0;
+        this._offsetY = 0;
+        this._recalcOffset = true;
+        this._alignment = SpriteAlignment_MiddleCenter;
+
+        this._targetLayer.fill(0);
+        this._targetLayer.visible = false;
+
+        this._image.clearBitmap();
+    }
+
 
 
     var _targetLayer;

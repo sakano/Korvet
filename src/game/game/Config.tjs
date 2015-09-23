@@ -3,11 +3,21 @@ FILE_INCLUDE_GUARD
 
 Class(Config)
 {
+    property currentMode {
+        getter {
+            return this._currentMode;
+        }
+        setter(value) {
+            if (this._currentMode === value) return;
+            changeMode(value);
+        }
+    }
     Func(createMode)(mode:string, parent:string = ConfigMode_Default) {
         checkArgs
         typeVoid(this._config[mode])
+        typeCheck(this._config[parent], "Dictionary")
         if (this._config[mode] !== void) return;
-        this._config[mode] = %[ __parent:parent ];
+        this._config[mode] = %[ __parent : this._config[parent] ];
     }
 
     Func(changeMode)(mode:string) {
@@ -21,6 +31,7 @@ Class(Config)
 
         // 全ての項目をチェックして値が変わるもののみ適用
         FOR_EACH(valueType, this._config[ConfigMode_Default].getKeys()) {
+            if (valueType === "__parent") { continue; }
             for (var configIndex = 0; configIndex < configTo.count; ++configIndex) {
                 if (typeof configTo[configIndex][valueType] === "undefined") { continue; }
                 var valueTo = configTo[configIndex][valueType];
@@ -82,8 +93,8 @@ Class(Config)
     }
 
     Func(_notifyUpdate)(valueType:string, value:any+, mode:string) {
-        this._setterCallbacks[valueType](value, valueType);
         if (mode === this._currentMode) {
+            this._setterCallbacks[valueType](value, valueType);
             this._triggerEvent(ConfigEventType_ValueUpdate, valueType, value);
         }
         this._triggerEvent(ConfigEventType_ValueUpdateAll, valueType, value, mode);
@@ -92,11 +103,8 @@ Class(Config)
     Func(_getConfigHierarchy)(mode:string) {
         checkArgs
         var configs = [];
-        var config = this._config[mode];
-        while (true) {
+        for (var config = this._config[mode]; config !== null; config = config.__parent) {
             configs.add(config);
-            if (config.__parent === null) break;
-            config = config.__parent;
         }
         assert(configs[configs.count - 1] === this._config[ConfigMode_Default])
         return configs;

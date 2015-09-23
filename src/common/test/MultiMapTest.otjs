@@ -135,7 +135,7 @@ FILE_INCLUDE_GUARD
     assertAlways(&--map.getKeys().equals(["key"])--&)
     assertAlways(&--map.removeKey("key") === 3--&)
     assertAlways(&--map.getKeys().isEmpty()--&)
-    
+
     invalidate map;
 }
 {   // MultiMap.getValues

@@ -23,8 +23,32 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
         this._textLayerFore <-> this._textLayerBack;
     }
 
-    OverrideFunc(draw)(force:bool = false) {}
-    OverrideFunc(drawInTransition)() {}
+    OverrideFunc(draw)(force:bool = false) { doNothing(); }
+    OverrideFunc(drawInTransition)() { doNothing();}
+
+    OverrideFunc(reset)() {
+        this._textLayerFore.fill(0);
+        this._textLayerBack.fill(0);
+
+        // this._baseLayerFore.fill(0);
+        // this._baseLayerBack.fill(0);
+
+        this._currentMessages.clear();
+    }
+
+    OverrideFunc(serialize)() {
+        var currentText;
+        FOR_EACH(message, this._currentMessages) {
+            if (message.type == "character") {
+                currentText += message.text;
+            }
+        }
+        return %[ text : currentText ];
+    }
+
+    OverrideFunc(deserialize)() {
+        reset();
+    }
 
 
 
@@ -81,7 +105,10 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
 
         this._textDrawer = this._createTextDrawer(System_DefaultFont, 26);
 
-        global.gConfig.newValue(ConfigValueType_TextWaitTime, this._textWaitTime, this._setTextWaitTime);
+        global.gConfig.newValue(ConfigValueType_TextWaitTime, this._textWaitTime, LMD(value:int) {
+            checkArgs
+            this._textWaitTime = (int)value;
+        } incontextof this);
     }
 
     Finalize() {
@@ -158,10 +185,12 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
 
     Func(_endPageCommandImpl)(command:Dictionary) {
         assert(this._currentMessages.count> 0)
-        return %[
-            interrupt : true,
-            sequences : [ this._createDrawMessageSequence() ]
-        ];
+        if (!this._noDraw) {
+            return %[
+                interrupt : true,
+                sequences : [ this._createDrawMessageSequence() ]
+            ];
+        }
     }
 
     Func(_createDrawMessageSequence)() {
@@ -247,20 +276,5 @@ ClassExtends(MessageCommandHandler, AbstractDrawableCommandHandler)
     Func(_doRepage)() {
         this._doReline();
         this._drawingLineNumber = 0;
-    }
-
-    Func(_setTextWaitTime)(value:int) {
-        checkArgs
-        this._textWaitTime = (int)value;
-    }
-
-    OverrideFunc(onCommandConvert)(command:Dictionary) {
-    }
-
-    Func(serializeCurrentMessage)() {
-        return [];
-    }
-    OverrideFunc(serializeCurrentState)() {
-        return %[];
     }
 }

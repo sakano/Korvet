@@ -37,7 +37,7 @@ Class(Game)
 
         this._window = new global.ResizableWindow(null, 1280, 720);
 
-        this._mode = new global.NovelMode(this, this._currentTick);
+        this._mode = new global.NovelModeCompiler(this, this._currentTick);
         this._mode.initialize();
 
         this._menu = new global.GameMenu(this._window);
@@ -45,9 +45,6 @@ Class(Game)
         this._window.visible = true;
 
         bindWindowEvent(ObservableWindowEventType_Close, this._dispose);
-
-        this._mode.loadScript("sc01.krs");
-        this._mode.resumeCommandLoopAsync();
     }
 
     Finalize() {

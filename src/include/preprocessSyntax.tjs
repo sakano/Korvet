@@ -70,13 +70,13 @@ m4_define(&--Func--&,&--m4_dnl
     m4_define(&--__FUNC_NAME--&,$1)m4_dnl
     m4_ifelse(RELEASE, 1,m4_dnl
         &--function $1 __FUNC_ARG_REMOVE_TYPES--&,m4_dnl
-        &--__FuncImpl("__PARENT_CLASS_NAME","__CLASS_NAME","$1","m4___file__",m4___line__);function $1 __FUNC_ARGS--&)--&)m4_dnl
+        &--__FuncImpl("__PARENT_CLASS_NAME","__CLASS_NAME","$1",m4_patsubst("m4___file__",\\,\\\\),m4___line__);function $1 __FUNC_ARGS--&)--&)m4_dnl
 m4_dnl
 m4_define(&--OverrideFunc--&,&--m4_dnl
     m4_define(&--__FUNC_NAME--&,$1)m4_dnl
     m4_ifelse(RELEASE, 1,m4_dnl
         &--function $1 __FUNC_ARG_REMOVE_TYPES--&,m4_dnl
-        &--__OverrideFuncImpl("__PARENT_CLASS_NAME","__CLASS_NAME","$1","m4___file__",m4___line__);function $1 __FUNC_ARGS--&)--&)m4_dnl
+        &--__OverrideFuncImpl("__PARENT_CLASS_NAME","__CLASS_NAME","$1",m4_patsubst("m4___file__",\\,\\\\),m4___line__);function $1 __FUNC_ARGS--&)--&)m4_dnl
 m4_dnl
 m4_define(&--LMD--&, &--function __FUNC_ARGS($@)--&)m4_dnl
 m4_dnl
@@ -89,7 +89,7 @@ m4_define(&--AbstractFunc--&,m4_dnl
     &--m4_define(&--__FUNC_NAME--&,&--$1--&)--&m4_dnl
     m4_ifelse(RELEASE, 1,m4_dnl
         &--&--__InternalAbstractFunc--&--&,m4_dnl
-        &--&--__FuncImpl("__PARENT_CLASS_NAME","__CLASS_NAME","$1","m4___file__",m4___line__);__InternalAbstractFunc--&--&))m4_dnl
+        &--&--__FuncImpl("__PARENT_CLASS_NAME","__CLASS_NAME","$1",m4_patsubst("m4___file__",\\,\\\\),m4___line__);__InternalAbstractFunc--&--&))m4_dnl
 m4_dnl
 m4_dnl
 m4_dnl

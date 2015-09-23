@@ -13,9 +13,11 @@ m4_dnl // ConfigMode
 m4_define(&--ConfigMode_Default--&, &--"default"--&)m4_dnl
 m4_define(&--ConfigMode_Auto--&, &--"auto"--&)m4_dnl
 m4_define(&--ConfigMode_Skip--&, &--"skip"--&)m4_dnl
+m4_define(&--ConfigMode_Compile--&, &--"compile"--&)m4_dnl
 m4_dnl
 m4_dnl // ConfigValueType
 m4_define(&--ConfigValueType_TextWaitTime--&, &--"textWaitTime"--&)m4_dnl
+m4_define(&--ConfigValueType_NoDraw--&, &--"noDraw"--&)m4_dnl
 m4_dnl
 m4_dnl // TransitionType
 m4_define(&--TransitionType_Crossfade--&, &--"crossfade"--&)m4_dnl

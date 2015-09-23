@@ -46,3 +46,8 @@ var gGame = new Game();
 //var gConverter = new KorvetConverter();
 //gConverter.setCommonFile("macros.krs");
 //gConverter.convert("sc01.krs", System.exePath + "sc01.bin");
+
+execStorage("init_config.tjs");
+
+gGame._mode.loadScript("sc01.krs");
+gGame._mode.resumeCommandLoopAsync();

@@ -18,6 +18,43 @@ ClassExtends(TachieCommandHandler, SpriteCommandHandler)
         super.beforeTransition();
     }
 
+    OverrideFunc(reset)() {
+        super.reset();
+
+        this._pose = "";
+        this._size = "";
+        this._diffs.clear();
+        this._diffCommandGroup = %[];
+        this._fileChanged = false;
+        this._diffChanged = false;
+
+        this.alignment = SpriteAlignment_BottomCenter;
+    }
+
+    OverrideFunc(serialize)() {
+        var dic = super.serialize();
+        with (dic) {
+            .charName = this._charName;
+            .pose = this._pose;
+            .size = this._size;
+            .diffs = this._diffs.clone();
+        }
+        return dic;
+    }
+
+    OverrideFunc(deserialize)(dic:Dictionary) {
+        checkArgs
+        super.deserialize(...);
+        with (dic) {
+            this._charName = .charName;
+            this._pose = .pose;
+            this._size = .size;
+            this._diffs = (Dictionary.clone incontextof .diffs)();
+            this._fileChanged = .pose != "" && .size != "";
+            this._diffChanged = this._fileChanged;
+        }
+    }
+
 
 
     var _charName = "";
@@ -41,8 +78,10 @@ ClassExtends(TachieCommandHandler, SpriteCommandHandler)
     Constructor(mode:NovelMode, parentLayerFore:Layer, parentLayerBack:Layer, charName:string) {
         checkArgs
         super.SpriteCommandHandler(...);
+
         this._showHideAutoTransition = this._tachieAutoTransition;
         this._charName = charName;
+        this.alignment = SpriteAlignment_BottomCenter;
     }
 
     Finalize() {
@@ -59,7 +98,7 @@ ClassExtends(TachieCommandHandler, SpriteCommandHandler)
 
     OverrideFunc(_createAttributeMethods)() {
         var methods = super._createAttributeMethods();
-        methods.name = this._changeFileCommandImpl incontextof %[ self:this, targetName:"_charName" ];
+        methods.name = LMD() { doNothing(); };
         methods.pose = this._changeFileCommandImpl incontextof %[ self:this, targetName:"_pose" ];
         methods.size = this._changeFileCommandImpl incontextof %[ self:this, targetName:"_size" ];
         return methods;
@@ -102,7 +141,9 @@ ClassExtends(TachieCommandHandler, SpriteCommandHandler)
         global.gScriptLogger.validateAttribute(null, attrName, attrValues, AttributeType_Verified, AttributeValueType_Null);
         var targetGroup = this._diffCommandGroup[attrName];
         typeString(targetGroup)
+
         if (this._diffs[targetGroup] === attrName) { return; }
+
         this._diffs[targetGroup] = attrName;
         this._diffChanged = true;
         return %[ trans : this._tachieAutoTransition ];

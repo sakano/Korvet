@@ -5,6 +5,7 @@ ClassExtends(NovelMode, GameMode)
 {
     property inTransition { getter { return this._systemCommandHandler._inTransition; } }
     property inAction { getter { return this._actionCount > 0; } }
+    property noDraw { getter { return this._noDraw; } }
 
     Func(onTick)() {
         this._runner.onTick(...);
@@ -19,22 +20,86 @@ ClassExtends(NovelMode, GameMode)
         }
     }
 
-    Func(loadScript)(path:string+, label:string+) {
+    Func(loadScript)(path:string+, label:string+, skipEndPageCount:int = 0) {
         checkArgs
+        assert(path === void || path.length > 0)
+        assert(label === void || label.length > 0)
+        assert(skipEndPageCount >= 0)
+        // ファイルが指定されていたら読み込む
         if (path !== void) {
+            gLog.info(expandMessage(INFO_NOVEL_MODE_LOAD_SCRIPT, "PATH", path));
             var error = this._parser.initStorage(path);
             if (!success(error)) {
                 return error;
             }
         }
-
+        // ラベルが指定されていたらジャンプ
         if (label !== void) {
+            gLog.info(expandMessage(INFO_NOVEL_MODE_LABEL_JUMP, "LABEL", label));
             var error = this._parser.goToLabel(label);
             if (!success(error)) {
                 return error;
             }
         }
+        // ページが指定されていたらスキップ
+        if (skipEndPageCount > 0) {
+            gLog.info(expandMessage(INFO_NOVEL_MODE_PAGE_SKIP, "COUNT", skipEndPageCount));
+            for (var pageCount = 0; pageCount < skipEndPageCount;) {
+                var command = %[];
+                var error = this._parser.getNextCommand(command);
+                if (!success(error)) {
+                    return error;
+                }
+                if (command.isEmpty()) {
+                    return new global.ParseError(this._parser.currentStorage, this._parser.currentLineNumber, "",
+                        expandMessage(ERROR_NOVEL_MODE_END_OF_SCRIPT_WHILE_PAGE_SKIP, "PATH", path, "LABEL", label, "COUNT", skipEndPageCount));
+                }
+                if (command.name == "__endpage") {
+                    ++pageCount;
+                }
+            }
+        }
+
+        this._reset();
+
         return SUCCESS;
+    }
+
+    Func(deserialize)(path:string, page:int = 0) {
+        checkArgs
+        assert(path.length > 0)
+        assert(page >= 0)
+
+        this._reset();
+
+        var compiledPath = Storages.chopStorageExt(path) + ".krb";
+        var data = Scripts.evalStorage(compiledPath);
+        var dic = data[page];
+
+        if (dic === void) {
+            return new global.Error(expandMessage(ERROR_NOVEL_MODE_INVALID_PAGE, "PATH", path, "COUNT", page));
+        }
+
+        var error = this.loadScript(path, void, dic.pageCount);
+        if (!success(error)) {
+            global.gLog.fatal(error.message);
+            return error;
+        }
+
+        this._stageCommandHandler.deserialize(dic.stage);
+        this._tachieCommandHandler.deserialize(dic.tachie);
+        this._messageCommandHandler.deserialize(dic.message);
+
+        this._systemCommandHandler.registerTransInfo(%[
+            priority : NovelModeTransPriority_Specified,
+            type : TransitionType_Crossfade,
+            option: %[
+                time : 1
+            ]
+        ]);
+        this._doUpdateCommand();
+        this.skipTransition();
+        this.resumeCommandLoopAsync();
     }
 
     Func(resumeCommandLoopAsync)() {
@@ -46,9 +111,9 @@ ClassExtends(NovelMode, GameMode)
         // クリックされたら遅延実行、アクション、トランジションの実行をスキップしてコマンド実行を再開
         global.gAsyncCaller.call(this._runner.run, global.SequenceRunner.sequence()
             .wait("click")
-            .call(this._trigger, "skipDelay")
-            .call(this._trigger, "skipAction")
-            .call(this._trigger, "skipTrans")
+            .call(this.skipDelay)
+            .call(this.skipAction)
+            .call(this.skipTransition)
             .call(this.resumeCommandLoopAsync));
     }
 
@@ -61,10 +126,14 @@ ClassExtends(NovelMode, GameMode)
     }
 
     Func(onTransitionBegin)() {
-        this._trigger("skipTrans");
+        skipTransition();
         for (var i = 0; i < this._drawables.count; ++i) {
             this._drawables[i].beforeTransition();
         }
+    }
+
+    Func(skipTransition)() {
+        this._trigger("skipTrans");
     }
 
     Func(onTransitionCompleted)() {
@@ -72,6 +141,10 @@ ClassExtends(NovelMode, GameMode)
         for (var i = 0; i < this._drawables.count; ++i) {
             this._drawables[i].afterTransition();
         }
+    }
+
+    Func(skipAction)() {
+        this._trigger("skipAction");
     }
 
     Func(onActionBegin)() {
@@ -87,6 +160,10 @@ ClassExtends(NovelMode, GameMode)
         }
     }
 
+    Func(skipDelay)() {
+        this._trigger("skipDelay");
+    }
+
 
 
     var _parser;
@@ -100,6 +177,8 @@ ClassExtends(NovelMode, GameMode)
     var _foreLayer;
     var _backLayer;
     var _actionCount = 0;
+
+    var _noDraw = false;
 
     Constructor(game:Game, currentTick:int) {
         checkArgs
@@ -125,6 +204,11 @@ ClassExtends(NovelMode, GameMode)
         this._initCommandHandlers();
 
         global.gScriptLogger.setParser(this._parser);
+
+        global.gConfig.newValue(ConfigValueType_NoDraw, this._noDraw, LMD(value:bool) {
+            checkArgs
+            this._noDraw = !!value;
+        } incontextof this);
     }
 
     Finalize() {
@@ -151,19 +235,27 @@ ClassExtends(NovelMode, GameMode)
         this._systemCommandHandler = new global.SystemCommandHandler(this);
         this._commandHandlers.add(this._systemCommandHandler);
 
-        var stageCommandHandler = new global.StageCommandHandler(this, this._foreLayer, this._backLayer);
-        this._commandHandlers.add(stageCommandHandler);
-        this._drawables.add(stageCommandHandler);
+        this._stageCommandHandler = new global.StageCommandHandler(this, this._foreLayer, this._backLayer);
+        this._commandHandlers.add(_stageCommandHandler);
+        this._drawables.add(_stageCommandHandler);
 
-        var tachieCommandHandler = new global.TachieCommandHandler(this, this._foreLayer, this._backLayer, "楓");
-        tachieCommandHandler.alignment = SpriteAlignment_BottomCenter;
-        this._commandHandlers.add(tachieCommandHandler);
-        this._drawables.add(tachieCommandHandler);
+        this._tachieCommandHandler = new global.TachieCommandHandler(this, this._foreLayer, this._backLayer, "楓");
+        this._commandHandlers.add(_tachieCommandHandler);
+        this._drawables.add(_tachieCommandHandler);
 
         var messageCommandHandler = new global.MessageCommandHandler(this, this._foreLayer, this._backLayer);
         this._commandHandlers.add(messageCommandHandler);
         this._drawables.add(messageCommandHandler);
         this._messageCommandHandler = messageCommandHandler;
+    }
+
+    Func(_reset)() {
+        this.skipDelay();
+        this.skipAction();
+        this.skipTransition();
+        FOR_EACH(h, this._commandHandlers) {
+            h.reset();
+        }
     }
 
     Func(_createTargetLayer)(parentLayer:Layer) {
