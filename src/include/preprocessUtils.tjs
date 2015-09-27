@@ -8,12 +8,12 @@ m4_define(&--assertAlways--&,m4_dnl
 m4_dnl
 m4_dnl
 m4_dnl
-m4_define(&--exception--&, m4_ifelse(DEBUG, 1,m4_dnl
+m4_define(&--exceptionAlways--&,m4_dnl
     { var exceptionOccured = false; try {m4_dnl
         $1;m4_dnl
     } catch() {m4_dnl
         exceptionOccured = true;m4_dnl
-    } assert(exceptionOccured); }))m4_dnl
+    } assert(exceptionOccured); })m4_dnl
 m4_dnl
 m4_dnl
 m4_dnl

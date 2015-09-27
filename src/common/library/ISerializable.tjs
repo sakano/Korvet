@@ -12,7 +12,6 @@ Class(ISerializable)
         for (var i = 0; i < properties.count; ++i) {
             assert(properties[i] != void)
             var value = object[properties[i]];
-            dm(properties[i]);
             if (typeof value === "Object") {
                 result[properties[i]] = value.serialize();
             } else {

@@ -9,8 +9,8 @@ FILE_INCLUDE_GUARD
 setStaticMember(Storages, "getExistSoundFileName", LMD(file:string) {
     checkArgs
     with (Storages) {
-        if (.isExistentStorage(file)) { return file; }
         m4_pushdef(&--CHECK_EXT--&, &--if (.isExistentStorage(file + $1)) { return file + $1; }--&)
+        CHECK_EXT("")
         CHECK_EXT(".ogg")
         CHECK_EXT(".opus")
         CHECK_EXT(".wav")

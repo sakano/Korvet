@@ -19,10 +19,7 @@ ClassExtends(NovelModeCompiler, NovelMode)
         // ファイルが存在しないか更新されていたらコンパイル
         if (!Storages.isExistentStorage(compiledPath)
             || Storages.getLastModifiedFileTime(Storages.getPlacedPath(srcPath)) != Storages.getLastModifiedFileTime(Storages.getPlacedPath(compiledPath))) {
-                var error = compile(srcPath, compiledPath);
-                if (!success(error)) {
-                    return error;
-                }
+                compile(srcPath, compiledPath);
         }
         return super.loadScript(path, label, page);
     }
@@ -36,27 +33,16 @@ ClassExtends(NovelModeCompiler, NovelMode)
         var prevMode = global.gConfig.currentMode;
         global.gConfig.changeMode(ConfigMode_Compile);
 
-        var error = super.loadScript(src);
-        if (!success(error)) {
-            global.gLog.fatal(error.message);
-            return error;
-        }
+        super.loadScript(src);
 
         var serialized = [];
         var pageCount = 0;
         while (true) {
             // 次のコマンドを得る
-            var command = %[];
-            var error = this._parser.getNextCommand(command);
-
-            // パース中にエラーが発生したら停止
-            if (!success(error)) {
-                global.gScriptLogger.onScriptError(ASSERT_SCRIPT_PARSER_ERROR, "MES", error.message);
-                return error;
-            }
+            var command = this._parser.getNextCommand();
 
             // コマンドが得られなかったら停止
-            if (command.isEmpty()) break;
+            if (command === null) break;
 
             // コマンドを実行する
             var interrupt = this._doCommand(command);
@@ -94,7 +80,5 @@ ClassExtends(NovelModeCompiler, NovelMode)
         assert(Storages.setLastModifiedFileTime(dest, Storages.getLastModifiedFileTime(Storages.getPlacedPath(src))))
 
         gConfig.changeMode(prevMode);
-
-        return SUCCESS;
     }
 }

@@ -234,7 +234,7 @@ FILE_INCLUDE_GUARD
     }
     {
         var array = new Array();
-        exception(array.erase(0));
+        exceptionAlways(array.erase(0));
 
         assertAlways( array.add(0) === 0 )
         assertAlways( array.add(1) === 1 )
@@ -252,7 +252,7 @@ FILE_INCLUDE_GUARD
         assertAlways( array2.erase(4) === void)
         assertAlways( eq(array2, [ 0, 2, "0", "1", 0, 1, 2 ]) )
 
-        exception(array2.erase(20));
+        exceptionAlways(array2.erase(20));
 
         invalidate array2;
     }

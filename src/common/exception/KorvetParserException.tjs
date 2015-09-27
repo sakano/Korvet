@@ -1,0 +1,18 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(KorvetParserException, ParseException)
+{
+    property index { getter { return _index; } }
+
+    var _index;
+
+    Constructor(filename:string, lineNumber:int, line:string, index:int, message:string+ = EXCEPTION_KORVET_PARSE, innerException:Exception? = null) {
+        checkArgs
+        _index = index;
+        message = expandMessage(message,
+                "MES", innerException !== null ? innerException.message : "",
+                "FILE", filename, "LNUM", lineNumber, "LINE", line, "INDEX", index);
+        super.ParseException(filename, lineNumber, line, message, innerException);
+    }
+}

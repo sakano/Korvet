@@ -6,13 +6,12 @@ m4_define(&--INFO_NOVEL_MODE_LABEL_JUMP--&, &--"ラベルジャンプします({
 m4_define(&--INFO_NOVEL_MODE_PAGE_SKIP--&, &--"ページスキップします({COUNT})"--&)m4_dnl
 m4_define(&--INFO_NOVEL_MODE_BEGIN_COMPILE--&, &--"スクリプトを変換します({SRC} -> {DEST})"--&)m4_dnl
 m4_dnl
-m4_define(&--ERROR_NOVEL_MODE_END_OF_SCRIPT_WHILE_PAGE_SKIP--&, &--"ページスキップ中にスクリプトが終了しました({PATH}({LABEL}):{COUNT})"--&)m4_dnl
-m4_define(&--ERROR_NOVEL_MODE_INVALID_PAGE--&, &--"指定されたページが存在しません({PATH}:{COUNT})"--&)m4_dnl
+m4_define(&--EXCEPTION_NOVEL_MODE_END_OF_SCRIPT_WHILE_PAGE_SKIP--&, &--"ページスキップ中にスクリプトが終了しました({PATH}({LABEL}):{COUNT})"--&)m4_dnl
+m4_define(&--EXCEPTION_NOVEL_MODE_INVALID_PAGE--&, &--"指定されたページが存在しません({PATH}:{COUNT})"--&)m4_dnl
 m4_dnl
-m4_define(&--ERROR_READ_INI_FILE--&, &--"iniファイルの読み込みに失敗しました\nパス:{PATH}\n行:{LINE}\n行番号:{LINENUM}"--&)m4_dnl
-m4_define(&--ERROR_READ_INI_FILE_SECTION--&, &--"sectionを読み込めません"--&)m4_dnl
-m4_define(&--ERROR_READ_INI_FILE_SECTION_UNSPECIFIED--&, &--"sectionが指定されていません"--&)m4_dnl
-m4_define(&--ERROR_READ_INI_FILE_KEY_NAME_DUPLICATE--&, &--"キー名が重複しています({NAME})"--&)m4_dnl
+m4_define(&--EXCEPTION_READ_INI_FILE_SECTION--&, &--"sectionを読み込めません\nパス:{FILE}\n行:{LINE}\n行番号:{LNUM}"--&)m4_dnl
+m4_define(&--EXCEPTION_READ_INI_FILE_SECTION_UNSPECIFIED--&, &--"sectionが指定されていません\nパス:{FILE}\n行:{LINE}\n行番号:{LNUM}"--&)m4_dnl
+m4_define(&--EXCEPTION_READ_INI_FILE_KEY_NAME_DUPLICATE--&, &--"キー名が重複しています({NAME})\nパス:{FILE}\n行:{LINE}\n行番号:{LNUM}"--&)m4_dnl
 m4_dnl
 m4_define(&--WARN_DEFERRED_PENDING_DEFERRED_INVALIDATED--&, &--"Pending中のDeferredが無効化されました"--&)m4_dnl
 m4_define(&--WARN_DEFERRED_INVALID_CALLBACK--&, &--"Deferredから無効な関数が呼び出されました"--&)m4_dnl
@@ -23,17 +22,17 @@ m4_dnl
 m4_define(&--FATAL_UNINVALIDATED_OBJECT_DETECTED--&, &--"未解放のオブジェクト({TYPE})が存在します:{MES}"--&)m4_dnl
 m4_dnl
 m4_define(&--EXCEPTION_LINQ_ARRAY_DUPLICATE_KEYS--&, &--"キーが重複しています({KEY})"--&)m4_dnl
-m4_dnl
-m4_define(&--ERROR_IO--&, &--"IOエラーが発生しました({FILE})"--&)m4_dnl
-m4_define(&--ERROR_PARSE--&, &--"パースエラーが発生しました[{FILE}({LNUM})]{LINE}"--&)m4_dnl
-m4_define(&--ERROR_FILE_NOT_FOUND--&, &--"ファイルが見つかりません({FILE})"--&)m4_dnl
-m4_define(&--ERROR_SOUND_FILE_NOT_FOUND--&, &--"サウンドファイルが見つかりません({FILE})"--&)m4_dnl
-m4_define(&--ERROR_SOUND_LABEL_NOT_FOUND--&, &--"指定されたサウンドラベルが見つかりません({LABEL})"--&)m4_dnl
-m4_define(&--ERROR_KORVET_PARSE--&, &--"krsスクリプトの読み込みに失敗しました({MES})[{FILE}({LNUM}:{INDEX})]{LINE}"--&)m4_dnl
-m4_define(&--ERROR_KORVET_PARSER_COMMAND_SYNTAX--&, &--"コマンドの構文が間違っています"--&)m4_dnl
-m4_define(&--ERROR_KORVET_PARSER_COMMAND_END_NOT_FOUND--&, &--"'['に対応する']'が見つかりません"--&)m4_dnl
-m4_define(&--ERROR_KORVET_PARSER_FILE_NOT_LOADED--&, &--"krsスクリプトが読み込まれていません"--&)m4_dnl
-m4_define(&--ERROR_KORVET_PARSER_LABEL_NOT_FOUND--&, &--"指定されたラベルが見つかりません({LABEL})"--&)m4_dnl
+m4_define(&--EXCEPTION_DEFAULT--&, &--"例外が発生しました"--&)m4_dnl
+m4_define(&--EXCEPTION_IO--&, &--"IOエラーが発生しました({FILE})"--&)m4_dnl
+m4_define(&--EXCEPTION_FILE_NOT_FOUND--&, &--"ファイルが見つかりません({FILE})"--&)m4_dnl
+m4_define(&--EXCEPTION_PARSE--&, &--"パースエラーが発生しました[{FILE}({LNUM})]{LINE}"--&)m4_dnl
+m4_define(&--EXCEPTION_KORVET_PARSE--&, &--"krsスクリプトの読み込みに失敗しました({MES})[{FILE}({LNUM}:{INDEX})]{LINE}"--&)m4_dnl
+m4_define(&--EXCEPTION_SOUND_FILE_NOT_FOUND--&, &--"サウンドファイルが見つかりません({FILE})"--&)m4_dnl
+m4_define(&--EXCEPTION_SOUND_LABEL_NOT_FOUND--&, &--"指定されたサウンドラベルが見つかりません({LABEL})"--&)m4_dnl
+m4_define(&--EXCEPTION_KORVET_PARSER_COMMAND_SYNTAX--&, &--"コマンドの構文が間違っています"--&)m4_dnl
+m4_define(&--EXCEPTION_KORVET_PARSER_COMMAND_END_NOT_FOUND--&, &--"'['に対応する']'が見つかりません"--&)m4_dnl
+m4_define(&--EXCEPTION_KORVET_PARSER_LABEL_NOT_FOUND--&, &--"指定されたラベルが見つかりません({LABEL})"--&)m4_dnl
+m4_define(&--EXCEPTION_MACRO_PARSER_MODULE_NEXTED_MACRO--&, &--"macroの前にendmacroが必要です"--&)m4_dnl
 m4_dnl
 m4_define(&--ASSERT_SAME_PLUGIN_LINKED--&, &--"同じプラグインが複数回リンクされました({NAME})"--&)m4_dnl
 m4_define(&--ASSERT_INSTANTIATE_ABSTRACT_CLASS--&, &--"抽象クラスはインスタンス化できません"--&)m4_dnl
@@ -59,9 +58,9 @@ m4_define(&--ASSERT_TRANSITIONSEQUENCE_INVALID_CALLBACK--&, &--"callbackには�
 m4_dnl
 m4_dnl // korvetスクリプトの記述ミスを通知する警告メッセージ
 m4_define(&--ASSERT_SCRIPT_HEADER--&, &--"[{FILE}({LINE})]"--&)m4_dnl
-m4_define(&--ASSERT_SCRIPT_PARSER_ERROR--&, &--"パースエラーが発生しました : {MES}"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_NESTED_MACRO--&, &--"macroの前にendmacroが必要です"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_SINGLE_ENDMACRO--&, &--"endmacroの前にmacroが必要です"--&)m4_dnl
+m4_define(&--ASSERT_SCRIPT_LABEL_DUPLICATE--&, &--"ラベル名が重複しています({LABEL})"--&)m4_dnl
 m4_dnl // 不正な属性
 m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_DUPLICATED--&, &--"同じ属性({ATTR_NAME})が２回以上指定されています"--&)m4_dnl
 m4_define(&--ASSERT_SCRIPT_ATTRIBUTE_REQUIRED--&, &--"必須属性({ATTR_NAME})が指定されていません"--&)m4_dnl

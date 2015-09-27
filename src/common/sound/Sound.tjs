@@ -84,20 +84,23 @@ Class(Sound)
     Func(play)(file:string, time:int = 0, startLabel:string+) {
         checkArgs
         assert(time >= 0)
-        file = Storages.getExistSoundFileName(file);
-        if (file === void) {
-            return new global.FileNotFoundError(file, expandMessage(ERROR_SOUND_FILE_NOT_FOUND, "FILE", file));
+        var existFile = Storages.getExistSoundFileName(file);
+        if (existFile === void) {
+            throw new global.FileNotFoundException(file, EXCEPTION_SOUND_FILE_NOT_FOUND);
         }
+
         _buffer.stopFade();
         _buffer.stop();
-        _buffer.open(file);
+        _buffer.open(existFile);
         loop = _loop;
+
         if (startLabel !== void) {
             if (_buffer.labels[startLabel] === void) {
-                return new global.Error(expandMessage(ERROR_SOUND_LABEL_NOT_FOUND, "LABEL", startLabel));
+                throw new global.IOException(file, expandMessage(EXCEPTION_SOUND_LABEL_NOT_FOUND, "LABEL", startLabel));
             }
             _buffer.samplePosition = _buffer.labels[startLabel].samplePosition;
         }
+
         if (time > 0) {
             _buffer.volume = 0;
             _buffer.play();
@@ -106,8 +109,8 @@ Class(Sound)
             _buffer.volume = 100000;
             _buffer.play();
         }
-        _currentFile = file;
-        return SUCCESS;
+
+        _currentFile = existFile;
     }
 
     /**

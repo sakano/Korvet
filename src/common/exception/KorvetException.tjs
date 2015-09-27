@@ -1,0 +1,47 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(KorvetException, Exception)
+{
+    property message { getter { return _message; } }
+    property innerException { getter { return _innerException; } }
+
+    property allMessage {
+        getter {
+            if (_innerException === null) {
+                return message;
+            }
+            if (typeof _innerException.allMessage !== "undefined") {
+                return message + "\r\n ---- \r\n" + _innerException.allMessage;
+            }
+            typeString(_innerException.message)
+            return message + "\r\n --- \r\n" + _innerException.message;
+        }
+    }
+
+    property trace {
+        getter {
+            if (_trace !== void) {
+                return _trace;
+            }
+            if (_innerException !== null && typeof _innerException.trace !== "undefined") {
+                return _innerException.trace;
+            }
+            return "";
+        }
+    }
+
+
+
+    var _message;
+    var _innerException;
+    var _trace;
+
+    Constructor(message:string = EXCEPTION_DEFAULT, innerException:Exception? = null) {
+        checkArgs
+        _message = message;
+        _innerException = innerException;
+        _trace = innerException === null ? global.Scripts.getTraceString(0) : void;
+        super.Exception(message);
+    }
+}

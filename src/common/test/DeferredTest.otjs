@@ -12,9 +12,9 @@ FILE_INCLUDE_GUARD
         assertAlways( deferred.state === PromiseState_Pending )
         deferred.resolve();
         assertAlways( deferred.state === PromiseState_Resolved )
-        exception(deferred.reject())
+        exceptionAlways(deferred.reject())
         assertAlways( deferred.state === PromiseState_Resolved )
-        exception(deferred.resolve())
+        exceptionAlways(deferred.resolve())
         assertAlways( deferred.state === PromiseState_Resolved )
         invalidate deferred;
     }
@@ -23,9 +23,9 @@ FILE_INCLUDE_GUARD
         assertAlways( deferred.state === PromiseState_Pending )
         deferred.reject();
         assertAlways( deferred.state === PromiseState_Rejected )
-        exception(deferred.resolve());
+        exceptionAlways(deferred.resolve());
         assertAlways( deferred.state === PromiseState_Rejected )
-        exception(deferred.reject());
+        exceptionAlways(deferred.reject());
         assertAlways( deferred.state === PromiseState_Rejected )
         invalidate deferred;
     }
@@ -38,9 +38,9 @@ FILE_INCLUDE_GUARD
         deferred.resolve();
         assertAlways( context.count === 1 )
         assertAlways( deferred.state === PromiseState_Resolved )
-        exception(deferred.resolve())
+        exceptionAlways(deferred.resolve())
         assertAlways( context.count === 1 )
-        exception(deferred.reject())
+        exceptionAlways(deferred.reject())
         assertAlways( context.count === 1 )
         deferred.done(LMD() { assertAlways( count++ === 1 ) } incontextof context);
         assertAlways( context.count === 1 )
@@ -57,9 +57,9 @@ FILE_INCLUDE_GUARD
         deferred.reject();
         assertAlways( context.count === 0 )
         assertAlways( deferred.state === PromiseState_Rejected )
-        exception(deferred.resolve())
+        exceptionAlways(deferred.resolve())
         assertAlways( context.count === 0 )
-        exception(deferred.reject())
+        exceptionAlways(deferred.reject())
         assertAlways( context.count === 0 )
         deferred.done(LMD() { assertAlways( false ) } incontextof context);
         assertAlways( context.count === 0 )
@@ -118,9 +118,9 @@ FILE_INCLUDE_GUARD
         deferred.resolve();
         assertAlways( context.count === 0 )
         assertAlways( deferred.state === PromiseState_Resolved )
-        exception(deferred.resolve())
+        exceptionAlways(deferred.resolve())
         assertAlways( context.count === 0 )
-        exception(deferred.reject())
+        exceptionAlways(deferred.reject())
         assertAlways( context.count === 0 )
         deferred.fail(LMD() { assertAlways( false ) } incontextof context);
         assertAlways( context.count === 0 )
@@ -137,9 +137,9 @@ FILE_INCLUDE_GUARD
         deferred.reject();
         assertAlways( context.count === 1)
         assertAlways( deferred.state === PromiseState_Rejected )
-        exception(deferred.resolve())
+        exceptionAlways(deferred.resolve())
         assertAlways( context.count === 1 )
-        exception(deferred.reject())
+        exceptionAlways(deferred.reject())
         assertAlways( context.count === 1 )
         deferred.fail(LMD() { assertAlways( count++ === 1 ) } incontextof context);
         assertAlways( context.count === 1 )
@@ -198,9 +198,9 @@ FILE_INCLUDE_GUARD
         deferred.resolve();
         assertAlways( context.count === 1 )
         assertAlways( deferred.state === PromiseState_Resolved )
-        exception(deferred.resolve())
+        exceptionAlways(deferred.resolve())
         assertAlways( context.count === 1 )
-        exception(deferred.reject())
+        exceptionAlways(deferred.reject())
         assertAlways( context.count === 1 )
         deferred.always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
         assertAlways( context.count === 1 )
@@ -217,9 +217,9 @@ FILE_INCLUDE_GUARD
         deferred.reject();
         assertAlways( context.count === 1)
         assertAlways( deferred.state === PromiseState_Rejected )
-        exception(deferred.resolve())
+        exceptionAlways(deferred.resolve())
         assertAlways( context.count === 1 )
-        exception(deferred.reject())
+        exceptionAlways(deferred.reject())
         assertAlways( context.count === 1 )
         deferred.always(LMD() { assertAlways( count++ === 1 ) } incontextof context);
         assertAlways( context.count === 1 )
@@ -281,8 +281,8 @@ FILE_INCLUDE_GUARD
         deferred.resolve();
         assertAlways( context.count === 2 )
         assertAlways( deferred.state === PromiseState_Resolved )
-        exception(deferred.resolve())
-        exception(deferred.reject())
+        exceptionAlways(deferred.resolve())
+        exceptionAlways(deferred.reject())
         assertAlways( context.count === 2 )
         invalidate deferred;
         invalidate context;
@@ -297,8 +297,8 @@ FILE_INCLUDE_GUARD
         deferred.reject();
         assertAlways( context.count === 2 )
         assertAlways( deferred.state === PromiseState_Rejected )
-        exception(deferred.resolve())
-        exception(deferred.reject())
+        exceptionAlways(deferred.resolve())
+        exceptionAlways(deferred.reject())
         assertAlways( context.count === 2 )
         invalidate deferred;
         invalidate context;
@@ -352,8 +352,8 @@ FILE_INCLUDE_GUARD
         deferred.resolve();
         assertAlways( context.count === 4 )
         assertAlways( deferred.state === PromiseState_Resolved )
-        exception(deferred.resolve())
-        exception(deferred.reject())
+        exceptionAlways(deferred.resolve())
+        exceptionAlways(deferred.reject())
         assertAlways( context.count === 4 )
         invalidate deferred;
         invalidate context;
@@ -371,8 +371,8 @@ FILE_INCLUDE_GUARD
         deferred.reject();
         assertAlways( context.count === 4 )
         assertAlways( deferred.state === PromiseState_Rejected )
-        exception(deferred.resolve())
-        exception(deferred.reject())
+        exceptionAlways(deferred.resolve())
+        exceptionAlways(deferred.reject())
         assertAlways( context.count === 4 )
         invalidate deferred;
         invalidate context;
@@ -392,8 +392,8 @@ FILE_INCLUDE_GUARD
         deferred.resolve();
         assertAlways( context.count === 4 )
         assertAlways( deferred.state === PromiseState_Resolved )
-        exception(deferred.resolve())
-        exception(deferred.reject())
+        exceptionAlways(deferred.resolve())
+        exceptionAlways(deferred.reject())
         assertAlways( deferred.state === PromiseState_Resolved )
         assertAlways( context.count === 4 )
         invalidate deferred;
@@ -415,9 +415,9 @@ FILE_INCLUDE_GUARD
         deferred.reject();
         assertAlways( context.count === 4 )
         assertAlways( deferred.state === PromiseState_Rejected )
-        exception(deferred.resolve())
+        exceptionAlways(deferred.resolve())
         assertAlways( deferred.state === PromiseState_Rejected )
-        exception(deferred.reject())
+        exceptionAlways(deferred.reject())
         assertAlways( deferred.state === PromiseState_Rejected )
         assertAlways( context.count === 4 )
         invalidate deferred;
@@ -470,13 +470,13 @@ FILE_INCLUDE_GUARD
         deferred3.reject();
         assertAlways( promise.state === PromiseState_Rejected )
         assertAlways( context.count === 2 )
-        exception(deferred.resolve())
+        exceptionAlways(deferred.resolve())
         assertAlways( promise.state === PromiseState_Rejected )
         assertAlways( context.count === 2 )
-        exception(deferred2.resolve())
+        exceptionAlways(deferred2.resolve())
         assertAlways( promise.state === PromiseState_Rejected )
         assertAlways( context.count === 2 )
-        exception(deferred3.resolve())
+        exceptionAlways(deferred3.resolve())
         assertAlways( promise.state === PromiseState_Rejected )
         assertAlways( context.count === 2 )
         invalidate context;

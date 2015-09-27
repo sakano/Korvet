@@ -135,10 +135,6 @@ ClassExtends(SystemCommandHandler, AbstractCommandHandler)
         checkArgs
         var file = command.attributeValues.file;
         var label = command.attributeValues.label;
-        var error = this._mode.loadScript(file, label);
-        if (!success(error)) {
-            global.gScriptLogger.onScriptError(error.message);
-            return %[ interrupt:true ];
-        }
+        this._mode.loadScript(file, label);
     }
 }

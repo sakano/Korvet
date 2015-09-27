@@ -61,11 +61,12 @@ execStorage("Utils.tjs");
 execStorage("Object.tjs");
 execStorage("Debug.tjs");
 
-// error
-execStorage("Error.tjs");
-execStorage("IOError.tjs");
-execStorage("FileNotFoundError.tjs");
-execStorage("ParseError.tjs");
+// exception
+execStorage("KorvetException.tjs");
+execStorage("IOException.tjs");
+execStorage("FileNotFoundException.tjs");
+execStorage("ParseException.tjs");
+execStorage("KorvetParserException.tjs");
 
 // extension
 execStorage("AsyncTriggerEx.tjs");

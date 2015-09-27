@@ -1,0 +1,16 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(IOException, KorvetException)
+{
+    property filename { getter { return _filename; } }
+
+    var _filename;
+
+    Constructor(filename:string, message:string+ = EXCEPTION_IO, innerException:Exception? = null) {
+        checkArgs
+        _filename = filename;
+        message = expandMessage(message, "FILE", filename);
+        super.KorvetException(message, innerException);
+    }
+}

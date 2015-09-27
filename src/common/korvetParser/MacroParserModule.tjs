@@ -27,13 +27,13 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         }
 
         // マクロを展開
-        var error = this._extractAttributeMacro(command);
-        if (error !== void) return %[ error : error ];
+        this._extractAttributeMacro(command);
         if (this._extractMacro(command, parser)) {
+            // マクロとして展開されたら終わり
             return %[ mode : KorvetParserModuleMode_Loop ];
         }
 
-        // マクロ用のタグならそれぞれ処理
+        // もしマクロ記録用のコマンドならそれぞれ処理
         switch(command.name) {
         case "macro":       return this._beginRecordMacro(command, parser);
         case "endmacro":    return this._endRecordMacro(command);
@@ -93,10 +93,6 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         this._macroAttributeMacros.dispose();
     }
 
-    Func(_onDeserialized)() {
-        this._clearInternalState();
-    }
-
     Func(_extractMacro)(command:Dictionary, parser:KorvetParser) {
         checkArgs
         var macro = this._registeredMacros[command.name];
@@ -140,9 +136,7 @@ ClassExtends(MacroParserModule, KorvetParserModule)
 
     Func(_createPopMacroCommand)(parser:KorvetParser) {
         checkArgs
-        var command = %[];
-        parser.makeCommandTemplate(command, "__popmacro");
-        return command;
+        return parser.createCommand("__popmacro");
     }
 
     Func(_popMacro)() {
@@ -215,7 +209,8 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         checkArgs
         // 既にマクロ記録中ならエラー
         if (this._isMacroRecording) {
-            return %[ error : new global.Error(ASSERT_SCRIPT_NESTED_MACRO) ];
+            global.gScriptLogger.onScriptError(ASSERT_SCRIPT_NESTED_MACRO);
+            throw new global.KorvetException(EXCEPTION_MACRO_PARSER_MODULE_NEXTED_MACRO);
         }
 
         // マクロの記録を開始
@@ -249,6 +244,7 @@ ClassExtends(MacroParserModule, KorvetParserModule)
         // マクロ記録中でなければエラー
         if (!this._isMacroRecording) {
             global.gScriptLogger.onScriptError(ASSERT_SCRIPT_SINGLE_ENDMACRO);
+            // コマンドを無視して処理は継続
             return %[ mode : KorvetParserModuleMode_Cancel ];
         }
         typeString(this._recordingMacroName)

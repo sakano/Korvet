@@ -1,0 +1,11 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(FileNotFoundException, IOException)
+{
+    Constructor(filename:string, message:string+ = EXCEPTION_FILE_NOT_FOUND, innerException:Exception? = null) {
+        checkArgs
+        message = expandMessage(message, "FILE", filename);
+        super.IOException(filename, message, innerException);
+    }
+}

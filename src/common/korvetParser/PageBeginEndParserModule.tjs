@@ -43,15 +43,11 @@ ClassExtends(PageBeginEndParserModule, KorvetParserModule)
 
     Func(_createBeginPageCommand)(parser:KorvetParser) {
         checkArgs
-        var command = %[];
-        parser.makeCommandTemplate(command, "__beginpage");
-        return command;
+        return parser.createCommand("__beginpage");
     }
 
     Func(_createEndPageCommand)(parser:KorvetParser) {
         checkArgs
-        var command = %[];
-        parser.makeCommandTemplate(command, "__endpage");
-        return command;
+        return parser.createCommand("__endpage");
     }
 }

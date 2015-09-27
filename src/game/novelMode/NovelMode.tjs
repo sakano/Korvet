@@ -28,31 +28,21 @@ ClassExtends(NovelMode, GameMode)
         // ファイルが指定されていたら読み込む
         if (path !== void) {
             gLog.info(expandMessage(INFO_NOVEL_MODE_LOAD_SCRIPT, "PATH", path));
-            var error = this._parser.initStorage(path);
-            if (!success(error)) {
-                return error;
-            }
+            this._parser.initStorage(path);
         }
         // ラベルが指定されていたらジャンプ
         if (label !== void) {
             gLog.info(expandMessage(INFO_NOVEL_MODE_LABEL_JUMP, "LABEL", label));
-            var error = this._parser.goToLabel(label);
-            if (!success(error)) {
-                return error;
-            }
+            this._parser.goToLabel(label);
         }
         // ページが指定されていたらスキップ
         if (skipEndPageCount > 0) {
             gLog.info(expandMessage(INFO_NOVEL_MODE_PAGE_SKIP, "COUNT", skipEndPageCount));
             for (var pageCount = 0; pageCount < skipEndPageCount;) {
-                var command = %[];
-                var error = this._parser.getNextCommand(command);
-                if (!success(error)) {
-                    return error;
-                }
-                if (command.isEmpty()) {
-                    return new global.ParseError(this._parser.currentStorage, this._parser.currentLineNumber, "",
-                        expandMessage(ERROR_NOVEL_MODE_END_OF_SCRIPT_WHILE_PAGE_SKIP, "PATH", path, "LABEL", label, "COUNT", skipEndPageCount));
+                var command = this._parser.getNextCommand();
+                if (command === null) {
+                    throw new global.KorvetException(
+                        expandMessage(EXCEPTION_NOVEL_MODE_END_OF_SCRIPT_WHILE_PAGE_SKIP, "PATH", path, "LABEL", label, "COUNT", skipEndPageCount));
                 }
                 if (command.name == "__endpage") {
                     ++pageCount;
@@ -61,8 +51,6 @@ ClassExtends(NovelMode, GameMode)
         }
 
         this._reset();
-
-        return SUCCESS;
     }
 
     Func(deserialize)(path:string, page:int = 0) {
@@ -77,14 +65,10 @@ ClassExtends(NovelMode, GameMode)
         var dic = data[page];
 
         if (dic === void) {
-            return new global.Error(expandMessage(ERROR_NOVEL_MODE_INVALID_PAGE, "PATH", path, "COUNT", page));
+            throw new global.KorvetException(expandMessage(EXCEPTION_NOVEL_MODE_INVALID_PAGE, "PATH", path, "COUNT", page));
         }
 
-        var error = this.loadScript(path, void, dic.pageCount);
-        if (!success(error)) {
-            global.gLog.fatal(error.message);
-            return error;
-        }
+        this.loadScript(path, void, dic.pageCount);
 
         this._stageCommandHandler.deserialize(dic.stage);
         this._tachieCommandHandler.deserialize(dic.tachie);
@@ -293,17 +277,10 @@ ClassExtends(NovelMode, GameMode)
     Func(_resumeCommandLoop)() {
         while (true) {
             // 次のコマンドを得る
-            var command = %[];
-            var error = _parser.getNextCommand(command);
-
-            // パース中にエラーが発生したら停止
-            if (!success(error)) {
-                global.gScriptLogger.onScriptError(ASSERT_SCRIPT_PARSER_ERROR, "MES", error.message);
-                break;
-            }
+            var command = _parser.getNextCommand();
 
             // コマンドが得られなかったら停止
-            if (command.isEmpty()) break;
+            if (command === null) break;
 
             // コマンドを実行する
             var interrupt = this._doCommand(command);

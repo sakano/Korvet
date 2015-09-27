@@ -23,8 +23,8 @@ Class(KorvetParser)
         checkArgs
         assert(path.length > 0)
 
-        // ファイルが存在しなければエラーを返す
-        if (!Storages.isExistentStorage(path)) return new global.FileNotFoundError(path);
+        // ファイルが存在しなければ例外を投げる
+        if (!Storages.isExistentStorage(path)) throw new global.FileNotFoundException(path);
 
         // 状態を初期化
         this.clear(false);
@@ -43,16 +43,11 @@ Class(KorvetParser)
         }
 
         // moduleに通知
-        for (var i = this._modules.count - 1; i >= 0; --i) {
-            this._modules[i].onInitStorage(this);
-        }
+        this._foreachModules(LMD(module) { module.onInitStorage(this); } incontextof this);
 
         // ファイル開始コマンドを積んでおく
-        var command = %[];
-        this._makeBeginFileCommand(command, this._currentStorage);
-        this.addHeadCommand(command);
-
-        return SUCCESS;
+        var beginFileCommand = this._createBeginFileCommand(this._currentStorage);
+        this.addHeadCommand(beginFileCommand);
     }
 
     Func(setModule)(module:KorvetParserModule, priority:int) {
@@ -81,29 +76,35 @@ Class(KorvetParser)
         this._commandList.pop();
     }
 
-    Func(makeCommandTemplate)(command:Dictionary, commandName:string) {
+    Func(createCommand)(commandName:string, attributes*) {
         checkArgs
-        assert(command.isEmpty())
-        command.name = commandName;
-        command.attributeNames = [];
-        command.attributeValues = %[];
+        assert(attributes.count % 2 === 0)
+        var attrNames = [];
+        var attrValues = %[];
+        for (var i = 0; i < attributes.count; i += 2) {
+            typeString(attributes[i])
+            typeString(attributes[i+1])
+            attrNames.add(attributes[i]);
+            assert(typeof attrValues[attributes[i]] === "undefined")
+            attrValues[attributes[i]]  = attributes[i+1];
+        }
+        return %[
+            name : commandName,
+            attributeNames : attrNames,
+            attributeValues : attrValues
+        ];
     }
 
-    Func(getNextCommand)(command:Dictionary) {
+    Func(getNextCommand)() {
         checkArgs
-        assert(command.isEmpty())
         assert(this._currentStorage !== "")
 
         while (true) {
-            var mode = KorvetParserModuleMode_End;
-
             // コマンドリストが空なら次のタグを得てリストに入れる
             // 次のタグが得られなければ終わり
             if (this._commandList.count === 0) {
-                var nextCommand = %[];
-                var error = this._getNextCommand(nextCommand);
-                if (!success(error)) return error;
-                if (nextCommand.isEmpty()) return SUCCESS;
+                var nextCommand = this._getNextCommand();
+                if (nextCommand === null) return null;
                 this.addHeadCommand(nextCommand);
             }   
 
@@ -111,40 +112,68 @@ Class(KorvetParser)
             var nextCommand = this._commandList[-1];
 
             // モジュールに通知
-            for (var i = this._modules.count - 1; i >= 0; --i) {
-                var result = this._modules[i].onCommand(this, nextCommand);
-                if (result !== void) {
-                    if (result.error !== void) {
-                        return new global.KorvetParserError(this._currentStorage, this._currentLineNumber,
-                            this._currentLogicalLine, this._currentLogicalLineIndex, void, result.error);
-                    }
-                    if (result.mode !== void) {
-                        mode = result.mode;
-                    }
+            var data = %[ mode: KorvetParserModuleMode_End ];
+            this._foreachModules(LMD(module, data, nextCommand) {
+                var result;
+                try {
+                    result = module.onCommand(this, nextCommand);
+                } catch(e) {
+                    throw new global.KorvetParserException(this._currentStorage, this._currentLineNumber,
+                        this._currentLogicalLine, this._currentLogicalLineIndex, EXCEPTION_KORVET_PARSE, e);
                 }
-            }
-            var loop = true;
-            switch (mode) {
+                if (result !== void && result.mode !== void) {
+                    data.mode = result.mode;
+                }
+            } incontextof this, data, nextCommand);
+
+            switch (data.mode) {
             case KorvetParserModuleMode_End:
-                loop = false;
                 this._commandList.pop();
-                command.assign(nextCommand);
-                break;
+                return nextCommand;
             case KorvetParserModuleMode_Loop:
-                loop = true;
                 break;
             case KorvetParserModuleMode_Cancel:
-                loop = true;
                 this._commandList.pop();
                 break;
             default:
                 assert(false);
             }
-            if (!loop) break;
         }
+    }
 
-        assert(!command.isEmpty())
-        return SUCCESS;
+    Func(goToLabel)(label:string) {
+        checkArgs
+        assert(this._currentStorage !== "")
+
+        var lineNumber = this._labels[label];
+        if (lineNumber === void) {
+            throw new global.KorvetParserException(this._currentStorage, this._currentLineNumber,
+                this._currentLogicalLine, this._currentLogicalLineIndex,
+                expandMessage(EXCEPTION_KORVET_PARSER_LABEL_NOT_FOUND, "LABEL", label));
+        }
+        
+        this._commandList.clear();
+        this._currentStorageEnded = false;
+        this._currentLineNumber = lineNumber;
+        this._currentLogicalLine = "";
+        this._currentLogicalLineIndex = 0;
+        this._processingCurrentLine = false;
+        this._foreachModules(LMD(module) { module.onInitStorage(this); } incontextof this);
+    }
+
+    Func(clear)(clearModules:bool = true) {
+        this._lines.clear();
+        this._labels.clear();
+        this._commandList.clear();
+        this._currentStorage = "";
+        this._currentStorageEnded = true;
+        this._currentLineNumber = 0;
+        this._currentLogicalLine = "";
+        this._currentLogicalLineIndex = 0;
+        this._processingCurrentLine = false;
+        if (clearModules) {
+            this._foreachModules(LMD(module) { module.clear(); });
+        }
     }
 
 
@@ -167,46 +196,6 @@ Class(KorvetParser)
     var _processingCurrentLine;
 
 
-    Func(goToLabel)(label:string) {
-        checkArgs
-        if (this._currentStorage === "") {
-            return new global.KorvetParserError(this._currentStorage, this._currentLineNumber,
-                this._currentLogicalLine, this._currentLogicalLineIndex,
-                expandMessage(ERROR_KORVET_PARSER_FILE_NOT_LOADED));
-        }
-        var lineNumber = this._labels[label];
-        if (lineNumber === void) {
-            return new global.KorvetParserError(this._currentStorage, this._currentLineNumber,
-                this._currentLogicalLine, this._currentLogicalLineIndex,
-                expandMessage(ERROR_KORVET_PARSER_LABEL_NOT_FOUND, "LABEL", label));
-        }
-        this._commandList.clear();
-        this._currentStorageEnded = false;
-        this._currentLineNumber = lineNumber;
-        this._currentLogicalLine = "";
-        this._currentLogicalLineIndex = 0;
-        this._processingCurrentLine = false;
-        return SUCCESS;
-    }
-
-    Func(clear)(clearModules:bool = true) {
-        this._lines.clear();
-        this._labels.clear();
-        this._commandList.clear();
-        this._currentStorage = "";
-        this._currentStorageEnded = true;
-        this._currentLineNumber = 0;
-        this._currentLogicalLine = "";
-        this._currentLogicalLineIndex = 0;
-        this._processingCurrentLine = false;
-        if (clearModules) {
-            for (var i = this._modules.count - 1; i >= 0; --i) {
-                this._modules[i].clear();
-            }
-        }
-    }
-
-    Func(clone)() { notImplemented(); }
 
     Constructor() {
         this.clear();
@@ -221,12 +210,16 @@ Class(KorvetParser)
         invalidate this._commandList;
     }
 
-    Func(_getNextCommand)(command:Dictionary) {
-        checkArgs
-        assert(command.isEmpty());
+    Func(_foreachModules)(handler:Function, *) {
+        for (var i = this._modules.count - 1; i >= 0; --i) {
+            handler(this._modules[i], *);
+        }
+    }
 
+    Func(_getNextCommand)() {
+        checkArgs
         // 既に最後まで処理済みなら何もしない
-        if (this._currentStorageEnded) return SUCCESS;
+        if (this._currentStorageEnded) return null;
 
         while (true) try { // 次のコマンドが見つかるまで繰り返す
             if (!this._processingCurrentLine) {
@@ -236,8 +229,7 @@ Class(KorvetParser)
                 // 次の行が得られていなければファイル終了
                 if (currentLine === void) {
                     this._currentStorageEnded = true;
-                    this._makeEndFileCommand(command, this._currentStorage);
-                    return SUCCESS;
+                    return this._createEndFileCommand(this._currentStorage);
                 }
 
                 // インデント文字を消去
@@ -246,8 +238,7 @@ Class(KorvetParser)
 
                 // 空行ならemptyLineCommandを返す
                 if (this._currentLogicalLine.length === 0) {
-                    this._makeEmptyLineCommand(command);
-                    return SUCCESS;
+                    return this._createEmptyLineCommand();
                 }
 
                 // コメントなら何もせずやり直し
@@ -256,11 +247,11 @@ Class(KorvetParser)
                 // ラベルならラベルコマンド
                 if (this._currentLogicalLine[0] === "*") {
                     var name = this._currentLogicalLine.substr(1);
-                    if (this._labels[name] === void) {
-                        this._labels[name] = this._currentLineNumber;
+                    if (this._labels[name] !== void) {
+                        global.gScriptLogger.onScriptError(ASSERT_SCRIPT_LABEL_DUPLICATE, "LABEL", name);
                     }
-                    this._makeLabelCommand(command, name);
-                    return SUCCESS;
+                    this._labels[name] = this._currentLineNumber;
+                    return this._createLabelCommand(name);
                 }
 
                 // 末尾が\なら次の行と連結する
@@ -272,16 +263,14 @@ Class(KorvetParser)
 
                 // コマンド行なら全体をコマンドとして処理
                 if (this._currentLogicalLine[0] === "@") {
-                    this._makeCommand(command, this._currentLogicalLine.substr(1));
-                    return SUCCESS;
+                    return this._createCommand(this._currentLogicalLine.substr(1));
                 }
             }
 
             // 現在の行は全て処理済みなら改行
             if (this._currentLogicalLineIndex >= this._currentLogicalLine.length) {
                 this._processingCurrentLine = false;
-                this._makeRelineCommand(command);
-                return SUCCESS;
+                return this._createRelineCommand();
             }
 
             // 1文字ずつ走査する
@@ -292,49 +281,42 @@ Class(KorvetParser)
             if (current === '[') {
                 if (this._currentLogicalLine[this._currentLogicalLineIndex + 1] === '[') {
                     // 2つ続いていたら文字として処理
-                    this._makeCharacterCommand(command, '[');
                     this._currentLogicalLineIndex += 2;
-                    return SUCCESS;
+                    return this._createCharacterCommand('[');
                 }
 
                 // []で囲まれた部分をコマンドとして処理
                 var beginIndex = this._currentLogicalLineIndex + 1;
                 var endIndex = this._currentLogicalLine.indexOf(']', beginIndex);
                 if (endIndex < 0) {
-                    throw new global.Error(ERROR_KORVET_PARSER_COMMAND_END_NOT_FOUND);
+                    throw new global.KorvetException(EXCEPTION_KORVET_PARSER_COMMAND_END_NOT_FOUND);
                 }
-                this._makeCommand(command, this._currentLogicalLine.substr(beginIndex, endIndex - beginIndex));
+                var command = this._createCommand(this._currentLogicalLine.substr(beginIndex, endIndex - beginIndex));
                 this._currentLogicalLineIndex += endIndex - beginIndex + 2;
-                return SUCCESS;
+                return command;
             }
 
             // 文字として処理
-            this._makeCharacterCommand(command, current);
             this._currentLogicalLineIndex += 1;
-            return SUCCESS;
+            return this._createCharacterCommand(current);
         } catch (e) {
-            if (e instanceof "Error") {
-                return new global.KorvetParserError(this._currentStorage, this._currentLineNumber,
-                    this._currentLogicalLine, this._currentLogicalLineIndex, void, e);
-            } else {
-                throw e;
-            }
+            throw new global.KorvetParserException(this._currentStorage, this._currentLineNumber,
+                this._currentLogicalLine, this._currentLogicalLineIndex, EXCEPTION_KORVET_PARSE, e);
         }
         assert(false) // ここには来ない
     }
 
-    Func(_makeCommand)(command:Dictionary, commandString:string) {
+    Func(_createCommand)(commandString:string) {
         checkArgs
-        assert(command.isEmpty())
         var commandLineRegExp = /\A([^ \t\[\]=]+)([ \t]+(([^ \t\[\]=]+)([ \t]*=[ \t]*("(.+?)"|'(.+?)'|([^ \t\[\]=]+)))?)?)*\z/;
 
         // 構文が正しいかチェック
         if (!commandLineRegExp.test(commandString)) {
-            throw new global.Error(ERROR_KORVET_PARSER_COMMAND_SYNTAX);
+            throw new global.KorvetException(EXCEPTION_KORVET_PARSER_COMMAND_SYNTAX);
         }
 
         // コマンド名を取得
-        this.makeCommandTemplate(command, commandLineRegExp.matches[1]);
+        var command = this.createCommand(commandLineRegExp.matches[1]);
 
         // 属性と属性値を取得
         var keyValueRegExp = /[ \t]+(([^ \t\[\]=]+)([ \t]*=[ \t]*("(.+?)"|'(.+?)'|([^ \t\[\]=]+)))?)?/g;
@@ -351,6 +333,8 @@ Class(KorvetParser)
             command.attributeNames.add(attrName);
             command.attributeValues[attrName] = value;
         }
+
+        // 生成されたコマンドが正しい形式かチェック
         typeCheck(command, "Dictionary")
         assert(command.getKeys().count === 3)
         typeString(command.name)
@@ -358,44 +342,37 @@ Class(KorvetParser)
         typeCheck(command.attributeNames, "Array")
         typeCheck(command.attributeValues, "Dictionary")
         assert(command.attributeNames.count === command.attributeValues.getKeys().count)
+        return command;
     }
 
-    Func(_makeEmptyLineCommand)(command:Dictionary) {
+    Func(_createEmptyLineCommand)() {
         checkArgs
-        this.makeCommandTemplate(command, "__emptyline");
+        return this.createCommand("__emptyline");
     }
 
-    Func(_makeCharacterCommand)(command:Dictionary, character:string) {
+    Func(_createCharacterCommand)(character:string) {
         checkArgs
-        this.makeCommandTemplate(command, "__ch");
-        command.attributeNames.push("text");
-        command.attributeValues.text = character;
+        return this.createCommand("__ch", "text", character);
     }
 
-    Func(_makeRelineCommand)(command:Dictionary) {
+    Func(_createRelineCommand)() {
         checkArgs
-        this.makeCommandTemplate(command, "__reline");
+        return this.createCommand("__reline");
     }
 
-    Func(_makeBeginFileCommand)(command:Dictionary, filename:string) {
+    Func(_createBeginFileCommand)(filename:string) {
         checkArgs
-        this.makeCommandTemplate(command, "__beginfile");
-        command.attributeNames.push("file");
-        command.attributeValues.file = filename;
+        return this.createCommand("__beginfile", "file", filename);
     }
 
-    Func(_makeEndFileCommand)(command:Dictionary, filename:string) {
+    Func(_createEndFileCommand)(filename:string) {
         checkArgs
-        this.makeCommandTemplate(command, "__endfile");
-        command.attributeNames.push("file");
-        command.attributeValues.file = filename;
+        return this.createCommand("__endfile", "file", filename);
     }
 
-    Func(_makeLabelCommand)(command:Dictionary, name:string) {
+    Func(_createLabelCommand)(name:string) {
         checkArgs
-        this.makeCommandTemplate(command, "__label");
-        command.attributeNames.push("name");
-        command.attributeValues.name = name;
+        return this.createCommand("__label", "name", name);
     }
 
     Func(_goNextLine)() {
