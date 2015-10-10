@@ -119,11 +119,30 @@ FILE_INCLUDE_GUARD
         checkEnumerableResult([1,1,1].distinct(), 1);
         checkEnumerableResult([1,2,3,2,1,2,3,4].distinct(), 1,2,3,4);
         checkEnumerableResult([void, "test", void, "test", null, "test2", null].distinct(), void, "test", null, "test2");
+        checkEnumerableResult([0,void,1,"1"].distinct(), 0,void,1);
 
         var query = [1,1,2,1].distinct();
         assertAlways(&--query.toArray().equals([1,2])--&)
         assertAlways(&--query.toArray().equals([1,2])--&)
         assertAlways(&--query.toArray().equals([1,2])--&)
+    }
+    {   // concat
+        assertAlways(&--[1,3,2,3].concat().toArray().equals([1,3,2,3])--&)
+        checkEnumerableResult([].concat());
+        checkEnumerableResult([].concat([],[],[],[],[]));
+        checkEnumerableResult([].concat([4,5,6]), 4,5,6);
+        checkEnumerableResult([1,1,1].concat(), 1,1,1);
+        checkEnumerableResult([1,1,1].concat([2,3,4]), 1,1,1,2,3,4);
+        checkEnumerableResult([1,1,1].concat([2,3,4], [5,6,7], [8,9]), 1,1,1,2,3,4,5,6,7,8,9);
+        checkEnumerableResult([1,2,3].concat([4],[],[5],[6,7],[]), 1,2,3,4,5,6,7);
+        checkEnumerableResult([void,"str"].concat([null],[void],[],["str2"]), void, "str", null, void, "str2");
+        checkEnumerableResult([].concat([],[],["A"],[],[],[]), "A");
+        checkEnumerableResult([void].concat([],[],[],[],[],[]), void);
+
+        var query = [1,2,3].concat([4,5,6]);
+        assertAlways(&--query.toArray().equals([1,2,3,4,5,6])--&)
+        assertAlways(&--query.toArray().equals([1,2,3,4,5,6])--&)
+        assertAlways(&--query.toArray().equals([1,2,3,4,5,6])--&)
     }
     {   // take
         assertAlways(&--[1,3,2,3].take(2).toArray().equals([1,3])--&)
@@ -137,6 +156,53 @@ FILE_INCLUDE_GUARD
         assertAlways(&--query.toArray().equals([1,void,3])--&)
         assertAlways(&--query.toArray().equals([1,void,3])--&)
         assertAlways(&--query.toArray().equals([1,void,3])--&)
+    }
+    {   // takeWhile
+        assertAlways(&--[1,3,2,3].takeWhile(LMD{ return true; }).toArray().equals([1,3,2,3])--&)
+        assertAlways(&--[1,3,2,3].takeWhile(LMD{ return false; }).toArray().equals([])--&)
+        checkEnumerableResult([].takeWhile(LMD{ throw new Exception(); }));
+        checkEnumerableResult([1,2,3].takeWhile(LMD(v) { return v <= 2; }), 1,2);
+        checkEnumerableResult([1,2,3].takeWhile(LMD(v) { return v >= 2; }));
+        checkEnumerableResult([1,2,3].takeWhile(LMD(v) { return v != 2; }), 1);
+        checkEnumerableResult([void,null,"str"].takeWhile(LMD(v) { return true; }), void,null,"str");
+
+        var query = [1,void,3,null,5,6].takeWhile(LMD(v) { return v != null; });
+        assertAlways(&--query.toArray().equals([1,void,3])--&)
+        assertAlways(&--query.toArray().equals([1,void,3])--&)
+        assertAlways(&--query.toArray().equals([1,void,3])--&)
+    }
+    {   // skip
+        assertAlways(&--[1,3,2,3].skip(2).toArray().equals([2,3])--&)
+        checkEnumerableResult([].skip(0));
+        checkEnumerableResult([1,2,3].skip(0), 1,2,3);
+        checkEnumerableResult([1,2,3].skip(1), 2,3);
+        checkEnumerableResult([1,2,3].skip(2), 3);
+        checkEnumerableResult([1,2,3].skip(3));
+        checkEnumerableResult([1,2,3].skip(4));
+        checkEnumerableResult([1,2,3].skip(10));
+        checkEnumerableResult([1,2,3].skip(1).skip(1), 3);
+        checkEnumerableResult([void,null,"str"].skip(1), null,"str");
+        checkEnumerableResult([void,null,"str"].skip(3));
+
+        var query = [1,void,3,null,5,6].skip(3);
+        assertAlways(&--query.toArray().equals([null,5,6])--&)
+        assertAlways(&--query.toArray().equals([null,5,6])--&)
+        assertAlways(&--query.toArray().equals([null,5,6])--&)
+    }
+    {   // skipWhile
+        assertAlways(&--[1,3,2,3].skipWhile(LMD{ return true; }).toArray().equals([])--&)
+        assertAlways(&--[1,3,2,3].skipWhile(LMD{ return false; }).toArray().equals([1,3,2,3])--&)
+        checkEnumerableResult([].skipWhile(LMD{ throw new Exception(); }));
+        checkEnumerableResult([1,2,3].skipWhile(LMD(v) { return v <= 2; }), 3);
+        checkEnumerableResult([1,2,3].skipWhile(LMD(v) { return v >= 2; }), 1,2,3);
+        checkEnumerableResult([1,2,3].skipWhile(LMD(v) { return v != 2; }), 2,3);
+        checkEnumerableResult([void,null,"str"].skipWhile(LMD(v) { return true; }));
+        checkEnumerableResult([void,null,"str"].skipWhile(LMD(v) { return false; }), void,null,"str");
+
+        var query = [1,void,3,null,5,6].skipWhile(LMD(v) { return v != void; });
+        assertAlways(&--query.toArray().equals([void,3,null,5,6])--&)
+        assertAlways(&--query.toArray().equals([void,3,null,5,6])--&)
+        assertAlways(&--query.toArray().equals([void,3,null,5,6])--&)
     }
     {   // where
         assertAlways(&--[1,3,2,3].where(LMD(value){ return value <= 2; }).toArray().equals([1,2])--&)
@@ -181,6 +247,24 @@ FILE_INCLUDE_GUARD
         invalidate selector;
         invalidate query;
     }
+    {   // selectMany
+        assertAlways(&--[0,1,2,3].selectMany(LMD(value) { return [value, value*10]; }).toArray().equals([0,0,1,10,2,20,3,30])--&)
+        checkEnumerableResult([].selectMany(LMD() {assertAlways(fals)}));
+        checkEnumerableResult([0,1,2,3].selectMany(LMD(value) { return [value]; }), 0,1,2,3);
+        checkEnumerableResult([void, null, ].selectMany(LMD(value) { return [typeof value, value]; }), "void", void, "Object", null, "void", void);
+
+        var context = %[ called:0 ];
+        var selector = LMD(value) { ++this.called; return [value,-value,value*10]; } incontextof context;
+        var query = [1,2,3].selectMany(selector);
+        assertAlways(context.called === 0)
+        assertAlways(query.toArray().equals([1,-1,10,2,-2,20,3,-3,30]))
+        assertAlways(context.called === 3)
+        assertAlways(query.count() === 9)
+        assertAlways(context.called === 6)
+        invalidate context;
+        invalidate selector;
+        invalidate query;
+    }
     {
         var expected = 0;
         for (var i = 1; i <= 50; ++i) { expected += i*2; }
@@ -213,6 +297,9 @@ FILE_INCLUDE_GUARD
 
         // distinct
         checkEnumerableResult([1,2,3,4,5,void,1,2,3,6,void,null].distinct(), 1,2,3,4,5,void,6,null);
+
+        // concat
+        checkEnumerableResult([1,2,3,void,null,"str"].concat([4,5,6,"",void,null]), 1,2,3,void,null,"str",4,5,6,"",void,null);
     }
 
     invalidate checkEnumerableResult;

@@ -18,6 +18,7 @@ Class(Enumerable)
     Func(skip)() { return new global.SkipEnumerable(this, *); }
     Func(skipWhile)() { return new global.SkipWhileEnumerable(this, *); }
     Func(distinct)() { return new global.DistinctEnumerable(this); }
+    Func(concat)() { return new global.ConcatEnumerable(this, *); }
 
     Func(toArray)() {
         var array = [];
@@ -117,6 +118,7 @@ setStaticMember(Enumerable, "methodNames", [
     "take", "takeWhile",
     "skip", "skipWhile",
     "distinct",
+    "concat",
     "toArray", "toDictionary", "toMultiMap",
     "foreach",
     // "count",

@@ -84,6 +84,7 @@ execStorage("PriorityQueue.tjs");
 
 // Enumerable
 execStorage("Enumerable.tjs");
+execStorage("ConcatEnumerable.tjs");
 execStorage("DistinctEnumerable.tjs");
 execStorage("RangeEnumerable.tjs");
 execStorage("RepeatEnumerable.tjs");

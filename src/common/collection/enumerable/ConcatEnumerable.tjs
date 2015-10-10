@@ -1,0 +1,59 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+ClassExtends(ConcatEnumerable, Enumerable)
+{
+    OverrideFunc(getEnumerator)() {
+        return new global.ConcatEnumerator(this);
+    }
+
+    var _source;
+    var _nextEnumerables;
+
+    Constructor(source:Object, nexts*) {
+        checkArgs
+        typeFunction(source.getEnumerator)
+        assert(nexts.all(LMD(e) { return e.getEnumerator instanceof "Function"; }))
+        this._source = source;
+        this._nextEnumerables = nexts;
+    }
+
+    Finalize() {
+        invalidate _nextEnumerables;
+    }
+}
+
+ClassExtends(ConcatEnumerator, Enumerator)
+{
+    property current { getter { return this._source.current; } }
+
+    OverrideFunc(moveNext) {
+        this._source = this._parent._source.getEnumerator();
+        this.moveNext = this._moveNextImpl;
+        return this._moveNextImpl();
+    }
+
+    var _parent;
+    var _source;
+    var _nextIndex = -1;
+
+    Constructor(parent:ConcatEnumerable) {
+        checkArgs
+        this._parent = parent;
+    }
+
+    Func(_moveNextImpl)() {
+        if (this._source === null) return false;
+
+        while (!this._source.moveNext()) {
+            if (++_nextIndex >= this._parent._nextEnumerables.count) {
+                this._source = null;
+                return false;
+            }
+            typeFunction(this._parent._nextEnumerables[_nextIndex].getEnumerator)
+            this._source = this._parent._nextEnumerables[_nextIndex].getEnumerator();
+        }
+
+        return true;
+    }
+}
