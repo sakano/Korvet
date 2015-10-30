@@ -1,0 +1,192 @@
+// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+// ============================================================================= 使用するデリミタを定義
+m4_define(&--D_OUTPUT--&, "!")
+m4_define(&--D_GROUP--&, "&")
+m4_define(&--D_ID--&, "@")
+
+// ============================================================================= スクリプト読み込み
+Scripts.execStorage("initialize_tool.tjs");
+Scripts.execStorage("psdLoader.tjs");
+
+// ============================================================================= プラグイン読み込み
+
+Plugins.link("psd.dll") if (typeof global.PSD === "undefined");
+Plugins.link("layerExSave.dll") if (typeof global.Layer.getCropRectZero === "undefined");
+
+// ============================================================================= ウィンドウ生成
+var win = new Window();
+win.add(new Layer(win, null));
+win.onFileDrop = function(files:Array) {
+    checkArgs
+    FOR_EACH(file, files) {
+        dm("file : " + file);
+        outputCombinedImagesFromPSD(file);
+    }
+};
+win.setInnerSize(200,100);
+win.primaryLayer.setSize(200,100);
+win.caption = "PSD to Combined";
+win.visible = true;
+
+// ============================================================================= 関数定義
+var psd;
+
+function outputCombinedImagesFromPSD(filename:string) {
+    checkArgs
+    psd = new PSDLoader();
+
+    var layersInfo = psd.getLayersInfo(filename);
+    var base = getOutputInfo(layersInfo, filename);
+    var group = getGroupInfo(layersInfo);
+
+    outputImages(base, group, 0);
+
+    invalidate psd;
+}
+
+/// レイヤ情報を再帰的に辿って全てのグループの組み合わせについてoutputImageを呼び出す
+/// @param base 出力情報
+/// @param group グループごとのレイヤ情報
+/// @param groupIndex グループのインデックス
+/// @param * 出力するレイヤ情報
+function outputImages(base:Dictionary, group:Dictionary, groupIndex:int, *) {
+    checkArgs
+    var groupName = group.name[groupIndex];
+    var recurFlag = (groupIndex + 1 < group.name.count);
+    FOR_EACH(id, group.idByGroup[groupName]) {
+        if (recurFlag) {
+            outputImages(base, group, groupIndex+1, group.info[groupName][id]*, *);
+        } else {
+            outputImage(base, group.info[groupName][id]*, *);
+        }
+    }
+}
+
+/// 指定された出力情報に従って、指定されたレイヤが全て統合された画像を出力
+/// @param base 出力情報
+/// @param outputInfo* 出力するレイヤ情報
+function outputImage(base:Dictionary, outputInfo*) {
+    checkArgs
+    var expandMessageList = [];
+    var layerID = %[];
+    var baseLayer = new Layer(win, win.primaryLayer);
+    baseLayer.setSize(psd.width, psd.height);
+
+    // baseLayerに指定されたレイヤの画像を結合
+    FOR_EACH(info, outputInfo) {
+        var psdLayer = new Layer(win, win.primaryLayer);
+        psd.getLayerData(psdLayer, info.layerNumber);
+        baseLayer.operateRect(info.left, info.top, psdLayer, 0, 0, psdLayer.width, psdLayer.height, omAlpha, info.opacity);
+        expandMessageList.add(info.delims[D_GROUP][0]);
+        expandMessageList.add(info.delims[D_ID][0]);
+    }
+
+    var filename = expandMessage(base.filename, expandMessageList*);
+
+    // 出力情報ごとに画像を1枚ずつ出力
+    FOR_EACH(output, base.output) {
+        var outName = output.name;
+        var ratio = output.ratio / 100;
+        var outLayer = new Layer(win, win.primaryLayer);
+        outLayer.assignImages(baseLayer);
+        outLayer.setSize(baseLayer.width, baseLayer.height);
+
+        // リサイズ
+        if (ratio !== 1) {
+            var resizedLayer = new Layer(win, win.primaryLayer);
+            resizedLayer.setSize(outLayer.width * ratio, outLayer.height * ratio);
+            resizedLayer.stretchCopy(0, 0, resizedLayer.width, resizedLayer.height, outLayer, 0, 0, outLayer.width, outLayer.height, stLanczos3);
+            outLayer.assignImages(resizedLayer);
+            outLayer.setSize(resizedLayer.width, resizedLayer.height);
+        }
+        
+        // クロッピング
+        if (base.crop[outName] !== void) {
+            var rect = base.crop[outName];
+            var croppedLayer = new Layer(win, win.primaryLayer);
+            croppedLayer.setSize(Math.ceil(rect.width * ratio), Math.ceil(rect.height * ratio));
+            croppedLayer.copyRect(0, 0, outLayer,
+                Math.floor(rect.left * ratio), Math.floor(rect.top * ratio),
+                croppedLayer.width, croppedLayer.height);
+            outLayer.assignImages(croppedLayer);
+            outLayer.setSize(croppedLayer.width, croppedLayer.height);
+        }
+
+        // トリミング
+        {
+            var rect = outLayer.getCropRect();
+            if (rect !== void) {
+                var trimLayer = new Layer(win, win.primaryLayer);
+                trimLayer.setSize(rect.w, rect.h);
+                trimLayer.copyRect(0, 0, outLayer, rect.x, rect.y, rect.w, rect.h);
+                outLayer.assignImages(trimLayer);
+                outLayer.setSize(trimLayer.width, trimLayer.height);
+            }
+        }
+
+        // 保存
+        outLayer.saveLayerImage(base.destFolder + filename.replace(/{SIZE}/, outName) + ".png", "png");
+    }
+}
+
+/// @return 出力情報
+function getOutputInfo(layersInfo:Array, filename:string) {
+    checkArgs
+    var baseInfo = %[
+        filename : "", 
+        output : [],
+        crop : %[],
+        destFolder : Storages.extractStoragePath(Storages.getFullPath(filename)) + "/output/",
+    ];
+    FOR_EACH(info, layersInfo) {
+        var baseDelims = info.delims[D_OUTPUT];
+        for (var i = 0; i < baseDelims.count; ++i) {
+            switch(baseDelims[i]) {
+            case "NAME": // 出力画像ファイル名
+                baseInfo.filename = baseDelims[++i];
+                break;
+            case "OUT": // 出力画像縮小率
+                var name = baseDelims[++i];
+                var ratio = baseDelims[++i];
+                baseInfo.output.add(%[ name:name, ratio:ratio ]);
+                break;
+            case "CROP": // クロッピング範囲
+                var name = baseDelims[++i];
+                baseInfo.crop[name] = new Rect(info.left, info.top, info.right, info.bottom);
+            }
+        }
+    }
+    return baseInfo;
+}
+
+
+/// @return 差分グループごとのレイヤ情報
+function getGroupInfo(layersInfo:Array) {
+    var name = [];
+    var idByGroup = %[];
+    var info = %[];
+    FOR_EACH(layerInfo, layersInfo) {
+        var groupName = layerInfo.delims[D_GROUP][0];
+        var id = layerInfo.delims[D_ID][0];
+        if (groupName === void || id === void) continue;
+        if (idByGroup[groupName] === void) {
+            name.add(groupName);
+            idByGroup[groupName] = [];
+            info[groupName] = %[];
+        }
+        if (info[groupName][id] === void) {
+            info[groupName][id] = [];
+        }
+        if (idByGroup[groupName].find(id) < 0) {
+            idByGroup[groupName].add(id);
+        }
+        info[groupName][id].add(layerInfo);
+    }
+    return %[
+        name : name, // グループ一覧
+        idByGroup : idByGroup, // グループごとのID一覧
+        info : info // IDごとのレイヤ情報一覧
+    ];
+}

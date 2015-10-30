@@ -3,9 +3,8 @@ FILE_INCLUDE_GUARD
 
 Class(PSDLoader)
 {
-    var win;
     var psd;
-    var delimiters = [ "@" , "&", ";", "$", "#", "!", "?", "/", "|", ">", "^" ];
+    var delimiters = [ "@" , "&", ";", ":", "$", "#", "!", "?", "/", "|", ">", "^" ];
 
     property width { getter { return psd.width; } }
     property height { getter { return psd.height; } }
@@ -14,9 +13,7 @@ Class(PSDLoader)
     Func(getLayerDataRaw)() { return psd.getLayerDataRaw(...); }
 
     Constructor() {
-        win = new Window();
         psd = new PSD();
-        win.add(new global.Layer(win, null));
     }
 
     /// @param filename string psdファイルパス

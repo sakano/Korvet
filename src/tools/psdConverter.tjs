@@ -3,17 +3,21 @@ FILE_INCLUDE_GUARD
 
 Class(PSDConverter)
 {
+    var win;
     var loader = new PSDLoader();
 
-    Constructor() {}
+    Constructor() {
+        win = new Window();
+        win.add(new global.Layer(win, null));
+    }
 
     Func(initLayer)(layer:Layer) {
         checkArgs
-        layer.assignImages(loader.win.primaryLayer);
+        layer.assignImages(win.primaryLayer);
     }
 
     Func(createTemporaryLayer)() {
-        return new global.Layer(loader.win, loader.win.primaryLayer);
+        return new global.Layer(win, win.primaryLayer);
     }
 
     /// @param layersInfo Array レイヤ情報
