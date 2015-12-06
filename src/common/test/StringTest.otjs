@@ -1,0 +1,60 @@
+﻿// Copyright (C) 2015 Biscrat
+FILE_INCLUDE_GUARD
+
+{   // sprintf
+    var equals = LMD(a, b) {
+        assertAlways(a === b)
+    };
+
+    equals("%d".sprintf(345), "345");
+    equals("%d".sprintf(-1234), "-1234");
+    equals("%i".sprintf(1234), "1234");
+    equals("%i".sprintf(-1234), "-1234");
+    equals("%o".sprintf(8), "10");
+    equals("%o".sprintf(-8), "1777777777777777777770");
+    equals("%u".sprintf(1000), "1000");
+    equals("%u".sprintf(-1), "18446744073709551615");
+    equals("%x".sprintf(255), "ff");
+    equals("%x".sprintf(-16), "fffffffffffffff0");
+    equals("%X".sprintf(255), "FF");
+    equals("%X".sprintf(-15), "FFFFFFFFFFFFFFF1");
+    equals("%f".sprintf(12.3), "12.300000");
+    equals("%f".sprintf(-12.3), "-12.300000");
+    equals("%e".sprintf(12.3), "1.230000e+01");
+    equals("%e".sprintf(-12.3), "-1.230000e+01");
+    equals("%E".sprintf(12.3), "1.230000E+01");
+    equals("%E".sprintf(-12.3), "-1.230000E+01");
+    equals("%g".sprintf(12.3), "12.3");
+    equals("%g".sprintf(-12.3), "-12.3");
+    equals("%G".sprintf(12.3), "12.3");
+    equals("%G".sprintf(-12.3), "-12.3");
+    
+    equals("%d".sprintf(1<<62), "4611686018427387904");
+    equals("%d".sprintf(0xEFFFFFFFFFFFFFFF), "-1152921504606846977");
+    equals("%i".sprintf(1<<62), "4611686018427387904");
+    equals("%i".sprintf(0xEFFFFFFFFFFFFFFF), "-1152921504606846977");
+    equals("%o".sprintf(1<<62), "400000000000000000000");
+    equals("%o".sprintf(0xEFFFFFFFFFFFFFFF), "1677777777777777777777");
+    equals("%u".sprintf(1<<62), "4611686018427387904");
+    equals("%u".sprintf(0xEFFFFFFFFFFFFFFF), "17293822569102704639");
+    equals("%x".sprintf(1<<62), "4000000000000000");
+    equals("%x".sprintf(0xEFFFFFFFFFFFFFFF), "efffffffffffffff");
+    equals("%X".sprintf(1<<62), "4000000000000000");
+    equals("%X".sprintf(0xEFFFFFFFFFFFFFFF), "EFFFFFFFFFFFFFFF");
+    
+    equals("%%d".sprintf(1234), "%d");
+    equals("%8d".sprintf(1234), "    1234");
+    equals("%-8d".sprintf(1234), "1234    ");
+    equals("%+8d".sprintf(1234), "   +1234");
+    equals("%#8d".sprintf(1234), "    1234");
+    equals("%#8x".sprintf(1234), "   0x4d2");
+    equals("%08d".sprintf(1234), "00001234");
+    equals("%08d".sprintf(1234), "00001234");
+    equals("%16d".sprintf(1234), "            1234");
+    equals("%016d".sprintf(1234), "0000000000001234");
+    equals("%2d".sprintf(1234), "1234");
+    equals("%.8f".sprintf(1234.567), "1234.56700000");
+    equals("%.8f".sprintf(1234.567), "1234.56700000");
+    equals("%*d".sprintf(8, 123), "     123");
+    equals("%.*f".sprintf(4, 12.3), "12.3000");
+}

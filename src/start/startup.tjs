@@ -9,6 +9,7 @@ Scripts.execStorage("initialize.tjs");
 
     // テストスクリプトを実行
     execStorage("ObjectTest.otjs");
+    execStorage("StringTest.otjs");
 
     execStorage("ArrayTest.otjs");
     execStorage("DictionaryTest.otjs");
